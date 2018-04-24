@@ -1,2 +1,2 @@
-# Tri&#9653;ngle &#9651;rc&#9653;de
+# Triangle &#9653;rcade
 Bachelor project at UiA, Multimediatechnology and design
