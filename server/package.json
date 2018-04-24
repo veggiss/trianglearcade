@@ -1,0 +1,21 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "bundle-colyseus-client": "browserify ./node_modules/colyseus.js/lib/index.js -s Colyseus -o static/colyseus.js",
+    "build": "npm run bundle-colyseus-client"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "browserify": "^16.2.0",
+    "colyseus": "^0.9.4",
+    "colyseus.js": "^0.9.1",
+    "express": "^4.16.3",
+    "https": "^1.0.0",
+    "sat": "^0.7.0"
+  }
+}
