@@ -10,7 +10,6 @@ class Main extends Phaser.State {
 		this.game.stage.backgroundColor = '#b77d10';
 		this.game.stage.disableVisibilityChange = true;
 		this.background = this.game.add.tileSprite(0, 0, 1920, 1920, 'background');
-		this.game.physics.startSystem(Phaser.Physics.ARCADE);
 		this.game.world.setBounds(0, 0, 1920, 1920);
 		this.game.room = this.game.colyseus.join('game');
 		this.clients = {};
@@ -21,24 +20,7 @@ class Main extends Phaser.State {
 	}
 
 	update() {
-		this.bullets.forEach((bullet, index, obj) => {
-			if (!bullet.alive) {
-				obj.splice(index, 1)
-			} else {
-				for (let id in this.clients) {
-					if (bullet.owner !== id) {
-						let dx = this.clients[id].x - bullet.x; 
-						let dy = this.clients[id].y - bullet.y;
-						let dist = Math.sqrt(dx * dx + dy * dy);
-
-						if (dist < 30) {
-							bullet.destroy();
-							obj.splice(index, 1);
-						}
-					}
-				}
-			}
-		});
+		this.updateBullets();
 	}
 
 	netListener() {
@@ -90,6 +72,28 @@ class Main extends Phaser.State {
 				this.clients[change.path.id].leave();
 				this.clients[change.path.id].destroy();
 				delete this.clients[change.path.id];
+			}
+		});
+	}
+
+	updateBullets() {
+		this.bullets.forEach((bullet, index, obj) => {
+			if (!bullet.alive) {
+				obj.splice(index, 1)
+			} else {
+				for (let id in this.clients) {
+					if (bullet.owner !== id) {
+						let dx = this.clients[id].x - bullet.x; 
+						let dy = this.clients[id].y - bullet.y;
+						let dist = Math.sqrt(dx * dx + dy * dy);
+
+						if (dist < 30) {
+							bullet.die();
+							bullet.destroy();
+							obj.splice(index, 1);
+						}
+					}
+				}
 			}
 		});
 	}

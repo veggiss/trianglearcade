@@ -6202,6 +6202,12 @@ var Bullet = function (_Phaser$Sprite) {
 		_this.owner = owner;
 		_this.index = index;
 		_this.timer = Date.now() + 1000;
+
+		//Emitter
+		_this.emitter = _this.game.add.emitter(0, 0, 100);
+		_this.emitter.makeParticles('deathParticle');
+		_this.emitter.gravity = 0;
+
 		//Physics
 		_this.angle = angle;
 		_this.anchor.setTo(0.5, 0.5);
@@ -6218,6 +6224,13 @@ var Bullet = function (_Phaser$Sprite) {
 			if (Date.now() > this.timer) {
 				this.destroy();
 			}
+		}
+	}, {
+		key: 'die',
+		value: function die() {
+			this.emitter.x = this.x;
+			this.emitter.y = this.y;
+			this.emitter.start(true, 500, null, 5);
 		}
 	}]);
 
@@ -6720,6 +6733,7 @@ var Player = function (_Phaser$Sprite) {
 	}, {
 		key: 'die',
 		value: function die() {
+			this.game.camera.shake(0.01, 250);
 			this.game.camera.target = null;
 			this.emitter.x = this.x;
 			this.emitter.y = this.y;
@@ -6886,7 +6900,6 @@ var Main = function (_Phaser$State) {
 			this.game.stage.backgroundColor = '#b77d10';
 			this.game.stage.disableVisibilityChange = true;
 			this.background = this.game.add.tileSprite(0, 0, 1920, 1920, 'background');
-			this.game.physics.startSystem(Phaser.Physics.ARCADE);
 			this.game.world.setBounds(0, 0, 1920, 1920);
 			this.game.room = this.game.colyseus.join('game');
 			this.clients = {};
@@ -6898,56 +6911,37 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'update',
 		value: function update() {
-			var _this2 = this;
-
-			this.bullets.forEach(function (bullet, index, obj) {
-				if (!bullet.alive) {
-					obj.splice(index, 1);
-				} else {
-					for (var id in _this2.clients) {
-						if (bullet.owner !== id) {
-							var dx = _this2.clients[id].x - bullet.x;
-							var dy = _this2.clients[id].y - bullet.y;
-							var dist = Math.sqrt(dx * dx + dy * dy);
-
-							if (dist < 30) {
-								bullet.destroy();
-								obj.splice(index, 1);
-							}
-						}
-					}
-				}
-			});
+			this.updateBullets();
 		}
 	}, {
 		key: 'netListener',
 		value: function netListener() {
-			var _this3 = this;
+			var _this2 = this;
 
 			this.game.room.onMessage.add(function (message) {
-				if (message.id) _this3.id = message.id;
+				if (message.id) _this2.id = message.id;
 				if (message.bullet) {
 					var bullet = message.bullet;
-					_this3.bullets.push(new _Bullet2.default(_this3.game, bullet.x, bullet.y, bullet.angle, bullet.id, _this3.bullets.length));
+					_this2.bullets.push(new _Bullet2.default(_this2.game, bullet.x, bullet.y, bullet.angle, bullet.id, _this2.bullets.length));
 				}
 				if (message.playerKilled) {
-					_this3.clients[message.playerKilled].die();
+					_this2.clients[message.playerKilled].die();
 				}
 				if (message.playerRespawned) {
-					_this3.clients[message.playerRespawned].respawn();
+					_this2.clients[message.playerRespawned].respawn();
 				}
 
 				if (message.playerHit) {
-					_this3.clients[message.playerHit.id].playerHealthBar.setPercent(message.playerHit.health);
+					_this2.clients[message.playerHit.id].playerHealthBar.setPercent(message.playerHit.health);
 				}
 			});
 
 			this.game.room.listen("players/:id/:axis", function (change) {
 				if (change.operation === 'replace') {
 					if (change.path.axis === 'x') {
-						_this3.clients[change.path.id].dest.x = change.value;
+						_this2.clients[change.path.id].dest.x = change.value;
 					} else if (change.path.axis === 'y') {
-						_this3.clients[change.path.id].dest.y = change.value;
+						_this2.clients[change.path.id].dest.y = change.value;
 					}
 				}
 			});
@@ -6955,23 +6949,48 @@ var Main = function (_Phaser$State) {
 			this.game.room.listen("players/:id/:angle", function (change) {
 				if (change.operation === 'replace') {
 					if (change.path.angle === 'angle') {
-						_this3.clients[change.path.id].dest.angle = change.value;
+						_this2.clients[change.path.id].dest.angle = change.value;
 					}
 				}
 			});
 
 			this.game.room.listen("players/:id", function (change) {
 				if (change.operation === "add") {
-					if (change.path.id !== _this3.id) {
-						_this3.clients[change.path.id] = new _Client2.default(_this3.game, change.value.x, change.value.y, change.value.health);
+					if (change.path.id !== _this2.id) {
+						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health);
 					} else {
-						_this3.clients[change.path.id] = new _Player2.default(_this3.game, change.value.x, change.value.y, change.value.health);
-						_this3.game.camera.follow(_this3.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+						_this2.clients[change.path.id] = new _Player2.default(_this2.game, change.value.x, change.value.y, change.value.health);
+						_this2.game.camera.follow(_this2.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 					}
 				} else if (change.operation === "remove") {
-					_this3.clients[change.path.id].leave();
-					_this3.clients[change.path.id].destroy();
-					delete _this3.clients[change.path.id];
+					_this2.clients[change.path.id].leave();
+					_this2.clients[change.path.id].destroy();
+					delete _this2.clients[change.path.id];
+				}
+			});
+		}
+	}, {
+		key: 'updateBullets',
+		value: function updateBullets() {
+			var _this3 = this;
+
+			this.bullets.forEach(function (bullet, index, obj) {
+				if (!bullet.alive) {
+					obj.splice(index, 1);
+				} else {
+					for (var id in _this3.clients) {
+						if (bullet.owner !== id) {
+							var dx = _this3.clients[id].x - bullet.x;
+							var dy = _this3.clients[id].y - bullet.y;
+							var dist = Math.sqrt(dx * dx + dy * dy);
+
+							if (dist < 30) {
+								bullet.die();
+								bullet.destroy();
+								obj.splice(index, 1);
+							}
+						}
+					}
 				}
 			});
 		}

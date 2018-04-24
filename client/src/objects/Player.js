@@ -61,6 +61,7 @@ class Player extends Phaser.Sprite {
 	}
 
 	die() {
+		this.game.camera.shake(0.01, 250);
 		this.game.camera.target = null;
 		this.emitter.x = this.x;
 		this.emitter.y = this.y;
