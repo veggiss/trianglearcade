@@ -6155,7 +6155,7 @@ var Game = function (_Phaser$Game) {
 
 new Game();
 
-},{"colyseus.js":13,"states/Boot":47,"states/Main":48,"states/Preload":49}],43:[function(require,module,exports){
+},{"colyseus.js":13,"states/Boot":48,"states/Main":49,"states/Preload":50}],43:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6247,6 +6247,10 @@ var _DebugBody = require('./DebugBody');
 
 var _DebugBody2 = _interopRequireDefault(_DebugBody);
 
+var _HealthBar = require('./HealthBar');
+
+var _HealthBar2 = _interopRequireDefault(_HealthBar);
+
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -6272,12 +6276,13 @@ function _inherits(subClass, superClass) {
 var Client = function (_Phaser$Sprite) {
 	_inherits(Client, _Phaser$Sprite);
 
-	function Client(game, x, y) {
+	function Client(game, x, y, health) {
 		_classCallCheck(this, Client);
 
 		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, x, y, 'player'));
 
 		_this.game = game;
+		_this.health = health;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
 		//Emitter
@@ -6285,10 +6290,16 @@ var Client = function (_Phaser$Sprite) {
 		_this.emitter.makeParticles('deathParticle');
 		_this.emitter.gravity = 0;
 
+		//Sprite
 		_this.anchor.setTo(0.5, 0.5);
+		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
+			x: _this.x,
+			y: _this.y + 64,
+			width: 64,
+			height: 8,
+			animationDuration: 200
+		});
 		_this.game.add.existing(_this);
-
-		//new DebugBody(this.game, this.dest.x, this.dest.y, 'circle', {host: this, radius: 25});
 		return _this;
 	}
 
@@ -6301,6 +6312,16 @@ var Client = function (_Phaser$Sprite) {
 			this.y = this.lerp(y, this.dest.y, 0.25);
 			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.25);
+			this.playerHealthBar.setPosition(this.x, this.y + 55);
+		}
+	}, {
+		key: 'respawn',
+		value: function respawn() {
+			this.health = 100;
+			this.playerHealthBar.setPercent(100);
+			this.alpha = 1;
+			this.playerHealthBar.barSprite.alpha = 1;
+			this.playerHealthBar.bgSprite.alpha = 1;
 		}
 	}, {
 		key: 'die',
@@ -6309,6 +6330,14 @@ var Client = function (_Phaser$Sprite) {
 			this.emitter.y = this.y;
 			this.emitter.start(true, 2000, null, 20);
 			this.alpha = 0;
+			this.playerHealthBar.barSprite.alpha = 0;
+			this.playerHealthBar.bgSprite.alpha = 0;
+		}
+	}, {
+		key: 'leave',
+		value: function leave() {
+			this.playerHealthBar.barSprite.destroy();
+			this.playerHealthBar.bgSprite.destroy();
 		}
 	}, {
 		key: 'lerp',
@@ -6322,7 +6351,7 @@ var Client = function (_Phaser$Sprite) {
 
 exports.default = Client;
 
-},{"./DebugBody":45}],45:[function(require,module,exports){
+},{"./DebugBody":45,"./HealthBar":46}],45:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6399,6 +6428,183 @@ exports.default = DebugBody;
 },{}],46:[function(require,module,exports){
 'use strict';
 
+/**
+ Copyright (c) 2015 Belahcen Marwane (b.marwane@gmail.com)
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ */
+
+var HealthBar = function HealthBar(game, providedConfig) {
+    this.game = game;
+
+    this.setupConfiguration(providedConfig);
+    this.setPosition(this.config.x, this.config.y);
+    this.drawBackground();
+    this.drawHealthBar();
+    this.setFixedToCamera(this.config.isFixedToCamera);
+};
+HealthBar.prototype.constructor = HealthBar;
+
+HealthBar.prototype.setupConfiguration = function (providedConfig) {
+    this.config = this.mergeWithDefaultConfiguration(providedConfig);
+    this.flipped = this.config.flipped;
+};
+
+HealthBar.prototype.mergeWithDefaultConfiguration = function (newConfig) {
+    var defaultConfig = {
+        width: 250,
+        height: 40,
+        x: 0,
+        y: 0,
+        bg: {
+            color: '#651828'
+        },
+        bar: {
+            color: '#FEFF03'
+        },
+        animationDuration: 200,
+        flipped: false,
+        isFixedToCamera: false
+    };
+
+    return mergeObjetcs(defaultConfig, newConfig);
+};
+
+function mergeObjetcs(targetObj, newObj) {
+    for (var p in newObj) {
+        try {
+            targetObj[p] = newObj[p].constructor == Object ? mergeObjetcs(targetObj[p], newObj[p]) : newObj[p];
+        } catch (e) {
+            targetObj[p] = newObj[p];
+        }
+    }
+    return targetObj;
+}
+
+HealthBar.prototype.drawBackground = function () {
+
+    var bmd = this.game.add.bitmapData(this.config.width, this.config.height);
+    bmd.ctx.fillStyle = this.config.bg.color;
+    bmd.ctx.beginPath();
+    bmd.ctx.rect(0, 0, this.config.width, this.config.height);
+    bmd.ctx.fill();
+    bmd.update();
+
+    this.bgSprite = this.game.add.sprite(this.x, this.y, bmd);
+    this.bgSprite.anchor.set(0.5);
+
+    if (this.flipped) {
+        this.bgSprite.scale.x = -1;
+    }
+};
+
+HealthBar.prototype.drawHealthBar = function () {
+    var bmd = this.game.add.bitmapData(this.config.width, this.config.height);
+    bmd.ctx.fillStyle = this.config.bar.color;
+    bmd.ctx.beginPath();
+    bmd.ctx.rect(0, 0, this.config.width, this.config.height);
+    bmd.ctx.fill();
+    bmd.update();
+
+    this.barSprite = this.game.add.sprite(this.x - this.bgSprite.width / 2, this.y, bmd);
+    this.barSprite.anchor.y = 0.5;
+
+    if (this.flipped) {
+        this.barSprite.scale.x = -1;
+    }
+};
+
+HealthBar.prototype.setPosition = function (x, y) {
+    this.x = x;
+    this.y = y;
+
+    if (this.bgSprite !== undefined && this.barSprite !== undefined) {
+        this.bgSprite.position.x = x;
+        this.bgSprite.position.y = y;
+
+        this.barSprite.position.x = x - this.config.width / 2;
+        this.barSprite.position.y = y;
+    }
+};
+
+HealthBar.prototype.setPercent = function (newValue) {
+    if (newValue < 0) newValue = 0;
+    if (newValue > 100) newValue = 100;
+
+    var newWidth = newValue * this.config.width / 100;
+
+    this.setWidth(newWidth);
+};
+
+/*
+ Hex format, example #ad3aa3
+ */
+HealthBar.prototype.setBarColor = function (newColor) {
+    var bmd = this.barSprite.key;
+    bmd.update();
+
+    var currentRGBColor = bmd.getPixelRGB(0, 0);
+    var newRGBColor = hexToRgb(newColor);
+    bmd.replaceRGB(currentRGBColor.r, currentRGBColor.g, currentRGBColor.b, 255, newRGBColor.r, newRGBColor.g, newRGBColor.b, 255);
+};
+
+HealthBar.prototype.setWidth = function (newWidth) {
+    if (this.flipped) {
+        newWidth = -1 * newWidth;
+    }
+    this.game.add.tween(this.barSprite).to({ width: newWidth }, this.config.animationDuration, Phaser.Easing.Linear.None, true);
+};
+
+HealthBar.prototype.setFixedToCamera = function (fixedToCamera) {
+    this.bgSprite.fixedToCamera = fixedToCamera;
+    this.barSprite.fixedToCamera = fixedToCamera;
+};
+
+HealthBar.prototype.kill = function () {
+    this.bgSprite.kill();
+    this.barSprite.kill();
+};
+
+module.exports = HealthBar;
+
+/**
+ Utils
+ */
+
+function hexToRgb(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+        return r + r + g + g + b + b;
+    });
+
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+},{}],47:[function(require,module,exports){
+'use strict';
+
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
@@ -6416,6 +6622,10 @@ var _createClass = function () {
 var _DebugBody = require('./DebugBody');
 
 var _DebugBody2 = _interopRequireDefault(_DebugBody);
+
+var _HealthBar = require('./HealthBar');
+
+var _HealthBar2 = _interopRequireDefault(_HealthBar);
 
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj };
@@ -6442,12 +6652,13 @@ function _inherits(subClass, superClass) {
 var Player = function (_Phaser$Sprite) {
 	_inherits(Player, _Phaser$Sprite);
 
-	function Player(game, x, y) {
+	function Player(game, x, y, health) {
 		_classCallCheck(this, Player);
 
 		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'player'));
 
 		_this.game = game;
+		_this.health = health;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
 		//Emitter
@@ -6457,14 +6668,21 @@ var Player = function (_Phaser$Sprite) {
 
 		//Sprite
 		_this.anchor.setTo(0.5, 0.5);
+		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
+			x: _this.x,
+			y: _this.y + 64,
+			width: 64,
+			height: 8,
+			animationDuration: 50
+		});
+
+		//Inputs
 		_this.game.input.activePointer.rightButton.onDown.add(_this.playerControls, { moveUp: true });
 		_this.game.input.activePointer.rightButton.onUp.add(_this.playerControls, { moveUp: false });
 		_this.game.input.activePointer.leftButton.onDown.add(_this.playerShoot, { shoot: true });
 		_this.game.input.activePointer.leftButton.onUp.add(_this.playerShoot, { shoot: false });
 
 		_this.game.add.existing(_this);
-
-		//new DebugBody(this.game, this.dest.x, this.dest.y, 'circle', {host: this, radius: 25});
 		return _this;
 	}
 
@@ -6477,6 +6695,7 @@ var Player = function (_Phaser$Sprite) {
 			this.y = this.lerp(y, this.dest.y, 0.1);
 			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
+			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
 	}, {
 		key: 'playerControls',
@@ -6489,12 +6708,31 @@ var Player = function (_Phaser$Sprite) {
 			t.game.room.send({ shoot: this.shoot });
 		}
 	}, {
+		key: 'respawn',
+		value: function respawn() {
+			this.game.camera.target = this;
+			this.health = 100;
+			this.playerHealthBar.setPercent(100);
+			this.alpha = 1;
+			this.playerHealthBar.barSprite.alpha = 1;
+			this.playerHealthBar.bgSprite.alpha = 1;
+		}
+	}, {
 		key: 'die',
 		value: function die() {
+			this.game.camera.target = null;
 			this.emitter.x = this.x;
 			this.emitter.y = this.y;
 			this.emitter.start(true, 2000, null, 20);
 			this.alpha = 0;
+			this.playerHealthBar.barSprite.alpha = 0;
+			this.playerHealthBar.bgSprite.alpha = 0;
+		}
+	}, {
+		key: 'leave',
+		value: function leave() {
+			this.playerHealthBar.barSprite.destroy();
+			this.playerHealthBar.bgSprite.destroy();
 		}
 	}, {
 		key: 'lerp',
@@ -6508,7 +6746,7 @@ var Player = function (_Phaser$Sprite) {
 
 exports.default = Player;
 
-},{"./DebugBody":45}],47:[function(require,module,exports){
+},{"./DebugBody":45,"./HealthBar":46}],48:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6577,7 +6815,7 @@ var Boot = function (_Phaser$State) {
 
 exports.default = Boot;
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6672,17 +6910,9 @@ var Main = function (_Phaser$State) {
 							var dy = _this2.clients[id].y - bullet.y;
 							var dist = Math.sqrt(dx * dx + dy * dy);
 
-							if (dist < 25) {
+							if (dist < 30) {
 								bullet.destroy();
 								obj.splice(index, 1);
-								if (bullet.owner === _this2.id) {
-									_this2.game.room.send({ bulletHit: {
-											attacker: bullet.owner,
-											target: id,
-											index: bullet.index,
-											time: Date.now()
-										} });
-								}
 							}
 						}
 					}
@@ -6701,12 +6931,14 @@ var Main = function (_Phaser$State) {
 					_this3.bullets.push(new _Bullet2.default(_this3.game, bullet.x, bullet.y, bullet.angle, bullet.id, _this3.bullets.length));
 				}
 				if (message.playerKilled) {
-					if (message.playerKilled == _this3.id) _this3.game.camera.target = null;
 					_this3.clients[message.playerKilled].die();
 				}
 				if (message.playerRespawned) {
-					if (message.playerRespawned == _this3.id) _this3.game.camera.target = _this3.clients[message.playerRespawned];
-					_this3.clients[message.playerRespawned].alpha = 1;
+					_this3.clients[message.playerRespawned].respawn();
+				}
+
+				if (message.playerHit) {
+					_this3.clients[message.playerHit.id].playerHealthBar.setPercent(message.playerHit.health);
 				}
 			});
 
@@ -6731,12 +6963,13 @@ var Main = function (_Phaser$State) {
 			this.game.room.listen("players/:id", function (change) {
 				if (change.operation === "add") {
 					if (change.path.id !== _this3.id) {
-						_this3.clients[change.path.id] = new _Client2.default(_this3.game, change.value.x, change.value.y);
+						_this3.clients[change.path.id] = new _Client2.default(_this3.game, change.value.x, change.value.y, change.value.health);
 					} else {
-						_this3.clients[change.path.id] = new _Player2.default(_this3.game, change.value.x, change.value.y);
+						_this3.clients[change.path.id] = new _Player2.default(_this3.game, change.value.x, change.value.y, change.value.health);
 						_this3.game.camera.follow(_this3.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 					}
 				} else if (change.operation === "remove") {
+					_this3.clients[change.path.id].leave();
 					_this3.clients[change.path.id].destroy();
 					delete _this3.clients[change.path.id];
 				}
@@ -6749,7 +6982,7 @@ var Main = function (_Phaser$State) {
 
 exports.default = Main;
 
-},{"objects/Bullet":43,"objects/Client":44,"objects/Player":46,"phaser-move-and-stop-plugin":24}],49:[function(require,module,exports){
+},{"objects/Bullet":43,"objects/Client":44,"objects/Player":47,"phaser-move-and-stop-plugin":24}],50:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

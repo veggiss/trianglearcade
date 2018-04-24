@@ -3,13 +3,13 @@ const Bullet = require('./Bullet');
 const V = SAT.Vector;
 const C = SAT.Circle;
 const P = SAT.Polygon;
-
 let network;
 
 module.exports = class Player {
-    constructor(id, x, y, angle, net) {
+    constructor(id, index, x, y, angle, net) {
         network = net;
         this.id = id;
+        this.index = index;
         this.x = x;
         this.y = y;
         this.lastDeath = Date.now();
@@ -17,10 +17,8 @@ module.exports = class Player {
         this.angle = angle;
         this.moveUp = false;
         this.shooting = false;
-        /*this.body = new P(new V(this.x, this.y), [
-            new V(1, 0), new V(0, 1), new V(1, 1)
-        ]);*/
         this.lastShot = Date.now() + 200;
+        this.health = 100;
         this.bullets = [];
     }
 
@@ -35,7 +33,7 @@ module.exports = class Player {
             this.lastShot = Date.now() + 200;
             let bullet = new Bullet(this.x, this.y, this.angle, this.id);
             this.bullets.push(bullet);
-            network.broadcast({bullet: {
+            network.sendToAll({bullet: {
                 id: bullet.owner,
                 x: bullet.x,
                 y: bullet.y,
@@ -58,22 +56,29 @@ module.exports = class Player {
 
             this.x += Math.sin(this.angle * Math.PI / 180) * 8;
             this.y -= Math.cos(this.angle * Math.PI / 180) * 8;
+        }
+    }
 
-            //this.body.pos.x = this.lerp(this.body.pos.x, this.x, 0.1);
-            //this.body.pos.y = this.lerp(this.body.pos.y, this.y, 0.1);
+    bulletHit() {
+        this.health -= 10;
+
+        if (this.health >= 0) { 
+            network.sendToAll({playerHit: {id: this.id, health: this.health}});
+        } else {
+            this.kill();
         }
     }
 
     kill() {
-        this.lastDeath = Date.now() + 3000;
         this.alive = false;
-        network.broadcast({playerKilled: this.id});
+        this.lastDeath = Date.now() + 3000;
+        network.sendToAll({playerKilled: this.id});
     }
 
     respawn() {
-        console.log("RESPAWNED");
         this.alive = true;
-        network.broadcast({playerRespawned: this.id});
+        this.health = 100;
+        network.sendToAll({playerRespawned: this.id});
     }
 
     updateBullets() {

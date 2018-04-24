@@ -4,17 +4,16 @@ const {createTimeline} = require('@gamestdio/timeline');
 
 module.exports = class StateHandlerRoom extends Room {
     onInit (options) {
-        //console.log("New room created!", options);
         this.setSimulationInterval(() => this.update(), 1000 / 20);
         this.setPatchRate(100);
         this.setState(new State());
         this.state.timeline = createTimeline();
         this.state.timeline.maxSnapshots = 1;
-        this.saveSnapshot();
+        this.state.timeline.takeSnapshot(this.state.players);
     }
 
     onJoin (client) {
-        this.state.createPlayer(client.sessionId, this);
+        this.state.createPlayer(client.sessionId, this.clients.length - 1, this);
         this.send(client, {id: client.sessionId});
     }
 
@@ -34,24 +33,27 @@ module.exports = class StateHandlerRoom extends Room {
         } else if (data.shoot === false) {
             this.state.players[client.sessionId].shooting = false;
         }
-
-        if (data.bulletHit) {
-            this.state.checkBulletHit(data.bulletHit);
-        }
     }
 
     onDispose () {
         console.log("Dispose room");
     }
 
+    sendToAll(message) {
+        this.clients.forEach(client => {
+            this.send(client, message);
+        });
+    }
+
     update() {
         this.state.globalUpdate();
+        this.saveSnapshot();
     }
 
     saveSnapshot() {
         let self = this;
-        setInterval(() => {
+        setTimeout(() => {
             self.state.timeline.takeSnapshot(self.state.players);
-        }, 100);
+        }, 200);
     }
 }

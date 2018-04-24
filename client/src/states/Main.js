@@ -49,12 +49,14 @@ class Main extends Phaser.State {
 				this.bullets.push(new Bullet(this.game, bullet.x, bullet.y, bullet.angle, bullet.id, this.bullets.length));
 			}
 			if (message.playerKilled) {
-				if (message.playerKilled == this.id) this.game.camera.target = null;
 				this.clients[message.playerKilled].die();
 			}
 			if (message.playerRespawned) {
-				if (message.playerRespawned == this.id) this.game.camera.target = this.clients[message.playerRespawned];
-				this.clients[message.playerRespawned].alpha = 1;
+				this.clients[message.playerRespawned].respawn();
+			}
+
+			if(message.playerHit) {
+				this.clients[message.playerHit.id].playerHealthBar.setPercent(message.playerHit.health);
 			}
 		});
 
@@ -79,12 +81,13 @@ class Main extends Phaser.State {
 		this.game.room.listen("players/:id", change => {
 			if (change.operation === "add") {
 				if (change.path.id !== this.id) {
-					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y);
+					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health);
 				} else {
-					this.clients[change.path.id] = new Player(this.game, change.value.x, change.value.y);
+					this.clients[change.path.id] = new Player(this.game, change.value.x, change.value.y, change.value.health);
 					this.game.camera.follow(this.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 				}
 			} else if (change.operation === "remove") {
+				this.clients[change.path.id].leave();
 				this.clients[change.path.id].destroy();
 				delete this.clients[change.path.id];
 			}
