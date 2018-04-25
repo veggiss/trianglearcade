@@ -2,6 +2,7 @@ import MoveAndStopPlugin from "phaser-move-and-stop-plugin";
 import Player from 'objects/Player';
 import Client from 'objects/Client';
 import Bullet from 'objects/Bullet';
+import Bit from 'objects/Bit';
 
 class Main extends Phaser.State {
 
@@ -12,9 +13,19 @@ class Main extends Phaser.State {
 		this.background = this.game.add.tileSprite(0, 0, 1920, 1920, 'background');
 		this.game.world.setBounds(0, 0, 1920, 1920);
 		this.game.room = this.game.colyseus.join('game');
+		this.bulletPool = this.game.add.group();
 		this.clients = {};
 		this.bullets = [];
+		this.bits = {};
 		this.id;
+
+		//Emitter
+	    this.emBulletHit = this.game.add.emitter(0, 0, 100);
+	    this.emBulletHit.makeParticles('deathParticle');
+	    this.emBulletHit.gravity = 0;
+
+	    //Create bullets
+	    this.createBulletPool();
 
 		this.netListener();
 	}
@@ -26,19 +37,31 @@ class Main extends Phaser.State {
 	netListener() {
 		this.game.room.onMessage.add(message => {
 			if (message.id) this.id = message.id;
+
 			if (message.bullet) {
-				let bullet = message.bullet;
-				this.bullets.push(new Bullet(this.game, bullet.x, bullet.y, bullet.angle, bullet.id, this.bullets.length));
+				let bullet = this.bulletPool.getFirstDead();
+				bullet.owner = message.bullet.owner;
+				bullet.id = message.bullet.id;
+				bullet.angle = message.bullet.angle;
+				bullet.timer = Date.now() + 1000;
+				bullet.reset(message.bullet.x, message.bullet.y);
 			}
+
 			if (message.playerKilled) {
 				this.clients[message.playerKilled].die();
 			}
+
 			if (message.playerRespawned) {
 				this.clients[message.playerRespawned].respawn();
 			}
 
-			if(message.playerHit) {
+			if (message.playerHit) {
 				this.clients[message.playerHit.id].playerHealthBar.setPercent(message.playerHit.health);
+			}
+
+			if (message.bitHit) {
+				this.bits[message.bitHit.id].target = this.clients[message.bitHit.player];
+				this.bits[message.bitHit.id].activated = true;
 			}
 		});
 
@@ -74,28 +97,37 @@ class Main extends Phaser.State {
 				delete this.clients[change.path.id];
 			}
 		});
+
+		this.game.room.listen("bits/:id", change => {
+			if (change.operation === 'add') {
+				this.bits[change.path.id] = new Bit(this.game, change.value.x, change.value.y);
+			}
+		});
+	}
+
+	createBulletPool() {
+		for (let i = 0; i < 100; i++) {
+			this.bulletPool.add(new Bullet(this.game));
+		}
 	}
 
 	updateBullets() {
-		this.bullets.forEach((bullet, index, obj) => {
-			if (!bullet.alive) {
-				obj.splice(index, 1)
-			} else {
-				for (let id in this.clients) {
-					if (bullet.owner !== id) {
-						let dx = this.clients[id].x - bullet.x; 
-						let dy = this.clients[id].y - bullet.y;
-						let dist = Math.sqrt(dx * dx + dy * dy);
+		this.bulletPool.forEachAlive(bullet => {
+			for (let id in this.clients) {
+				if (bullet.owner !== id) {
+					let dx = this.clients[id].x - bullet.x; 
+					let dy = this.clients[id].y - bullet.y;
+					let dist = Math.sqrt(dx * dx + dy * dy);
 
-						if (dist < 30) {
-							bullet.die();
-							bullet.destroy();
-							obj.splice(index, 1);
-						}
+					if (dist < 30) {
+						bullet.kill();
+						this.emBulletHit.x = this.x;
+						this.emBulletHit.y = this.y;
+						this.emBulletHit.start(true, 500, null, 5);
 					}
 				}
 			}
-		});
+		}, this);
 	}
 }
 

@@ -6155,7 +6155,95 @@ var Game = function (_Phaser$Game) {
 
 new Game();
 
-},{"colyseus.js":13,"states/Boot":48,"states/Main":49,"states/Preload":50}],43:[function(require,module,exports){
+},{"colyseus.js":13,"states/Boot":49,"states/Main":50,"states/Preload":51}],43:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+function _possibleConstructorReturn(self, call) {
+	if (!self) {
+		throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	}return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+	if (typeof superClass !== "function" && superClass !== null) {
+		throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+	}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var Bit = function (_Phaser$Sprite) {
+	_inherits(Bit, _Phaser$Sprite);
+
+	function Bit(game, x, y) {
+		_classCallCheck(this, Bit);
+
+		var _this = _possibleConstructorReturn(this, (Bit.__proto__ || Object.getPrototypeOf(Bit)).call(this, game, x, y, 'bit'));
+
+		_this.game = game;
+		_this.anchor.setTo(0.5, 0.5);
+		_this.activated = false;
+		_this.kill = false;
+		_this.target;
+
+		_this.game.add.existing(_this);
+		return _this;
+	}
+
+	_createClass(Bit, [{
+		key: 'update',
+		value: function update() {
+			if (this.activated) {
+				this.moveToTarget();
+			}
+		}
+	}, {
+		key: 'moveToTarget',
+		value: function moveToTarget() {
+			if (this.target) {
+				this.x = this.lerp(this.x, this.target.x, 0.1);
+				this.y = this.lerp(this.y, this.target.y, 0.1);
+
+				var dx = this.target.x - this.x;
+				var dy = this.target.y - this.y;
+				var dist = Math.sqrt(dx * dx + dy * dy);
+
+				if (dist < 25) {
+					this.destroy();
+				}
+			}
+		}
+	}, {
+		key: 'lerp',
+		value: function lerp(a, b, n) {
+			return (1 - n) * a + n * b;
+		}
+	}]);
+
+	return Bit;
+}(Phaser.Sprite);
+
+exports.default = Bit;
+
+},{}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6193,24 +6281,19 @@ function _inherits(subClass, superClass) {
 var Bullet = function (_Phaser$Sprite) {
 	_inherits(Bullet, _Phaser$Sprite);
 
-	function Bullet(game, x, y, angle, owner, index) {
+	function Bullet(game, x, y) {
 		_classCallCheck(this, Bullet);
 
 		var _this = _possibleConstructorReturn(this, (Bullet.__proto__ || Object.getPrototypeOf(Bullet)).call(this, game, x, y, 'bullet'));
 
+		_this.owner;
+		_this.id;
+		_this.angle;
 		_this.game = game;
-		_this.owner = owner;
-		_this.index = index;
 		_this.timer = Date.now() + 1000;
-
-		//Emitter
-		_this.emitter = _this.game.add.emitter(0, 0, 100);
-		_this.emitter.makeParticles('deathParticle');
-		_this.emitter.gravity = 0;
-
-		//Physics
-		_this.angle = angle;
 		_this.anchor.setTo(0.5, 0.5);
+		_this.kill();
+
 		_this.game.add.existing(_this);
 		return _this;
 	}
@@ -6218,19 +6301,14 @@ var Bullet = function (_Phaser$Sprite) {
 	_createClass(Bullet, [{
 		key: 'update',
 		value: function update() {
-			this.x += Math.sin(this.angle * Math.PI / 180) * 16 / 3;
-			this.y -= Math.cos(this.angle * Math.PI / 180) * 16 / 3;
+			if (this.alive) {
+				this.x += Math.sin(this.angle * Math.PI / 180) * 16 / 3;
+				this.y -= Math.cos(this.angle * Math.PI / 180) * 16 / 3;
 
-			if (Date.now() > this.timer) {
-				this.destroy();
+				if (Date.now() > this.timer) {
+					this.kill();
+				}
 			}
-		}
-	}, {
-		key: 'die',
-		value: function die() {
-			this.emitter.x = this.x;
-			this.emitter.y = this.y;
-			this.emitter.start(true, 500, null, 5);
 		}
 	}]);
 
@@ -6239,7 +6317,7 @@ var Bullet = function (_Phaser$Sprite) {
 
 exports.default = Bullet;
 
-},{}],44:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6364,7 +6442,7 @@ var Client = function (_Phaser$Sprite) {
 
 exports.default = Client;
 
-},{"./DebugBody":45,"./HealthBar":46}],45:[function(require,module,exports){
+},{"./DebugBody":46,"./HealthBar":47}],46:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6438,7 +6516,7 @@ var DebugBody = function (_Phaser$Sprite) {
 
 exports.default = DebugBody;
 
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 'use strict';
 
 /**
@@ -6615,7 +6693,7 @@ function hexToRgb(hex) {
     } : null;
 }
 
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6760,7 +6838,7 @@ var Player = function (_Phaser$Sprite) {
 
 exports.default = Player;
 
-},{"./DebugBody":45,"./HealthBar":46}],48:[function(require,module,exports){
+},{"./DebugBody":46,"./HealthBar":47}],49:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6829,7 +6907,7 @@ var Boot = function (_Phaser$State) {
 
 exports.default = Boot;
 
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6861,6 +6939,10 @@ var _Client2 = _interopRequireDefault(_Client);
 var _Bullet = require('objects/Bullet');
 
 var _Bullet2 = _interopRequireDefault(_Bullet);
+
+var _Bit = require('objects/Bit');
+
+var _Bit2 = _interopRequireDefault(_Bit);
 
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj };
@@ -6902,9 +6984,19 @@ var Main = function (_Phaser$State) {
 			this.background = this.game.add.tileSprite(0, 0, 1920, 1920, 'background');
 			this.game.world.setBounds(0, 0, 1920, 1920);
 			this.game.room = this.game.colyseus.join('game');
+			this.bulletPool = this.game.add.group();
 			this.clients = {};
 			this.bullets = [];
+			this.bits = {};
 			this.id;
+
+			//Emitter
+			this.emBulletHit = this.game.add.emitter(0, 0, 100);
+			this.emBulletHit.makeParticles('deathParticle');
+			this.emBulletHit.gravity = 0;
+
+			//Create bullets
+			this.createBulletPool();
 
 			this.netListener();
 		}
@@ -6920,19 +7012,31 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.onMessage.add(function (message) {
 				if (message.id) _this2.id = message.id;
+
 				if (message.bullet) {
-					var bullet = message.bullet;
-					_this2.bullets.push(new _Bullet2.default(_this2.game, bullet.x, bullet.y, bullet.angle, bullet.id, _this2.bullets.length));
+					var bullet = _this2.bulletPool.getFirstDead();
+					bullet.owner = message.bullet.owner;
+					bullet.id = message.bullet.id;
+					bullet.angle = message.bullet.angle;
+					bullet.timer = Date.now() + 1000;
+					bullet.reset(message.bullet.x, message.bullet.y);
 				}
+
 				if (message.playerKilled) {
 					_this2.clients[message.playerKilled].die();
 				}
+
 				if (message.playerRespawned) {
 					_this2.clients[message.playerRespawned].respawn();
 				}
 
 				if (message.playerHit) {
 					_this2.clients[message.playerHit.id].playerHealthBar.setPercent(message.playerHit.health);
+				}
+
+				if (message.bitHit) {
+					_this2.bits[message.bitHit.id].target = _this2.clients[message.bitHit.player];
+					_this2.bits[message.bitHit.id].activated = true;
 				}
 			});
 
@@ -6968,31 +7072,41 @@ var Main = function (_Phaser$State) {
 					delete _this2.clients[change.path.id];
 				}
 			});
+
+			this.game.room.listen("bits/:id", function (change) {
+				if (change.operation === 'add') {
+					_this2.bits[change.path.id] = new _Bit2.default(_this2.game, change.value.x, change.value.y);
+				}
+			});
+		}
+	}, {
+		key: 'createBulletPool',
+		value: function createBulletPool() {
+			for (var i = 0; i < 100; i++) {
+				this.bulletPool.add(new _Bullet2.default(this.game));
+			}
 		}
 	}, {
 		key: 'updateBullets',
 		value: function updateBullets() {
 			var _this3 = this;
 
-			this.bullets.forEach(function (bullet, index, obj) {
-				if (!bullet.alive) {
-					obj.splice(index, 1);
-				} else {
-					for (var id in _this3.clients) {
-						if (bullet.owner !== id) {
-							var dx = _this3.clients[id].x - bullet.x;
-							var dy = _this3.clients[id].y - bullet.y;
-							var dist = Math.sqrt(dx * dx + dy * dy);
+			this.bulletPool.forEachAlive(function (bullet) {
+				for (var id in _this3.clients) {
+					if (bullet.owner !== id) {
+						var dx = _this3.clients[id].x - bullet.x;
+						var dy = _this3.clients[id].y - bullet.y;
+						var dist = Math.sqrt(dx * dx + dy * dy);
 
-							if (dist < 30) {
-								bullet.die();
-								bullet.destroy();
-								obj.splice(index, 1);
-							}
+						if (dist < 30) {
+							bullet.kill();
+							_this3.emBulletHit.x = _this3.x;
+							_this3.emBulletHit.y = _this3.y;
+							_this3.emBulletHit.start(true, 500, null, 5);
 						}
 					}
 				}
-			});
+			}, this);
 		}
 	}]);
 
@@ -7001,7 +7115,7 @@ var Main = function (_Phaser$State) {
 
 exports.default = Main;
 
-},{"objects/Bullet":43,"objects/Client":44,"objects/Player":47,"phaser-move-and-stop-plugin":24}],50:[function(require,module,exports){
+},{"objects/Bit":43,"objects/Bullet":44,"objects/Client":45,"objects/Player":48,"phaser-move-and-stop-plugin":24}],51:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7049,6 +7163,7 @@ var Preload = function (_Phaser$State) {
 		key: 'preload',
 		value: function preload() {
 			this.game.load.image('player', 'assets/player.png');
+			this.game.load.image('bit', 'assets/bit.png');
 			this.game.load.image('bullet', 'assets/bullet.png');
 			this.game.load.image('deathParticle', 'assets/deathParticle.png');
 			this.game.load.image('background', 'assets/background.png');
