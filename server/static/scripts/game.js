@@ -6745,13 +6745,14 @@ function _inherits(subClass, superClass) {
 var Player = function (_Phaser$Sprite) {
 	_inherits(Player, _Phaser$Sprite);
 
-	function Player(game, x, y, health) {
+	function Player(game, x, y, health, angle) {
 		_classCallCheck(this, Player);
 
 		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'player'));
 
 		_this.game = game;
 		_this.health = health;
+		_this.angle = angle;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
 		//Emitter
@@ -7015,27 +7016,6 @@ var Main = function (_Phaser$State) {
 			this.game.room.onMessage.add(function (message) {
 				if (message.id) _this2.id = message.id;
 
-				if (message.bullet) {
-					var bullet = _this2.bulletPool.getFirstDead();
-					bullet.owner = message.bullet.owner;
-					bullet.id = message.bullet.id;
-					bullet.angle = message.bullet.angle;
-					bullet.timer = Date.now() + 1000;
-					bullet.reset(message.bullet.x, message.bullet.y);
-				}
-
-				if (message.playerKilled) {
-					_this2.clients[message.playerKilled].die();
-				}
-
-				if (message.playerRespawned) {
-					_this2.clients[message.playerRespawned].respawn();
-				}
-
-				if (message.playerHit) {
-					_this2.clients[message.playerHit.id].playerHealthBar.setPercent(message.playerHit.health);
-				}
-
 				if (message.bitHit) {
 					var bit = _this2.findBit(message.bitHit.id);
 					if (bit) {
@@ -7045,33 +7025,51 @@ var Main = function (_Phaser$State) {
 						bit.activated = true;
 					}
 				}
-			});
 
-			this.game.room.listen("players/:id/:axis", function (change) {
-				if (change.operation === 'replace') {
-					if (change.path.axis === 'x') {
-						_this2.clients[change.path.id].dest.x = change.value;
-					} else if (change.path.axis === 'y') {
-						_this2.clients[change.path.id].dest.y = change.value;
-					}
+				if (message.bullet) {
+					var bullet = _this2.bulletPool.getFirstDead();
+					bullet.owner = message.bullet.owner;
+					bullet.id = message.bullet.id;
+					bullet.angle = message.bullet.angle;
+					bullet.timer = Date.now() + 1000;
+					bullet.reset(message.bullet.x, message.bullet.y);
 				}
 			});
 
-			this.game.room.listen("players/:id/:angle", function (change) {
+			this.game.room.listen("players/:id/:variable", function (change) {
 				if (change.operation === 'replace') {
-					if (change.path.angle === 'angle') {
-						_this2.clients[change.path.id].dest.angle = change.value;
+					switch (change.path.variable) {
+						case 'x':
+							_this2.clients[change.path.id].dest.x = change.value;
+							break;
+						case 'y':
+							_this2.clients[change.path.id].dest.y = change.value;
+							break;
+						case 'angle':
+							_this2.clients[change.path.id].dest.angle = change.value;
+							break;
+						case 'health':
+							_this2.clients[change.path.id].playerHealthBar.setPercent(change.value);
+							break;
+						case 'alive':
+							if (change.value) {
+								_this2.clients[change.path.id].respawn();
+							} else {
+								_this2.clients[change.path.id].die();
+							}
 					}
 				}
 			});
 
 			this.game.room.listen("players/:id", function (change) {
 				if (change.operation === "add") {
-					if (change.path.id !== _this2.id) {
-						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health);
-					} else {
-						_this2.clients[change.path.id] = new _Player2.default(_this2.game, change.value.x, change.value.y, change.value.health);
-						_this2.game.camera.follow(_this2.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+					if (_this2.id) {
+						if (change.path.id !== _this2.id) {
+							_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health, change.value.angle);
+						} else {
+							_this2.clients[change.path.id] = new _Player2.default(_this2.game, change.value.x, change.value.y, change.value.health, change.value.angle);
+							_this2.game.camera.follow(_this2.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+						}
 					}
 				} else if (change.operation === "remove") {
 					_this2.clients[change.path.id].leave();

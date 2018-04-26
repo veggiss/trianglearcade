@@ -4,7 +4,6 @@ module.exports = class Bullet {
         this.x = x;
         this.y = y;
         this.angle = angle;
-        this.owner = owner;
     }
 
     update() {

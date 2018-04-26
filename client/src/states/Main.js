@@ -38,27 +38,6 @@ class Main extends Phaser.State {
 		this.game.room.onMessage.add(message => {
 			if (message.id) this.id = message.id;
 
-			if (message.bullet) {
-				let bullet = this.bulletPool.getFirstDead();
-				bullet.owner = message.bullet.owner;
-				bullet.id = message.bullet.id;
-				bullet.angle = message.bullet.angle;
-				bullet.timer = Date.now() + 1000;
-				bullet.reset(message.bullet.x, message.bullet.y);
-			}
-
-			if (message.playerKilled) {
-				this.clients[message.playerKilled].die();
-			}
-
-			if (message.playerRespawned) {
-				this.clients[message.playerRespawned].respawn();
-			}
-
-			if (message.playerHit) {
-				this.clients[message.playerHit.id].playerHealthBar.setPercent(message.playerHit.health);
-			}
-
 			if (message.bitHit) {
 				let bit = this.findBit(message.bitHit.id);
 				if (bit) {
@@ -68,33 +47,51 @@ class Main extends Phaser.State {
 					bit.activated = true;
 				}
 			}
-		});
 
-		this.game.room.listen("players/:id/:axis", change => {
-			if (change.operation === 'replace') {
-				if (change.path.axis === 'x') {
-					this.clients[change.path.id].dest.x = change.value;
-				} else if (change.path.axis === 'y') {
-					this.clients[change.path.id].dest.y = change.value;
-				}
+			if (message.bullet) {
+				let bullet = this.bulletPool.getFirstDead();
+				bullet.owner = message.bullet.owner;
+				bullet.id = message.bullet.id;
+				bullet.angle = message.bullet.angle;
+				bullet.timer = Date.now() + 1000;
+				bullet.reset(message.bullet.x, message.bullet.y);
 			}
 		});
 
-		this.game.room.listen("players/:id/:angle", change => {
+		this.game.room.listen("players/:id/:variable", change => {
 			if (change.operation === 'replace') {
-				if (change.path.angle === 'angle') {
-					this.clients[change.path.id].dest.angle = change.value;
+				switch(change.path.variable) {
+					case 'x':
+						this.clients[change.path.id].dest.x = change.value;
+						break;
+					case 'y':
+						this.clients[change.path.id].dest.y = change.value;
+						break;
+					case 'angle':
+						this.clients[change.path.id].dest.angle = change.value;
+						break;
+					case 'health':
+						this.clients[change.path.id].playerHealthBar.setPercent(change.value);
+						break;
+					case 'alive':
+						if (change.value) {
+							this.clients[change.path.id].respawn();
+						} else {
+							this.clients[change.path.id].die();
+						}
 				}
 			}
 		});
 
 		this.game.room.listen("players/:id", change => {
 			if (change.operation === "add") {
-				if (change.path.id !== this.id) {
-					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health);
-				} else {
-					this.clients[change.path.id] = new Player(this.game, change.value.x, change.value.y, change.value.health);
-					this.game.camera.follow(this.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+				if (this.id) {
+					if (change.path.id !== this.id) {
+						this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health, change.value.angle);
+					} else {
+						this.clients[change.path.id] = new Player(this.game, change.value.x, change.value.y, change.value.health, change.value.angle);
+						this.game.camera.follow(this.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+					}
 				}
 			} else if (change.operation === "remove") {
 				this.clients[change.path.id].leave();
@@ -158,4 +155,3 @@ class Main extends Phaser.State {
 }
 
 export default Main;
-

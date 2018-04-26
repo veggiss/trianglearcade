@@ -5,8 +5,7 @@ const {createTimeline} = require('@gamestdio/timeline');
 module.exports = class StateHandlerRoom extends Room {
     onInit (options) {
         this.setPatchRate(100);
-        this.setState(new State());
-        this.state.setNetwork(this);
+        this.setState(new State(this));
         /*this.state.timeline = createTimeline();
         this.state.timeline.maxSnapshots = 1;
         this.state.timeline.takeSnapshot(this.state.players);*/
@@ -15,7 +14,7 @@ module.exports = class StateHandlerRoom extends Room {
     }
 
     onJoin (client) {
-        this.state.createPlayer(client.sessionId, this.clients.length - 1, this);
+        this.state.createPlayer(client.sessionId, this);
         this.send(client, {id: client.sessionId});
     }
 
@@ -24,16 +23,12 @@ module.exports = class StateHandlerRoom extends Room {
     }
 
     onMessage (client, data) {
-        if (data.moveUp === true) {
-            this.state.players[client.sessionId].moveUp = true;
-        } else if (data.moveUp === false){
-            this.state.players[client.sessionId].moveUp = false;
+        if (typeof(data.moveUp) === 'boolean') {
+            this.state.players[client.sessionId].setMoveup(data.moveUp);
         }
 
-        if (data.shoot === true) {
-            this.state.players[client.sessionId].shooting = true;
-        } else if (data.shoot === false) {
-            this.state.players[client.sessionId].shooting = false;
+        if (typeof(data.shoot) === 'boolean') {
+            this.state.players[client.sessionId].setShooting(data.shoot);
         }
     }
 

@@ -2,11 +2,12 @@ import DebugBody from './DebugBody';
 import HealthBar from './HealthBar';
 
 class Player extends Phaser.Sprite {
-	constructor(game, x, y, health) {
+	constructor(game, x, y, health, angle) {
 		super(game, x, y, 'player');
 		
 		this.game = game;
 		this.health = health;
+		this.angle = angle;
 		this.dest = {x: x, y: y, angle: this.angle};
 
 		//Emitter

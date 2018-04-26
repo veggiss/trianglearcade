@@ -1,28 +1,27 @@
 const SAT = require('sat');
 const Bullet = require('./Bullet');
-const V = SAT.Vector;
-const C = SAT.Circle;
-const P = SAT.Polygon;
-let network;
+const util = require('./../utility/util');
 
 module.exports = class Player {
-    constructor(id, index, x, y, angle, net) {
-        network = net;
+    constructor(id, x, y, angle, network) {
         this.id = id;
-        this.index = index;
         this.x = x;
         this.y = y;
-        this.bodyPos = {x: this.x, y: this.y};
-        this.lastDeath = Date.now();
-        this.alive = true;
+        this.alive = false;
         this.angle = angle;
-        this.moveUp = false;
-        this.shooting = false;
-        this.fireRate = 500;
-        this.respawnTime = 2000;
-        this.lastShot = Date.now() + this.fireRate;
         this.health = 100;
-        this.bullets = [];
+
+        this.private = util.setEnumerable({
+            network: network,
+            fireRate: 500,
+            lastShot: Date.now(),
+            bodyPos: {x: this.x, y: this.y},
+            moveUp: false,
+            shooting: false,
+            lastDeath: Date.now() + 5000,
+            respawnTime: 2000,
+            bullets: []
+        });
     }
 
     update() {
@@ -32,11 +31,11 @@ module.exports = class Player {
     }
 
     updateShoot() {
-        if (this.shooting && (Date.now() > this.lastShot)) {
-            this.lastShot = Date.now() + this.fireRate;
+        if (this.private.shooting && (Date.now() > this.private.lastShot)) {
+            this.private.lastShot = Date.now() + this.private.fireRate;
             let bullet = new Bullet(this.x, this.y, this.angle, this.id);
-            this.bullets.push(bullet);
-            network.sendToAll({bullet: {
+            this.private.bullets.push(bullet);
+            this.private.network.sendToAll({bullet: {
                 id: bullet.owner,
                 x: bullet.x,
                 y: bullet.y,
@@ -46,10 +45,10 @@ module.exports = class Player {
     }
 
     move() {
-        if (Date.now() > this.lastDeath) {
+        if (Date.now() > this.private.lastDeath) {
             if (!this.alive) this.respawn();
             
-            if (!this.moveUp) {
+            if (!this.private.moveUp) {
                 this.angle += 5;
                 if (this.angle >= 360) this.angle = 0;
             } else {
@@ -59,35 +58,48 @@ module.exports = class Player {
 
             this.x += Math.sin(this.angle * Math.PI / 180) * 8;
             this.y -= Math.cos(this.angle * Math.PI / 180) * 8;
-            this.bodyPos.x = this.lerp(this.bodyPos.x, this.x, 0.175);
-            this.bodyPos.y = this.lerp(this.bodyPos.y, this.y, 0.175);
+            this.private.bodyPos.x = this.lerp(this.private.bodyPos.x, this.x, 0.175);
+            this.private.bodyPos.y = this.lerp(this.private.bodyPos.y, this.y, 0.175);
         }
+    }
+
+    setMoveup(data) {
+        this.private.moveUp = data;
+    }
+
+    setShooting(data) {
+        this.private.shooting = data;
+    }
+
+    getBody() {
+        return {x: this.private.bodyPos.x, y: this.private.bodyPos.y};
     }
 
     bulletHit() {
         this.health -= 10;
 
-        if (this.health >= 0) { 
-            network.sendToAll({playerHit: {id: this.id, health: this.health}});
-        } else {
-            this.kill();
+        if (this.health <= 0) { 
+            this.die();
         }
     }
 
-    kill() {
+    die() {
         this.alive = false;
-        this.lastDeath = Date.now() + this.respawnTime;
-        network.sendToAll({playerKilled: this.id});
+        this.private.lastDeath = Date.now() + this.private.respawnTime;
+        let pos = util.ranWorldPos();
+        let angle = util.ranPlayerAngle();
+        this.x = pos.x;
+        this.y = pos.y;
+        this.angle = angle;
     }
 
     respawn() {
         this.alive = true;
         this.health = 100;
-        network.sendToAll({playerRespawned: this.id});
     }
 
     updateBullets() {
-        this.bullets.forEach((bullet, index, obj) => {
+        this.private.bullets.forEach((bullet, index, obj) => {
             bullet.update();
 
             if (Date.now() > bullet.timer) {
