@@ -7014,7 +7014,12 @@ var Main = function (_Phaser$State) {
 			var _this2 = this;
 
 			this.game.room.onMessage.add(function (message) {
-				if (message.id) _this2.id = message.id;
+				if (message.me) {
+					var me = message.me;
+					_this2.id = me.id;
+					_this2.clients[_this2.id] = new _Player2.default(_this2.game, me.x, me.y, me.health, me.angle);
+					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+				}
 
 				if (message.bitHit) {
 					var bit = _this2.findBit(message.bitHit.id);
@@ -7063,13 +7068,8 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.listen("players/:id", function (change) {
 				if (change.operation === "add") {
-					if (_this2.id) {
-						if (change.path.id !== _this2.id) {
-							_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health, change.value.angle);
-						} else {
-							_this2.clients[change.path.id] = new _Player2.default(_this2.game, change.value.x, change.value.y, change.value.health, change.value.angle);
-							_this2.game.camera.follow(_this2.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
-						}
+					if (change.path.id !== _this2.id) {
+						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health, change.value.angle);
 					}
 				} else if (change.operation === "remove") {
 					_this2.clients[change.path.id].leave();

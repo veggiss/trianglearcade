@@ -92,7 +92,7 @@ module.exports = class State {
             for (let id in this.players) {
                 if (id !== player.id) {
                     if (player) {
-                        this.players[id].bullets.forEach((bullet, i, obj) => {
+                        this.players[id].private.bullets.forEach((bullet, i, obj) => {
                             if(util.distanceFrom(bullet, player.getBody()) < 30) {
                                 player.bulletHit();
                                 obj.splice(i, 1);

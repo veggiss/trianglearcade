@@ -36,7 +36,12 @@ class Main extends Phaser.State {
 
 	netListener() {
 		this.game.room.onMessage.add(message => {
-			if (message.id) this.id = message.id;
+			if (message.me) {
+				let me = message.me;
+				this.id = me.id;
+				this.clients[this.id] = new Player(this.game, me.x, me.y, me.health, me.angle);
+				this.game.camera.follow(this.clients[this.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+			}
 
 			if (message.bitHit) {
 				let bit = this.findBit(message.bitHit.id);
@@ -85,13 +90,8 @@ class Main extends Phaser.State {
 
 		this.game.room.listen("players/:id", change => {
 			if (change.operation === "add") {
-				if (this.id) {
-					if (change.path.id !== this.id) {
-						this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health, change.value.angle);
-					} else {
-						this.clients[change.path.id] = new Player(this.game, change.value.x, change.value.y, change.value.health, change.value.angle);
-						this.game.camera.follow(this.clients[change.path.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
-					}
+				if (change.path.id !== this.id) {
+					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health, change.value.angle);
 				}
 			} else if (change.operation === "remove") {
 				this.clients[change.path.id].leave();

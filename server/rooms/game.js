@@ -15,7 +15,14 @@ module.exports = class StateHandlerRoom extends Room {
 
     onJoin (client) {
         this.state.createPlayer(client.sessionId, this);
-        this.send(client, {id: client.sessionId});
+        let player = this.state.players[client.sessionId];
+        this.send(client, {me: {
+            id: client.sessionId,
+            x: player.x,
+            y: player.y,
+            health: player.health,
+            angle: player.angle
+        }});
     }
 
     onLeave (client) {
