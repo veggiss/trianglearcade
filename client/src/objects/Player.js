@@ -21,7 +21,7 @@ class Player extends Phaser.Sprite {
 			y: this.y + 64,
 			width: 64,
 			height: 8,
-			animationDuration: 50
+			animationDuration: 10
 		});
 
 		//Inputs
@@ -39,7 +39,7 @@ class Player extends Phaser.Sprite {
 		this.x = this.lerp(x, this.dest.x, 0.1);
 		this.y = this.lerp(y, this.dest.y, 0.1);
 		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
-		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.1);
+		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.25);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
 	}
 

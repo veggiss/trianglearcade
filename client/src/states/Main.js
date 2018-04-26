@@ -14,9 +14,8 @@ class Main extends Phaser.State {
 		this.game.world.setBounds(0, 0, 1920, 1920);
 		this.game.room = this.game.colyseus.join('game');
 		this.bulletPool = this.game.add.group();
+		this.bitsPool = this.game.add.group();
 		this.clients = {};
-		this.bullets = [];
-		this.bits = {};
 		this.id;
 
 		//Emitter
@@ -26,6 +25,7 @@ class Main extends Phaser.State {
 
 	    //Create bullets
 	    this.createBulletPool();
+	    this.createBitsPool();
 
 		this.netListener();
 	}
@@ -60,8 +60,13 @@ class Main extends Phaser.State {
 			}
 
 			if (message.bitHit) {
-				this.bits[message.bitHit.id].target = this.clients[message.bitHit.player];
-				this.bits[message.bitHit.id].activated = true;
+				let bit = this.findBit(message.bitHit.id);
+				if (bit) {
+					let player = this.clients[message.bitHit.player];
+					bit.target.x = player.x;
+					bit.target.y = player.y;
+					bit.activated = true;
+				}
 			}
 		});
 
@@ -100,15 +105,36 @@ class Main extends Phaser.State {
 
 		this.game.room.listen("bits/:id", change => {
 			if (change.operation === 'add') {
-				this.bits[change.path.id] = new Bit(this.game, change.value.x, change.value.y);
+				let bit = this.bitsPool.getFirstDead();
+				bit.id = change.path.id;
+				bit.reset(change.value.x, change.value.y);
 			}
 		});
 	}
 
 	createBulletPool() {
-		for (let i = 0; i < 100; i++) {
+		for (let i = 0; i < 200; i++) {
 			this.bulletPool.add(new Bullet(this.game));
 		}
+	}
+
+	createBitsPool() {
+		for (let i = 0; i < 120; i++) {
+			this.bitsPool.add(new Bit(this.game));
+		}
+	}
+
+	findBit(id) {
+		let foundBit;
+
+		this.bitsPool.forEachAlive(bit => {
+			if (bit.id === id) {
+				bit.id = id;
+				foundBit = bit;
+			}
+		});
+
+		return foundBit;
 	}
 
 	updateBullets() {
@@ -121,8 +147,8 @@ class Main extends Phaser.State {
 
 					if (dist < 30) {
 						bullet.kill();
-						this.emBulletHit.x = this.x;
-						this.emBulletHit.y = this.y;
+						this.emBulletHit.x = bullet.x;
+						this.emBulletHit.y = bullet.y;
 						this.emBulletHit.start(true, 500, null, 5);
 					}
 				}

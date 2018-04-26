@@ -12,12 +12,15 @@ module.exports = class Player {
         this.index = index;
         this.x = x;
         this.y = y;
+        this.bodyPos = {x: this.x, y: this.y};
         this.lastDeath = Date.now();
         this.alive = true;
         this.angle = angle;
         this.moveUp = false;
         this.shooting = false;
-        this.lastShot = Date.now() + 200;
+        this.fireRate = 500;
+        this.respawnTime = 2000;
+        this.lastShot = Date.now() + this.fireRate;
         this.health = 100;
         this.bullets = [];
     }
@@ -30,7 +33,7 @@ module.exports = class Player {
 
     updateShoot() {
         if (this.shooting && (Date.now() > this.lastShot)) {
-            this.lastShot = Date.now() + 200;
+            this.lastShot = Date.now() + this.fireRate;
             let bullet = new Bullet(this.x, this.y, this.angle, this.id);
             this.bullets.push(bullet);
             network.sendToAll({bullet: {
@@ -56,6 +59,8 @@ module.exports = class Player {
 
             this.x += Math.sin(this.angle * Math.PI / 180) * 8;
             this.y -= Math.cos(this.angle * Math.PI / 180) * 8;
+            this.bodyPos.x = this.lerp(this.bodyPos.x, this.x, 0.175);
+            this.bodyPos.y = this.lerp(this.bodyPos.y, this.y, 0.175);
         }
     }
 
@@ -71,7 +76,7 @@ module.exports = class Player {
 
     kill() {
         this.alive = false;
-        this.lastDeath = Date.now() + 3000;
+        this.lastDeath = Date.now() + this.respawnTime;
         network.sendToAll({playerKilled: this.id});
     }
 

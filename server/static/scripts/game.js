@@ -6198,11 +6198,11 @@ var Bit = function (_Phaser$Sprite) {
 
 		var _this = _possibleConstructorReturn(this, (Bit.__proto__ || Object.getPrototypeOf(Bit)).call(this, game, x, y, 'bit'));
 
+		_this.id;
+		_this.target = { x: 0, y: 0 };
 		_this.game = game;
 		_this.anchor.setTo(0.5, 0.5);
-		_this.activated = false;
-		_this.kill = false;
-		_this.target;
+		_this.kill();
 
 		_this.game.add.existing(_this);
 		return _this;
@@ -6227,7 +6227,8 @@ var Bit = function (_Phaser$Sprite) {
 				var dist = Math.sqrt(dx * dx + dy * dy);
 
 				if (dist < 25) {
-					this.destroy();
+					this.activated = false;
+					this.kill();
 				}
 			}
 		}
@@ -6388,8 +6389,9 @@ var Client = function (_Phaser$Sprite) {
 			y: _this.y + 64,
 			width: 64,
 			height: 8,
-			animationDuration: 200
+			animationDuration: 10
 		});
+
 		_this.game.add.existing(_this);
 		return _this;
 	}
@@ -6399,8 +6401,8 @@ var Client = function (_Phaser$Sprite) {
 		value: function update() {
 			var x = this.x + Math.sin(this.angle * Math.PI / 180);
 			var y = this.y + Math.cos(this.angle * Math.PI / 180);
-			this.x = this.lerp(x, this.dest.x, 0.25);
-			this.y = this.lerp(y, this.dest.y, 0.25);
+			this.x = this.lerp(x, this.dest.x, 0.1);
+			this.y = this.lerp(y, this.dest.y, 0.1);
 			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.25);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
@@ -6764,7 +6766,7 @@ var Player = function (_Phaser$Sprite) {
 			y: _this.y + 64,
 			width: 64,
 			height: 8,
-			animationDuration: 50
+			animationDuration: 10
 		});
 
 		//Inputs
@@ -6785,7 +6787,7 @@ var Player = function (_Phaser$Sprite) {
 			this.x = this.lerp(x, this.dest.x, 0.1);
 			this.y = this.lerp(y, this.dest.y, 0.1);
 			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
-			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
+			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.25);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
 	}, {
@@ -6985,9 +6987,8 @@ var Main = function (_Phaser$State) {
 			this.game.world.setBounds(0, 0, 1920, 1920);
 			this.game.room = this.game.colyseus.join('game');
 			this.bulletPool = this.game.add.group();
+			this.bitsPool = this.game.add.group();
 			this.clients = {};
-			this.bullets = [];
-			this.bits = {};
 			this.id;
 
 			//Emitter
@@ -6997,6 +6998,7 @@ var Main = function (_Phaser$State) {
 
 			//Create bullets
 			this.createBulletPool();
+			this.createBitsPool();
 
 			this.netListener();
 		}
@@ -7035,8 +7037,13 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.bitHit) {
-					_this2.bits[message.bitHit.id].target = _this2.clients[message.bitHit.player];
-					_this2.bits[message.bitHit.id].activated = true;
+					var bit = _this2.findBit(message.bitHit.id);
+					if (bit) {
+						var player = _this2.clients[message.bitHit.player];
+						bit.target.x = player.x;
+						bit.target.y = player.y;
+						bit.activated = true;
+					}
 				}
 			});
 
@@ -7075,16 +7082,39 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.listen("bits/:id", function (change) {
 				if (change.operation === 'add') {
-					_this2.bits[change.path.id] = new _Bit2.default(_this2.game, change.value.x, change.value.y);
+					var bit = _this2.bitsPool.getFirstDead();
+					bit.id = change.path.id;
+					bit.reset(change.value.x, change.value.y);
 				}
 			});
 		}
 	}, {
 		key: 'createBulletPool',
 		value: function createBulletPool() {
-			for (var i = 0; i < 100; i++) {
+			for (var i = 0; i < 200; i++) {
 				this.bulletPool.add(new _Bullet2.default(this.game));
 			}
+		}
+	}, {
+		key: 'createBitsPool',
+		value: function createBitsPool() {
+			for (var i = 0; i < 120; i++) {
+				this.bitsPool.add(new _Bit2.default(this.game));
+			}
+		}
+	}, {
+		key: 'findBit',
+		value: function findBit(id) {
+			var foundBit = void 0;
+
+			this.bitsPool.forEachAlive(function (bit) {
+				if (bit.id === id) {
+					bit.id = id;
+					foundBit = bit;
+				}
+			});
+
+			return foundBit;
 		}
 	}, {
 		key: 'updateBullets',
@@ -7100,8 +7130,8 @@ var Main = function (_Phaser$State) {
 
 						if (dist < 30) {
 							bullet.kill();
-							_this3.emBulletHit.x = _this3.x;
-							_this3.emBulletHit.y = _this3.y;
+							_this3.emBulletHit.x = bullet.x;
+							_this3.emBulletHit.y = bullet.y;
 							_this3.emBulletHit.start(true, 500, null, 5);
 						}
 					}

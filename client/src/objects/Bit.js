@@ -2,11 +2,11 @@ class Bit extends Phaser.Sprite {
 	constructor(game, x, y) {
 		super(game, x, y, 'bit');
 		
+		this.id;
+		this.target = {x: 0, y: 0};
 		this.game = game;
 		this.anchor.setTo(0.5, 0.5);
-		this.activated = false;
-		this.kill = false;
-		this.target;
+		this.kill();
 
 		this.game.add.existing(this);
 	}
@@ -27,7 +27,8 @@ class Bit extends Phaser.Sprite {
 			let dist = Math.sqrt(dx * dx + dy * dy);
 
 			if (dist < 25) {
-				this.destroy();
+				this.activated = false;
+				this.kill();
 			}
 		}
 	}

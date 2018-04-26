@@ -6,7 +6,8 @@ let network;
 
 module.exports = class State {
     constructor() {
-        this.timeline;
+        //this.timeline;
+        this.bitsTimer = Date.now() + 1000;
         this.players = {};
         this.bits = {};
     }
@@ -50,20 +51,38 @@ module.exports = class State {
 
     populateBits() {
         for (let i = 0; i < 100; i++) {
-            let pos = this.ranWorldPos();
-            this.bits[Object.keys(this.bits).length] = new Bit(pos.x, pos.y);
+            this.addNewBit();
         }
     }
 
+    addNewBit() {
+        let pos = this.ranWorldPos();
+        let id = this.uniqueId(4);
+        while (this.bits[id]) {
+            id = this.uniqueId(4);
+        }
+        this.bits[id] = new Bit(pos.x, pos.y);
+    }
+
+    bitOffset() {
+        return Object.keys(this.bits).length * 10;
+    }
+
+    //Utility
     distanceFrom(source, target) {
         let dx = source.x - target.x; 
         let dy = source.y - target.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    uniqueId(length) {
+        return Math.random().toString(36).substr(2, length);
+    }
+
     //Updaters
     globalUpdate() {
         this.updatePlayers();
+        this.updateBits();
     }
 
     updatePlayers() {
@@ -76,6 +95,15 @@ module.exports = class State {
         }
     }
 
+    updateBits() {
+        if (Object.keys(this.bits).length < 100) {
+            if (Date.now() > this.bitsTimer) {
+                this.addNewBit();
+                this.bitsTimer = Date.now() + this.bitOffset();
+            }
+        }
+    }
+
     playerWorldCollision(player) {
         if (player.x < 0 || player.x > 1920) this.killPlayer(player);
         else if (player.y < 0 || player.y > 1920) this.killPlayer(player);
@@ -85,11 +113,11 @@ module.exports = class State {
         if (player.alive) {
             for (let id in this.players) {
                 if (id !== player.id) {
-                    let currentPlayer = this.timeline.at(0)[player.id];
-                    if (currentPlayer) {
-                        this.players[id].bullets.forEach(bullet => {
-                            if(this.distanceFrom(currentPlayer, bullet) < 30) {
+                    if (player) {
+                        this.players[id].bullets.forEach((bullet, i, obj) => {
+                            if(this.distanceFrom(bullet, player.bodyPos) < 30) {
                                 player.bulletHit();
+                                obj.splice(i, 1);
                             }
                         });
                     }
@@ -101,9 +129,8 @@ module.exports = class State {
     playerBitsCollision(player) {
         for (let id in this.bits) {
             let bit = this.bits[id];
-            let currentPlayer = this.timeline.at(0)[player.id];
-            if (currentPlayer) {
-                let dist = this.distanceFrom(bit, currentPlayer);
+            if (player) {
+                let dist = this.distanceFrom(bit, player);
                 if (dist < 40) {
                     delete this.bits[id];
                     network.sendToAll({bitHit: {

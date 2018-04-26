@@ -5,12 +5,11 @@ const {createTimeline} = require('@gamestdio/timeline');
 module.exports = class StateHandlerRoom extends Room {
     onInit (options) {
         this.setPatchRate(100);
-        this.testStuff = 'lol';
         this.setState(new State());
         this.state.setNetwork(this);
-        this.state.timeline = createTimeline();
+        /*this.state.timeline = createTimeline();
         this.state.timeline.maxSnapshots = 1;
-        this.state.timeline.takeSnapshot(this.state.players);
+        this.state.timeline.takeSnapshot(this.state.players);*/
         this.state.populateBits();
         this.setSimulationInterval(() => this.update(), 1000 / 20);
     }
@@ -50,13 +49,13 @@ module.exports = class StateHandlerRoom extends Room {
 
     update() {
         this.state.globalUpdate();
-        this.saveSnapshot();
+        //this.saveSnapshot();
     }
 
     saveSnapshot() {
         let self = this;
         setTimeout(() => {
             self.state.timeline.takeSnapshot(self.state.players);
-        }, 200);
+        }, 5400);
     }
 }
