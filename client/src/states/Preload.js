@@ -6,6 +6,8 @@ class Preload extends Phaser.State {
 		this.game.load.image('bullet', 'assets/bullet.png');
 		this.game.load.image('deathParticle', 'assets/deathParticle.png');
 		this.game.load.image('background', 'assets/background.png');
+
+		this.game.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
 	}
 
 	create() {

@@ -61,29 +61,57 @@ class Main extends Phaser.State {
 				bullet.timer = Date.now() + 1000;
 				bullet.reset(message.bullet.x, message.bullet.y);
 			}
+
+			if (message.expGain) {
+				let player = this.clients[this.id];
+				player.exp = message.expGain.exp;
+				player.expAmount = message.expGain.expAmount;
+				player.expBar.setPercent((player.exp / player.expAmount) * 100);
+			}
+
+			if (message.levelUp) {
+				this.clients[this.id].addPoints();
+			}
+
+			if (message.statUpgrade) {
+				this.clients[this.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
+			}
 		});
 
 		this.game.room.listen("players/:id/:variable", change => {
 			if (change.operation === 'replace') {
-				switch(change.path.variable) {
-					case 'x':
-						this.clients[change.path.id].dest.x = change.value;
+				let player = this.clients[change.path.id];
+
+				if (player) {
+					switch(change.path.variable) {
+						case 'x':
+							player.dest.x = change.value;
 						break;
-					case 'y':
-						this.clients[change.path.id].dest.y = change.value;
+						case 'y':
+							player.dest.y = change.value;
 						break;
-					case 'angle':
-						this.clients[change.path.id].dest.angle = change.value;
+						case 'angle':
+							player.dest.angle = change.value;
 						break;
-					case 'health':
-						this.clients[change.path.id].playerHealthBar.setPercent(change.value);
+						case 'health':
+							player.playerHealthBar.setPercent((change.value / player.maxHealth) * 100);
 						break;
-					case 'alive':
-						if (change.value) {
-							this.clients[change.path.id].respawn();
-						} else {
-							this.clients[change.path.id].die();
-						}
+						case 'alive':
+							if (change.value) {
+								player.respawn();
+							} else {
+								player.die();
+							}
+						break;
+						case 'level':
+							if (change.path.id !== this.id) {
+								console.log("Player: " + change.path.id + " dinged to level " + change.value);
+							} else {
+								player.level = change.value;
+								player.updateText('level');
+							}
+						break;
+					}
 				}
 			}
 		});

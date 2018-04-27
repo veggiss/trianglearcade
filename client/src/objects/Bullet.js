@@ -1,5 +1,5 @@
 class Bullet extends Phaser.Sprite {
-	constructor(game, x, y) {
+	constructor(game, x, y, speed) {
 		super(game, x, y, 'bullet');
 
 		this.owner;

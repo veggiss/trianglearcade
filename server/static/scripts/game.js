@@ -6282,7 +6282,7 @@ function _inherits(subClass, superClass) {
 var Bullet = function (_Phaser$Sprite) {
 	_inherits(Bullet, _Phaser$Sprite);
 
-	function Bullet(game, x, y) {
+	function Bullet(game, x, y, speed) {
 		_classCallCheck(this, Bullet);
 
 		var _this = _possibleConstructorReturn(this, (Bullet.__proto__ || Object.getPrototypeOf(Bullet)).call(this, game, x, y, 'bullet'));
@@ -6752,16 +6752,31 @@ var Player = function (_Phaser$Sprite) {
 
 		_this.game = game;
 		_this.health = health;
+		_this.maxHealth = 100;
 		_this.angle = angle;
+		_this.level = 1;
+		_this.exp = 0;
+		_this.expAmount = 0;
+		_this.points = 0;
 		_this.dest = { x: x, y: y, angle: _this.angle };
+		_this.stats = {
+			firerate: 1,
+			speed: 1,
+			damage: 1,
+			health: 1
 
-		//Emitter
-		_this.emitter = _this.game.add.emitter(0, 0, 100);
+			//Emitter
+		};_this.emitter = _this.game.add.emitter(0, 0, 100);
 		_this.emitter.makeParticles('deathParticle');
 		_this.emitter.gravity = 0;
 
 		//Sprite
 		_this.anchor.setTo(0.5, 0.5);
+
+		// UI
+		_this.statTextGroup = _this.game.add.group();
+		_this.statButtonGroup = _this.game.add.group();
+		//Healthbar
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
 			x: _this.x,
 			y: _this.y + 64,
@@ -6770,6 +6785,50 @@ var Player = function (_Phaser$Sprite) {
 			animationDuration: 10
 		});
 
+		//Experience bar
+		_this.expBar = new _HealthBar2.default(_this.game, {
+			x: 100,
+			y: 50,
+			width: 128,
+			height: 16,
+			animationDuration: 200
+		});
+		_this.expBar.setPercent(0);
+
+		// Text
+		_this.levelText = _this.game.add.bitmapText(156, 100, 'font', 'Level: ' + _this.level, 32);
+		_this.pointsText = _this.game.add.bitmapText(156, 225, 'font', 'Points: ' + _this.points, 23);
+		_this.firerateText = _this.game.add.bitmapText(156, 250, 'font', 'Firerate: ' + _this.stats.firerate, 23);
+		_this.speedText = _this.game.add.bitmapText(156, 275, 'font', 'Speed: ' + _this.stats.speed, 23);
+		_this.damageText = _this.game.add.bitmapText(156, 300, 'font', 'Damage: ' + _this.stats.damage, 23);
+		_this.healthText = _this.game.add.bitmapText(156, 325, 'font', 'Health: ' + _this.stats.health, 23);
+
+		_this.statTextGroup.add(_this.levelText);
+		_this.statTextGroup.add(_this.pointsText);
+		_this.statTextGroup.add(_this.firerateText);
+		_this.statTextGroup.add(_this.speedText);
+		_this.statTextGroup.add(_this.damageText);
+		_this.statTextGroup.add(_this.healthText);
+
+		_this.statTextGroup.forEach(function (item) {
+			item.anchor.setTo(1, 1);
+			item.inputEnabled = true;
+			var name = item.text.substring(0, item.text.indexOf(':')).toLowerCase();
+
+			if (['firerate', 'speed', 'damage', 'health'].toString().includes(name)) {
+				item.alpha = 0.5;
+				item.name = name;
+				item.events.onInputDown.add(_this.addStat, _this);
+				item.events.onInputOver.add(_this.textOver, _this);
+				item.events.onInputOut.add(_this.textOut, _this);
+			}
+		});
+
+		_this.expBar.barSprite.fixedToCamera = true;
+		_this.expBar.bgSprite.fixedToCamera = true;
+		_this.statTextGroup.fixedToCamera = true;
+		_this.statButtonGroup.fixedToCamera = true;
+
 		//Inputs
 		_this.game.input.activePointer.rightButton.onDown.add(_this.playerControls, { moveUp: true });
 		_this.game.input.activePointer.rightButton.onUp.add(_this.playerControls, { moveUp: false });
@@ -6777,6 +6836,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.game.input.activePointer.leftButton.onUp.add(_this.playerShoot, { shoot: false });
 
 		_this.game.add.existing(_this);
+		_this.game.add.existing(_this.statTextGroup);
 		return _this;
 	}
 
@@ -6792,6 +6852,59 @@ var Player = function (_Phaser$Sprite) {
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
 	}, {
+		key: 'addStat',
+		value: function addStat(button, mouse) {
+			if (this.points > 0) {
+				this.game.room.send({ pointsAdded: button.name });
+				this.points--;
+				this.updateText('points');
+			}
+		}
+	}, {
+		key: 'textOver',
+		value: function textOver(button, mouse) {
+			button.alpha = 1;
+		}
+	}, {
+		key: 'textOut',
+		value: function textOut(button, mouse) {
+			button.alpha = 0.5;
+		}
+	}, {
+		key: 'addPoints',
+		value: function addPoints() {
+			this.points++;
+			this.updateText('points');
+		}
+	}, {
+		key: 'setHealth',
+		value: function setHealth(value) {
+			this.playerHealthBar.setPercent(value / this.maxHealth * 100);
+		}
+	}, {
+		key: 'upgradeStat',
+		value: function upgradeStat(type, value) {
+			switch (type) {
+				case 'firerate':
+					this.stats.firerate++;
+					break;
+				case 'speed':
+					this.stats.speed++;
+					break;
+				case 'damage':
+					this.stats.damage++;
+					break;
+				case 'health':
+					this.stats.health++;
+					this.maxHealth = value;
+					break;
+			}
+
+			console.log(type);
+
+			this.updateText(type);
+		}
+	}, {
 		key: 'playerControls',
 		value: function playerControls(t) {
 			t.game.room.send({ moveUp: this.moveUp });
@@ -6802,10 +6915,34 @@ var Player = function (_Phaser$Sprite) {
 			t.game.room.send({ shoot: this.shoot });
 		}
 	}, {
+		key: 'updateText',
+		value: function updateText(type, text) {
+			switch (type) {
+				case 'level':
+					this.levelText.text = 'Level: ' + this.level;
+					break;
+				case 'points':
+					this.pointsText.text = 'Points: ' + this.points;
+					break;
+				case 'firerate':
+					this.firerateText.text = 'Firerate: ' + this.stats.firerate;
+					break;
+				case 'speed':
+					this.speedText.text = 'Speed: ' + this.stats.speed;
+					break;
+				case 'damage':
+					this.speedText.text = 'Damage: ' + this.stats.damage;
+					break;
+				case 'health':
+					this.speedText.text = 'Health: ' + this.stats.health;
+					break;
+			}
+		}
+	}, {
 		key: 'respawn',
 		value: function respawn() {
 			this.game.camera.target = this;
-			this.health = 100;
+			this.health = this.maxHealth;
 			this.playerHealthBar.setPercent(100);
 			this.alpha = 1;
 			this.playerHealthBar.barSprite.alpha = 1;
@@ -7039,29 +7176,57 @@ var Main = function (_Phaser$State) {
 					bullet.timer = Date.now() + 1000;
 					bullet.reset(message.bullet.x, message.bullet.y);
 				}
+
+				if (message.expGain) {
+					var _player = _this2.clients[_this2.id];
+					_player.exp = message.expGain.exp;
+					_player.expAmount = message.expGain.expAmount;
+					_player.expBar.setPercent(_player.exp / _player.expAmount * 100);
+				}
+
+				if (message.levelUp) {
+					_this2.clients[_this2.id].addPoints();
+				}
+
+				if (message.statUpgrade) {
+					_this2.clients[_this2.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
+				}
 			});
 
 			this.game.room.listen("players/:id/:variable", function (change) {
 				if (change.operation === 'replace') {
-					switch (change.path.variable) {
-						case 'x':
-							_this2.clients[change.path.id].dest.x = change.value;
-							break;
-						case 'y':
-							_this2.clients[change.path.id].dest.y = change.value;
-							break;
-						case 'angle':
-							_this2.clients[change.path.id].dest.angle = change.value;
-							break;
-						case 'health':
-							_this2.clients[change.path.id].playerHealthBar.setPercent(change.value);
-							break;
-						case 'alive':
-							if (change.value) {
-								_this2.clients[change.path.id].respawn();
-							} else {
-								_this2.clients[change.path.id].die();
-							}
+					var player = _this2.clients[change.path.id];
+
+					if (player) {
+						switch (change.path.variable) {
+							case 'x':
+								player.dest.x = change.value;
+								break;
+							case 'y':
+								player.dest.y = change.value;
+								break;
+							case 'angle':
+								player.dest.angle = change.value;
+								break;
+							case 'health':
+								player.playerHealthBar.setPercent(change.value / player.maxHealth * 100);
+								break;
+							case 'alive':
+								if (change.value) {
+									player.respawn();
+								} else {
+									player.die();
+								}
+								break;
+							case 'level':
+								if (change.path.id !== _this2.id) {
+									console.log("Player: " + change.path.id + " dinged to level " + change.value);
+								} else {
+									player.level = change.value;
+									player.updateText('level');
+								}
+								break;
+						}
 					}
 				}
 			});
@@ -7195,6 +7360,8 @@ var Preload = function (_Phaser$State) {
 			this.game.load.image('bullet', 'assets/bullet.png');
 			this.game.load.image('deathParticle', 'assets/deathParticle.png');
 			this.game.load.image('background', 'assets/background.png');
+
+			this.game.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
 		}
 	}, {
 		key: 'create',

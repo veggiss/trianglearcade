@@ -13,14 +13,15 @@ module.exports = class State {
 
         this.private = util.setEnumerable({
             network: network,
-            bitsTimer: Date.now() + 1000
+            bitsTimer: Date.now() + 1000,
+            bitExpAmount: 25
         });
     }
 
     //Connections
-    createPlayer (id) {
+    createPlayer (id, client) {
         let pos = util.ranWorldPos();
-        this.players[id] = new Player(id, pos.x, pos.y, util.ranPlayerAngle(), this.private.network);
+        this.players[id] = new Player(id, pos.x, pos.y, util.ranPlayerAngle(), this.private.network, client);
     }
 
     removePlayer (id) {
@@ -111,6 +112,7 @@ module.exports = class State {
                 let dist = util.distanceFrom(bit, player);
                 if (dist < 40) {
                     delete this.bits[id];
+                    player.addXp(this.private.bitExpAmount);
                     this.private.network.sendToAll({bitHit: {
                         id: id,
                         player: player.id

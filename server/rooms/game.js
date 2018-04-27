@@ -14,7 +14,7 @@ module.exports = class StateHandlerRoom extends Room {
     }
 
     onJoin (client) {
-        this.state.createPlayer(client.sessionId, this);
+        this.state.createPlayer(client.sessionId, this, client);
         let player = this.state.players[client.sessionId];
         this.send(client, {me: {
             id: client.sessionId,
@@ -30,12 +30,20 @@ module.exports = class StateHandlerRoom extends Room {
     }
 
     onMessage (client, data) {
-        if (typeof(data.moveUp) === 'boolean') {
-            this.state.players[client.sessionId].setMoveup(data.moveUp);
-        }
+        let player = this.state.players[client.sessionId];
 
-        if (typeof(data.shoot) === 'boolean') {
-            this.state.players[client.sessionId].setShooting(data.shoot);
+        if (player) {
+            if (typeof(data.moveUp) === 'boolean') {
+                player.setMoveup(data.moveUp);
+            }
+
+            if (typeof(data.shoot) === 'boolean') {
+                player.setShooting(data.shoot);
+            }
+
+            if (typeof(data.pointsAdded) === 'string') {
+                player.addPoint(data.pointsAdded);
+            }
         }
     }
 
@@ -46,6 +54,13 @@ module.exports = class StateHandlerRoom extends Room {
     sendToAll(message) {
         this.clients.forEach(client => {
             this.send(client, message);
+        });
+    }
+
+    sendToClient(id, message) {
+        //Temporary solution
+        this.clients.forEach(client => {
+            if (client.sessionId === id) this.send(client, message);
         });
     }
 
