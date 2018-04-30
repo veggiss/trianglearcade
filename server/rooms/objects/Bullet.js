@@ -7,7 +7,7 @@ module.exports = class Bullet {
     }
 
     update() {
-        this.x += Math.sin(this.angle * Math.PI / 180) * 16;
-        this.y -= Math.cos(this.angle * Math.PI / 180) * 16;
+        this.x += Math.sin(this.angle * Math.PI / 180) * 24;
+        this.y -= Math.cos(this.angle * Math.PI / 180) * 24;
     }
 }

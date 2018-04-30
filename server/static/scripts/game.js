@@ -6302,8 +6302,8 @@ var Bullet = function (_Phaser$Sprite) {
 		key: 'update',
 		value: function update() {
 			if (this.alive) {
-				this.x += Math.sin(this.angle * Math.PI / 180) * 16 / 3;
-				this.y -= Math.cos(this.angle * Math.PI / 180) * 16 / 3;
+				this.x += Math.sin(this.angle * Math.PI / 180) * 24 / 3;
+				this.y -= Math.cos(this.angle * Math.PI / 180) * 24 / 3;
 
 				if (Date.now() > this.timer) {
 					this.kill();
@@ -7204,7 +7204,6 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.playerAngle) {
-					console.log(message.playerAngle);
 					_this2.clients[message.playerAngle.id].dest.angle = message.playerAngle.angle;
 				}
 			});

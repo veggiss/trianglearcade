@@ -77,7 +77,6 @@ class Main extends Phaser.State {
 			}
 
 			if (message.playerAngle) {
-				console.log(message.playerAngle);
 				this.clients[message.playerAngle.id].dest.angle = message.playerAngle.angle;
 			}
 		});

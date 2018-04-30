@@ -15,8 +15,8 @@ class Bullet extends Phaser.Sprite {
 
 	update() {
 		if (this.alive) {
-        this.x += (Math.sin(this.angle * Math.PI / 180) * 16) / 3;
-        this.y -= (Math.cos(this.angle * Math.PI / 180) * 16) / 3;
+        this.x += (Math.sin(this.angle * Math.PI / 180) * 24) / 3;
+        this.y -= (Math.cos(this.angle * Math.PI / 180) * 24) / 3;
 
 	        if (Date.now() > this.timer) {
 	        	this.kill();
