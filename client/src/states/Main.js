@@ -47,8 +47,7 @@ class Main extends Phaser.State {
 				let bit = this.findBit(message.bitHit.id);
 				if (bit) {
 					let player = this.clients[message.bitHit.player];
-					bit.target.x = player.x;
-					bit.target.y = player.y;
+					bit.target = player;
 					bit.activated = true;
 				}
 			}
@@ -76,6 +75,11 @@ class Main extends Phaser.State {
 			if (message.statUpgrade) {
 				this.clients[this.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
 			}
+
+			if (message.playerAngle) {
+				console.log(message.playerAngle);
+				this.clients[message.playerAngle.id].dest.angle = message.playerAngle.angle;
+			}
 		});
 
 		this.game.room.listen("players/:id/:variable", change => {
@@ -89,9 +93,6 @@ class Main extends Phaser.State {
 						break;
 						case 'y':
 							player.dest.y = change.value;
-						break;
-						case 'angle':
-							player.dest.angle = change.value;
 						break;
 						case 'health':
 							player.playerHealthBar.setPercent((change.value / player.maxHealth) * 100);
@@ -119,7 +120,7 @@ class Main extends Phaser.State {
 		this.game.room.listen("players/:id", change => {
 			if (change.operation === "add") {
 				if (change.path.id !== this.id) {
-					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health, change.value.angle);
+					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health);
 				}
 			} else if (change.operation === "remove") {
 				this.clients[change.path.id].leave();
@@ -165,7 +166,7 @@ class Main extends Phaser.State {
 	updateBullets() {
 		this.bulletPool.forEachAlive(bullet => {
 			for (let id in this.clients) {
-				if (bullet.owner !== id) {
+				if (bullet.id !== id) {
 					let dx = this.clients[id].x - bullet.x; 
 					let dy = this.clients[id].y - bullet.y;
 					let dist = Math.sqrt(dx * dx + dy * dy);

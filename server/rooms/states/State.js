@@ -36,7 +36,7 @@ module.exports = class State {
         let angle = util.ranPlayerAngle();
         player.x = pos.x;
         player.y = pos.y;
-        player.angle = angle;
+        player.private.angle = angle;
     }
 
     populateBits() {

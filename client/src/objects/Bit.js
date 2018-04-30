@@ -3,7 +3,7 @@ class Bit extends Phaser.Sprite {
 		super(game, x, y, 'bit');
 		
 		this.id;
-		this.target = {x: 0, y: 0};
+		this.target;
 		this.game = game;
 		this.anchor.setTo(0.5, 0.5);
 		this.kill();

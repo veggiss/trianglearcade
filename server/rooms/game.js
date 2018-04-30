@@ -21,7 +21,7 @@ module.exports = class StateHandlerRoom extends Room {
             x: player.x,
             y: player.y,
             health: player.health,
-            angle: player.angle
+            angle: player.private.angle
         }});
     }
 
@@ -44,6 +44,13 @@ module.exports = class StateHandlerRoom extends Room {
             if (typeof(data.pointsAdded) === 'string') {
                 player.addPoint(data.pointsAdded);
             }
+
+            if (typeof(data.updateAngle) === 'number') {
+                player.private.angle = data.updateAngle;
+                this.sendToAll({playerAngle: {
+                    id: client.sessionId,
+                    angle: data.updateAngle}}, [client.sessionId]);
+            }
         }
     }
 
@@ -51,9 +58,13 @@ module.exports = class StateHandlerRoom extends Room {
         console.log("Dispose room");
     }
 
-    sendToAll(message) {
+    sendToAll(message, exclude) {
+        let excludeList = Array.isArray(exclude) ? exclude : [];
+
         this.clients.forEach(client => {
-            this.send(client, message);
+            if (!excludeList.includes(client.sessionId)) {
+                this.send(client, message);
+            }
         });
     }
 

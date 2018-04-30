@@ -7,20 +7,22 @@ module.exports = class Player {
         this.id = id;
         this.x = x;
         this.y = y;
-        this.alive = false;
-        this.angle = angle;
-        this.health = 100;
+        this.alive = false;        this.health = 100;
         this.level = 1;
 
         this.private = util.setEnumerable({
             network: network,
             client: client,
+            angle: angle,
+            velX: 0,
+            velY: 0,
+            acceleration: 0.2,
             fireRate: 500,
             lastShot: Date.now(),
             bodyPos: {x: this.x, y: this.y},
             moveUp: false,
             shooting: false,
-            lastDeath: Date.now() + 5000,
+            lastDeath: Date.now(),
             respawnTime: 2000,
             expRate: 1.5,
             bullets: [],
@@ -28,7 +30,8 @@ module.exports = class Player {
             expNeeded: 200,
             points: 0,
             maxHealth: 100,
-            speed: 8,
+            speed: 0,
+            maxSpeed: 8,
             damage: 10
         });
     }
@@ -42,7 +45,8 @@ module.exports = class Player {
     updateShoot() {
         if (this.private.shooting && (Date.now() > this.private.lastShot)) {
             this.private.lastShot = Date.now() + this.private.fireRate;
-            let bullet = new Bullet(this.x, this.y, this.angle, this.id);
+            let pos = this.private.speed > 4 ? this.private.bodyPos : {x: this.x, y: this.y};
+            let bullet = new Bullet(pos.x, pos.y, this.private.angle, this.id);
             this.private.bullets.push(bullet);
             this.private.network.sendToAll({bullet: {
                 id: bullet.owner,
@@ -57,19 +61,36 @@ module.exports = class Player {
         if (Date.now() > this.private.lastDeath) {
             if (!this.alive) this.respawn();
             
-            if (!this.private.moveUp) {
-                this.angle += 5;
-                if (this.angle >= 360) this.angle = 0;
+            if (this.private.moveUp) {
+                this.accelerate();
+                let rad = this.private.angle * Math.PI / 180;
+                this.x += Math.sin(rad) * this.private.speed;
+                this.y -= Math.cos(rad) * this.private.speed;
             } else {
-                this.angle -= 5;
-                if (this.angle <= 0) this.angle = 360;
+                this.decelerate();
             }
 
-            this.x += Math.sin(this.angle * Math.PI / 180) * this.private.speed;
-            this.y -= Math.cos(this.angle * Math.PI / 180) * this.private.speed;
-            this.private.bodyPos.x = this.lerp(this.private.bodyPos.x, this.x, 0.175);
-            this.private.bodyPos.y = this.lerp(this.private.bodyPos.y, this.y, 0.175);
+            this.updateBody();
         }
+    }
+
+    accelerate() {
+        if (this.private.speed < this.private.maxSpeed) {
+            this.private.speed += 2;
+        }
+    }
+
+    decelerate() {
+        if (this.private.speed > 0) {
+            this.private.speed -= 1;
+        } else {
+            this.private.speed = 0;
+        }
+    }
+
+    updateBody() {
+        this.private.bodyPos.x = this.lerp(this.private.bodyPos.x, this.x, 0.175);
+        this.private.bodyPos.y = this.lerp(this.private.bodyPos.y, this.y, 0.175);
     }
 
     setMoveup(data) {
@@ -118,12 +139,12 @@ module.exports = class Player {
             let passed = true;
             switch(type) {
                 case 'firerate':
-                    this.private.fireRate -= 50;
+                    this.private.fireRate -= 25;
                     this.sendUpgrade(type, this.private.fireRate);
                 break;
                 case 'speed':
-                    this.private.speed += 1.5;
-                    this.sendUpgrade(type, this.private.speed);
+                    this.private.maxSpeed += 1;
+                    this.sendUpgrade(type, this.private.maxSpeed);
                 break;
                 case 'damage':
                     
@@ -157,7 +178,7 @@ module.exports = class Player {
         let angle = util.ranPlayerAngle();
         this.x = pos.x;
         this.y = pos.y;
-        this.angle = angle;
+        this.private.angle = angle;
     }
 
     respawn() {

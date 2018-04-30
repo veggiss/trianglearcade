@@ -11,7 +11,6 @@ class Game extends Phaser.Game {
 			? "ws://localhost:3000" // - Local
 			: `${window.location.protocol.replace("https", "wss")}//${window.location.hostname}`; // - Heroku/remote
 		this.colyseus = new Client(endpoint);
-
 		this.state.add('Boot', Boot, false);
 		this.state.add('Preload', Preload, false);
 		this.state.add('Main', Main, false);

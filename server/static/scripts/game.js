@@ -6142,7 +6142,6 @@ var Game = function (_Phaser$Game) {
 		var endpoint = window.location.hostname.indexOf("herokuapp") === -1 ? "ws://localhost:3000" // - Local
 		: window.location.protocol.replace("https", "wss") + '//' + window.location.hostname; // - Heroku/remote
 		_this.colyseus = new _colyseus.Client(endpoint);
-
 		_this.state.add('Boot', _Boot2.default, false);
 		_this.state.add('Preload', _Preload2.default, false);
 		_this.state.add('Main', _Main2.default, false);
@@ -6199,7 +6198,7 @@ var Bit = function (_Phaser$Sprite) {
 		var _this = _possibleConstructorReturn(this, (Bit.__proto__ || Object.getPrototypeOf(Bit)).call(this, game, x, y, 'bit'));
 
 		_this.id;
-		_this.target = { x: 0, y: 0 };
+		_this.target;
 		_this.game = game;
 		_this.anchor.setTo(0.5, 0.5);
 		_this.kill();
@@ -6375,6 +6374,8 @@ var Client = function (_Phaser$Sprite) {
 
 		_this.game = game;
 		_this.health = health;
+		_this.maxHealth = 100;
+		_this.angle = 0;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
 		//Emitter
@@ -6403,8 +6404,8 @@ var Client = function (_Phaser$Sprite) {
 			var y = this.y + Math.cos(this.angle * Math.PI / 180);
 			this.x = this.lerp(x, this.dest.x, 0.1);
 			this.y = this.lerp(y, this.dest.y, 0.1);
-			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
-			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.25);
+			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle - 90));
+			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
 	}, {
@@ -6758,6 +6759,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.exp = 0;
 		_this.expAmount = 0;
 		_this.points = 0;
+		_this.lastUpdate = Date.now() + 200;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 		_this.stats = {
 			firerate: 1,
@@ -6830,6 +6832,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.statButtonGroup.fixedToCamera = true;
 
 		//Inputs
+		_this.game.input.addMoveCallback(_this.updateAngle, _this);
 		_this.game.input.activePointer.rightButton.onDown.add(_this.playerControls, { moveUp: true });
 		_this.game.input.activePointer.rightButton.onUp.add(_this.playerControls, { moveUp: false });
 		_this.game.input.activePointer.leftButton.onDown.add(_this.playerShoot, { shoot: true });
@@ -6847,8 +6850,9 @@ var Player = function (_Phaser$Sprite) {
 			var y = this.y + Math.cos(this.angle * Math.PI / 180);
 			this.x = this.lerp(x, this.dest.x, 0.1);
 			this.y = this.lerp(y, this.dest.y, 0.1);
-			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
-			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.25);
+			var deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(deg));
+			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
 	}, {
@@ -6900,9 +6904,17 @@ var Player = function (_Phaser$Sprite) {
 					break;
 			}
 
-			console.log(type);
-
 			this.updateText(type);
+		}
+	}, {
+		key: 'updateAngle',
+		value: function updateAngle(pointer) {
+			if (this.lastUpdate < Date.now()) {
+				var deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
+				var destAngle = deg < 0 ? deg + 360 : deg;
+				this.game.room.send({ updateAngle: Math.round(destAngle) });
+				this.lastUpdate = Date.now() + 200;
+			}
 		}
 	}, {
 		key: 'playerControls',
@@ -7162,8 +7174,7 @@ var Main = function (_Phaser$State) {
 					var bit = _this2.findBit(message.bitHit.id);
 					if (bit) {
 						var player = _this2.clients[message.bitHit.player];
-						bit.target.x = player.x;
-						bit.target.y = player.y;
+						bit.target = player;
 						bit.activated = true;
 					}
 				}
@@ -7191,6 +7202,11 @@ var Main = function (_Phaser$State) {
 				if (message.statUpgrade) {
 					_this2.clients[_this2.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
 				}
+
+				if (message.playerAngle) {
+					console.log(message.playerAngle);
+					_this2.clients[message.playerAngle.id].dest.angle = message.playerAngle.angle;
+				}
 			});
 
 			this.game.room.listen("players/:id/:variable", function (change) {
@@ -7204,9 +7220,6 @@ var Main = function (_Phaser$State) {
 								break;
 							case 'y':
 								player.dest.y = change.value;
-								break;
-							case 'angle':
-								player.dest.angle = change.value;
 								break;
 							case 'health':
 								player.playerHealthBar.setPercent(change.value / player.maxHealth * 100);
@@ -7234,7 +7247,7 @@ var Main = function (_Phaser$State) {
 			this.game.room.listen("players/:id", function (change) {
 				if (change.operation === "add") {
 					if (change.path.id !== _this2.id) {
-						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health, change.value.angle);
+						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health);
 					}
 				} else if (change.operation === "remove") {
 					_this2.clients[change.path.id].leave();
@@ -7286,7 +7299,7 @@ var Main = function (_Phaser$State) {
 
 			this.bulletPool.forEachAlive(function (bullet) {
 				for (var id in _this3.clients) {
-					if (bullet.owner !== id) {
+					if (bullet.id !== id) {
 						var dx = _this3.clients[id].x - bullet.x;
 						var dy = _this3.clients[id].y - bullet.y;
 						var dist = Math.sqrt(dx * dx + dy * dy);

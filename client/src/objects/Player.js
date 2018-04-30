@@ -13,6 +13,7 @@ class Player extends Phaser.Sprite {
 		this.exp = 0;
 		this.expAmount = 0;
 		this.points = 0;
+		this.lastUpdate = Date.now() + 200;
 		this.dest = {x: x, y: y, angle: this.angle};
 		this.stats = {
 			firerate: 1,
@@ -88,6 +89,7 @@ class Player extends Phaser.Sprite {
 
 
 		//Inputs
+		this.game.input.addMoveCallback(this.updateAngle, this);
 		this.game.input.activePointer.rightButton.onDown.add(this.playerControls, {moveUp: true});
 		this.game.input.activePointer.rightButton.onUp.add(this.playerControls, {moveUp: false});
 		this.game.input.activePointer.leftButton.onDown.add(this.playerShoot, {shoot: true});
@@ -102,8 +104,9 @@ class Player extends Phaser.Sprite {
 		let y = this.y + Math.cos(this.angle * Math.PI / 180);
 		this.x = this.lerp(x, this.dest.x, 0.1);
 		this.y = this.lerp(y, this.dest.y, 0.1);
-		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
-		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.25);
+		let deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(deg));
+		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.1);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
 	}
 
@@ -149,9 +152,16 @@ class Player extends Phaser.Sprite {
 			break;
 		}
 
-		console.log(type);
-
 		this.updateText(type);
+	}
+
+	updateAngle(pointer) {
+		if (this.lastUpdate < Date.now()) {
+			let deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
+			let destAngle = deg < 0 ? deg + 360 : deg;
+			this.game.room.send({updateAngle: Math.round(destAngle)});
+			this.lastUpdate = Date.now() + 200;
+		}
 	}
 
 	playerControls(t) {
