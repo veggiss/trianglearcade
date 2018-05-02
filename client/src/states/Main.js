@@ -8,10 +8,18 @@ class Main extends Phaser.State {
 
 	create() {
 		this.game.moveAndStop = this.game.plugins.add(MoveAndStopPlugin);
-		this.game.stage.backgroundColor = '#b77d10';
+		this.game.stage.backgroundColor = '#000022';
 		this.game.stage.disableVisibilityChange = true;
-		this.background = this.game.add.tileSprite(0, 0, 1920, 1920, 'background');
 		this.game.world.setBounds(0, 0, 1920, 1920);
+
+		this.starfield2 = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
+		this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
+		this.planet_blue = this.game.add.image(0, 0, 'planet_blue');
+		this.starfield.fixedToCamera = true;
+		this.starfield2.fixedToCamera = true;
+		this.planet_blue.fixedToCamera = true
+		this.starfield2.alpha = 0.5;
+
 		this.game.room = this.game.colyseus.join('game');
 		this.bulletPool = this.game.add.group();
 		this.bitsPool = this.game.add.group();
@@ -32,6 +40,9 @@ class Main extends Phaser.State {
 
 	update() {
 		this.updateBullets();
+		this.starfield.tilePosition.set(-(this.game.camera.x * 0.07), -(this.game.camera.y * 0.07));
+		this.starfield2.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
+		this.planet_blue.cameraOffset.set(-(this.game.camera.x * 0.2), -(this.game.camera.y * 0.2));
 	}
 
 	netListener() {

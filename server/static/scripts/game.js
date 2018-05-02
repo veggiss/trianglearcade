@@ -6137,7 +6137,7 @@ var Game = function (_Phaser$Game) {
 	function Game() {
 		_classCallCheck(this, Game);
 
-		var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, window.innerWidth, window.innerHeight, Phaser.AUTO, 'trianglearcade', null, false, false));
+		var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, 1, 1, Phaser.WEBGL, 'trianglearcade'));
 
 		var endpoint = window.location.hostname.indexOf("herokuapp") === -1 ? "ws://localhost:3000" // - Local
 		: window.location.protocol.replace("https", "wss") + '//' + window.location.hostname; // - Heroku/remote
@@ -6384,6 +6384,7 @@ var Client = function (_Phaser$Sprite) {
 		_this.emitter.gravity = 0;
 
 		//Sprite
+		_this.scale.setTo(0.75, 0.75);
 		_this.anchor.setTo(0.5, 0.5);
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
 			x: _this.x,
@@ -6749,7 +6750,9 @@ var Player = function (_Phaser$Sprite) {
 	function Player(game, x, y, health, angle) {
 		_classCallCheck(this, Player);
 
-		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'player'));
+		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'spaceship_white'));
+
+		_this.pad = _this.game.plugins.add(Phaser.VirtualJoystick);
 
 		_this.game = game;
 		_this.health = health;
@@ -6759,7 +6762,8 @@ var Player = function (_Phaser$Sprite) {
 		_this.exp = 0;
 		_this.expAmount = 0;
 		_this.points = 0;
-		_this.lastUpdate = Date.now() + 200;
+		_this.angleRate = 200;
+		_this.lastUpdate = Date.now() + _this.angleRate;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 		_this.stats = {
 			firerate: 1,
@@ -6774,10 +6778,12 @@ var Player = function (_Phaser$Sprite) {
 
 		//Sprite
 		_this.anchor.setTo(0.5, 0.5);
+		_this.scale.setTo(0.75, 0.75);
 
 		// UI
 		_this.statTextGroup = _this.game.add.group();
 		_this.statButtonGroup = _this.game.add.group();
+
 		//Healthbar
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
 			x: _this.x,
@@ -6832,11 +6838,21 @@ var Player = function (_Phaser$Sprite) {
 		_this.statButtonGroup.fixedToCamera = true;
 
 		//Inputs
-		_this.game.input.addMoveCallback(_this.updateAngle, _this);
 		_this.game.input.activePointer.rightButton.onDown.add(_this.playerControls, { moveUp: true });
 		_this.game.input.activePointer.rightButton.onUp.add(_this.playerControls, { moveUp: false });
 		_this.game.input.activePointer.leftButton.onDown.add(_this.playerShoot, { shoot: true });
 		_this.game.input.activePointer.leftButton.onUp.add(_this.playerShoot, { shoot: false });
+
+		_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
+		_this.stick.alignBottomLeft();
+
+		_this.stick.onDown.add(_this.stickControls, { moveUp: true, _this: _this });
+		_this.stick.onUp.add(_this.stickControls, { moveUp: false, _this: _this });
+
+		_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
+		_this.buttonA.alignBottomRight();
+		_this.buttonA.onDown.add(_this.buttonShoot, { shoot: true, _this: _this });
+		_this.buttonA.onUp.add(_this.buttonShoot, { shoot: false, _this: _this });
 
 		_this.game.add.existing(_this);
 		_this.game.add.existing(_this.statTextGroup);
@@ -6846,14 +6862,8 @@ var Player = function (_Phaser$Sprite) {
 	_createClass(Player, [{
 		key: 'update',
 		value: function update() {
-			var x = this.x + Math.sin(this.angle * Math.PI / 180);
-			var y = this.y + Math.cos(this.angle * Math.PI / 180);
-			this.x = this.lerp(x, this.dest.x, 0.1);
-			this.y = this.lerp(y, this.dest.y, 0.1);
-			var deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
-			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(deg));
-			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
-			this.playerHealthBar.setPosition(this.x, this.y + 55);
+			this.updateAngle();
+			this.updatePlayerPos();
 		}
 	}, {
 		key: 'addStat',
@@ -6886,6 +6896,23 @@ var Player = function (_Phaser$Sprite) {
 			this.playerHealthBar.setPercent(value / this.maxHealth * 100);
 		}
 	}, {
+		key: 'updatePlayerPos',
+		value: function updatePlayerPos() {
+			var x = this.x + Math.sin(this.angle * Math.PI / 180);
+			var y = this.y + Math.cos(this.angle * Math.PI / 180);
+			this.x = this.lerp(x, this.dest.x, 0.1);
+			this.y = this.lerp(y, this.dest.y, 0.1);
+			var deg = void 0;
+			if (this.stick.isDown) {
+				deg = Phaser.Math.radToDeg(this.stick.rotation);
+			} else {
+				deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+			}
+			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(deg));
+			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
+			this.playerHealthBar.setPosition(this.x, this.y + 55);
+		}
+	}, {
 		key: 'upgradeStat',
 		value: function upgradeStat(type, value) {
 			switch (type) {
@@ -6908,13 +6935,31 @@ var Player = function (_Phaser$Sprite) {
 		}
 	}, {
 		key: 'updateAngle',
-		value: function updateAngle(pointer) {
+		value: function updateAngle() {
 			if (this.lastUpdate < Date.now()) {
-				var deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
+				var deg = void 0;
+
+				if (this.stick.isDown) {
+					deg = Phaser.Math.radToDeg(this.stick.rotation) + 90;
+				} else {
+					deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
+				}
 				var destAngle = deg < 0 ? deg + 360 : deg;
 				this.game.room.send({ updateAngle: Math.round(destAngle) });
-				this.lastUpdate = Date.now() + 200;
+				this.lastUpdate = Date.now() + this.angleRate;
 			}
+		}
+	}, {
+		key: 'stickControls',
+		value: function stickControls() {
+			var t = this._this;
+			t.game.room.send({ moveUp: this.moveUp });
+		}
+	}, {
+		key: 'buttonShoot',
+		value: function buttonShoot() {
+			var t = this._this;
+			t.game.room.send({ shoot: this.shoot });
 		}
 	}, {
 		key: 'playerControls',
@@ -6943,10 +6988,10 @@ var Player = function (_Phaser$Sprite) {
 					this.speedText.text = 'Speed: ' + this.stats.speed;
 					break;
 				case 'damage':
-					this.speedText.text = 'Damage: ' + this.stats.damage;
+					this.damageText.text = 'Damage: ' + this.stats.damage;
 					break;
 				case 'health':
-					this.speedText.text = 'Health: ' + this.stats.health;
+					this.healthText.text = 'Health: ' + this.stats.health;
 					break;
 			}
 		}
@@ -7131,10 +7176,18 @@ var Main = function (_Phaser$State) {
 		key: 'create',
 		value: function create() {
 			this.game.moveAndStop = this.game.plugins.add(_phaserMoveAndStopPlugin2.default);
-			this.game.stage.backgroundColor = '#b77d10';
+			this.game.stage.backgroundColor = '#000022';
 			this.game.stage.disableVisibilityChange = true;
-			this.background = this.game.add.tileSprite(0, 0, 1920, 1920, 'background');
 			this.game.world.setBounds(0, 0, 1920, 1920);
+
+			this.starfield2 = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
+			this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
+			this.planet_blue = this.game.add.image(0, 0, 'planet_blue');
+			this.starfield.fixedToCamera = true;
+			this.starfield2.fixedToCamera = true;
+			this.planet_blue.fixedToCamera = true;
+			this.starfield2.alpha = 0.5;
+
 			this.game.room = this.game.colyseus.join('game');
 			this.bulletPool = this.game.add.group();
 			this.bitsPool = this.game.add.group();
@@ -7156,6 +7209,9 @@ var Main = function (_Phaser$State) {
 		key: 'update',
 		value: function update() {
 			this.updateBullets();
+			this.starfield.tilePosition.set(-(this.game.camera.x * 0.07), -(this.game.camera.y * 0.07));
+			this.starfield2.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
+			this.planet_blue.cameraOffset.set(-(this.game.camera.x * 0.2), -(this.game.camera.y * 0.2));
 		}
 	}, {
 		key: 'netListener',
@@ -7368,12 +7424,19 @@ var Preload = function (_Phaser$State) {
 		key: 'preload',
 		value: function preload() {
 			this.game.load.image('player', 'assets/player.png');
+			this.game.load.image('spaceship_white', 'assets/spaceship_white.png');
 			this.game.load.image('bit', 'assets/bit.png');
 			this.game.load.image('bullet', 'assets/bullet.png');
 			this.game.load.image('deathParticle', 'assets/deathParticle.png');
-			this.game.load.image('background', 'assets/background.png');
+			this.game.load.image('starfield', 'assets/starfield.png');
+			this.game.load.image('starfield2', 'assets/starfield2.png');
+			this.game.load.image('planet_blue', 'assets/planet_blue.png');
+
+			this.load.atlas('arcade', 'assets/joystick/arcade-joystick.png', 'assets/joystick/arcade-joystick.json');
 
 			this.game.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
+
+			this.game.load.script('joystick', 'scripts/joystick.js');
 		}
 	}, {
 		key: 'create',

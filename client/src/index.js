@@ -5,7 +5,7 @@ import Main from 'states/Main';
 
 class Game extends Phaser.Game {
 	constructor() {
-		super(window.innerWidth, window.innerHeight, Phaser.AUTO, 'trianglearcade', null, false, false);
+		super(1, 1, Phaser.WEBGL, 'trianglearcade');
 		
 		const endpoint = (window.location.hostname.indexOf("herokuapp") === -1)
 			? "ws://localhost:3000" // - Local

@@ -24,7 +24,7 @@ module.exports = class Player {
             shooting: false,
             lastDeath: Date.now(),
             respawnTime: 2000,
-            expRate: 1.5,
+            expRate: 1.1,
             bullets: [],
             exp: 0,
             expNeeded: 200,
@@ -105,12 +105,16 @@ module.exports = class Player {
         return {x: this.private.bodyPos.x, y: this.private.bodyPos.y};
     }
 
-    bulletHit() {
-        this.health -= 10;
+    bulletHit(damage) {
+        this.health -= damage;
+        let died = false;
 
         if (this.health <= 0) { 
             this.die();
+            died = true;
         }
+
+        return died;
     }
 
     addXp(amount) {
@@ -143,15 +147,16 @@ module.exports = class Player {
                     this.sendUpgrade(type, this.private.fireRate);
                 break;
                 case 'speed':
-                    this.private.maxSpeed += 1;
+                    this.private.maxSpeed++;
                     this.sendUpgrade(type, this.private.maxSpeed);
                 break;
                 case 'damage':
-                    
+                    this.private.damage += 5;
+                    this.sendUpgrade(type, this.private.damage);
                 break;
                 case 'health':
-                    this.private.maxHealth += 25;
-                    this.health += 25;
+                    this.private.maxHealth += 50;
+                    this.health += 50;
                     this.sendUpgrade(type, this.private.maxHealth);
                 break;
                 default:

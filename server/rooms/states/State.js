@@ -95,7 +95,10 @@ module.exports = class State {
                     if (player) {
                         this.players[id].private.bullets.forEach((bullet, i, obj) => {
                             if(util.distanceFrom(bullet, player.getBody()) < 30) {
-                                player.bulletHit();
+                                if (player.bulletHit(this.players[id].private.damage)) {
+                                    this.players[id].addXp(15 * player.level);
+                                }
+                                
                                 obj.splice(i, 1);
                             }
                         });
