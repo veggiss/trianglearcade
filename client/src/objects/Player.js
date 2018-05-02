@@ -102,8 +102,8 @@ class Player extends Phaser.Sprite {
         this.stick = this.pad.addStick(0, 0, 200, 'arcade');
         this.stick.alignBottomLeft();
 
-		this.stick.onDown.add(this.stickControls, {moveUp: true, _this: this});
-		this.stick.onUp.add(this.stickControls, {moveUp: false, _this: this});
+		this.stick.onDown.add(this.stickControls, {moveUp: true, _this: this, temp: true});
+		this.stick.onUp.add(this.stickControls, {moveUp: false, _this: this, temp: true});
 
         this.buttonA = this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
         this.buttonA.alignBottomRight();
@@ -197,7 +197,9 @@ class Player extends Phaser.Sprite {
 
 	stickControls() {
 		let t = this._this;
-		t.game.room.send({moveUp: this.moveUp});
+		if (t.stick.isDown && this.temp) {
+			t.game.room.send({moveUp: this.moveUp});
+		}
 	}
 
 	buttonShoot() {

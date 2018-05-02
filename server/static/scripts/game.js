@@ -6370,7 +6370,7 @@ var Client = function (_Phaser$Sprite) {
 	function Client(game, x, y, health) {
 		_classCallCheck(this, Client);
 
-		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, x, y, 'player'));
+		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, x, y, 'spaceship_white'));
 
 		_this.game = game;
 		_this.health = health;
@@ -6846,8 +6846,8 @@ var Player = function (_Phaser$Sprite) {
 		_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
 		_this.stick.alignBottomLeft();
 
-		_this.stick.onDown.add(_this.stickControls, { moveUp: true, _this: _this });
-		_this.stick.onUp.add(_this.stickControls, { moveUp: false, _this: _this });
+		_this.stick.onDown.add(_this.stickControls, { moveUp: true, _this: _this, temp: true });
+		_this.stick.onUp.add(_this.stickControls, { moveUp: false, _this: _this, temp: true });
 
 		_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
 		_this.buttonA.alignBottomRight();
@@ -6953,7 +6953,9 @@ var Player = function (_Phaser$Sprite) {
 		key: 'stickControls',
 		value: function stickControls() {
 			var t = this._this;
-			t.game.room.send({ moveUp: this.moveUp });
+			if (t.stick.isDown && this.temp) {
+				t.game.room.send({ moveUp: this.moveUp });
+			}
 		}
 	}, {
 		key: 'buttonShoot',

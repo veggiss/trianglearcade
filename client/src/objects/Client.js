@@ -3,7 +3,7 @@ import HealthBar from './HealthBar';
 
 class Client extends Phaser.Sprite {
 	constructor(game, x, y, health) {
-		super(game, x, y, 'player');
+		super(game, x, y, 'spaceship_white');
 
 		this.game = game;
 		this.health = health;
