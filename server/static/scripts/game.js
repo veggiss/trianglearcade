@@ -6758,6 +6758,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.health = health;
 		_this.maxHealth = 100;
 		_this.angle = angle;
+		_this.deg = 0;
 		_this.level = 1;
 		_this.exp = 0;
 		_this.expAmount = 0;
@@ -6842,18 +6843,18 @@ var Player = function (_Phaser$Sprite) {
 			_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
 			_this.stick.alignBottomLeft();
 
-			_this.stick.onDown.add(_this.stickControls, { moveUp: true, _this: _this, temp: true });
-			_this.stick.onUp.add(_this.stickControls, { moveUp: false, _this: _this, temp: true });
+			_this.stick.onDown.add(_this.playerControls, _this, 1, true);
+			_this.stick.onUp.add(_this.playerControls, _this, 1, false);
 
 			_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
 			_this.buttonA.alignBottomRight();
-			_this.buttonA.onDown.add(_this.buttonShoot, { shoot: true, _this: _this });
-			_this.buttonA.onUp.add(_this.buttonShoot, { shoot: false, _this: _this });
+			_this.buttonA.onDown.add(_this.playerShoot, _this, 1, true);
+			_this.buttonA.onUp.add(_this.playerShoot, _this, 1, false);
 		} else {
-			_this.game.input.activePointer.rightButton.onDown.add(_this.playerControls, { moveUp: true });
-			_this.game.input.activePointer.rightButton.onUp.add(_this.playerControls, { moveUp: false });
-			_this.game.input.activePointer.leftButton.onDown.add(_this.playerShoot, { shoot: true });
-			_this.game.input.activePointer.leftButton.onUp.add(_this.playerShoot, { shoot: false });
+			_this.game.input.activePointer.rightButton.onDown.add(_this.playerControls, _this, 1, true);
+			_this.game.input.activePointer.rightButton.onUp.add(_this.playerControls, _this, 1, false);
+			_this.game.input.activePointer.leftButton.onDown.add(_this.playerShoot, _this, 1, true);
+			_this.game.input.activePointer.leftButton.onUp.add(_this.playerShoot, _this, 1, false);
 		}
 
 		_this.game.add.existing(_this);
@@ -6905,14 +6906,15 @@ var Player = function (_Phaser$Sprite) {
 			this.x = this.lerp(x, this.dest.x, 0.1);
 			this.y = this.lerp(y, this.dest.y, 0.1);
 
-			var deg = void 0;
 			if (this.game.onMobile) {
-				deg = Phaser.Math.radToDeg(this.stick.rotation);
+				if (this.stick.isDown) {
+					this.deg = Phaser.Math.radToDeg(this.stick.rotation);
+				}
 			} else {
-				deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+				this.deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
 			}
 
-			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(deg));
+			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.deg));
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
@@ -6944,38 +6946,25 @@ var Player = function (_Phaser$Sprite) {
 				var deg = void 0;
 
 				if (this.game.onMobile) {
-					deg = Phaser.Math.radToDeg(this.stick.rotation) + 90;
+					deg = this.stick.isDown ? Phaser.Math.radToDeg(this.stick.rotation) + 90 : this.deg + 90;
 				} else {
 					deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
 				}
+
 				var destAngle = deg < 0 ? deg + 360 : deg;
 				this.game.room.send({ updateAngle: Math.round(destAngle) });
 				this.lastUpdate = Date.now() + this.angleRate;
 			}
 		}
 	}, {
-		key: 'stickControls',
-		value: function stickControls() {
-			var t = this._this;
-			if (t.stick.isDown && this.temp) {
-				t.game.room.send({ moveUp: this.moveUp });
-			}
-		}
-	}, {
-		key: 'buttonShoot',
-		value: function buttonShoot() {
-			var t = this._this;
-			t.game.room.send({ shoot: this.shoot });
-		}
-	}, {
 		key: 'playerControls',
-		value: function playerControls(t) {
-			t.game.room.send({ moveUp: this.moveUp });
+		value: function playerControls(obj) {
+			this.game.room.send({ moveUp: obj.isDown });
 		}
 	}, {
 		key: 'playerShoot',
-		value: function playerShoot(t) {
-			t.game.room.send({ shoot: this.shoot });
+		value: function playerShoot(obj) {
+			this.game.room.send({ shoot: obj.isDown });
 		}
 	}, {
 		key: 'updateText',
@@ -7185,7 +7174,7 @@ var Main = function (_Phaser$State) {
 			this.game.stage.backgroundColor = '#000022';
 			this.game.stage.disableVisibilityChange = true;
 			this.game.world.setBounds(0, 0, 1920, 1920);
-			this.game.onMobile = !this.game.device.desktop;
+			this.game.onMobile = this.game.device.desktop;
 			//Background
 			this.starfield2 = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
 			this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');

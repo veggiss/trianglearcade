@@ -11,6 +11,7 @@ class Player extends Phaser.Sprite {
 		this.health = health;
 		this.maxHealth = 100;
 		this.angle = angle;
+		this.deg = 0;
 		this.level = 1;
 		this.exp = 0;
 		this.expAmount = 0;
@@ -98,18 +99,18 @@ class Player extends Phaser.Sprite {
 	        this.stick = this.pad.addStick(0, 0, 200, 'arcade');
 	        this.stick.alignBottomLeft();
 
-			this.stick.onDown.add(this.stickControls, {moveUp: true, _this: this, temp: true});
-			this.stick.onUp.add(this.stickControls, {moveUp: false, _this: this, temp: true});
+			this.stick.onDown.add(this.playerControls, this, 1, true);
+			this.stick.onUp.add(this.playerControls, this, 1, false);
 
 	        this.buttonA = this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
 	        this.buttonA.alignBottomRight();
-	        this.buttonA.onDown.add(this.buttonShoot, {shoot: true, _this: this});
-	        this.buttonA.onUp.add(this.buttonShoot, {shoot: false, _this: this});
+	        this.buttonA.onDown.add(this.playerShoot, this, 1, true);
+	        this.buttonA.onUp.add(this.playerShoot, this, 1, false);
         } else {
-			this.game.input.activePointer.rightButton.onDown.add(this.playerControls, {moveUp: true});
-			this.game.input.activePointer.rightButton.onUp.add(this.playerControls, {moveUp: false});
-			this.game.input.activePointer.leftButton.onDown.add(this.playerShoot, {shoot: true});
-			this.game.input.activePointer.leftButton.onUp.add(this.playerShoot, {shoot: false});
+			this.game.input.activePointer.rightButton.onDown.add(this.playerControls, this, 1, true);
+			this.game.input.activePointer.rightButton.onUp.add(this.playerControls, this, 1, false);
+			this.game.input.activePointer.leftButton.onDown.add(this.playerShoot, this, 1, true);
+			this.game.input.activePointer.leftButton.onUp.add(this.playerShoot, this, 1, false);
         }
 
 		this.game.add.existing(this);
@@ -152,14 +153,15 @@ class Player extends Phaser.Sprite {
 		this.x = this.lerp(x, this.dest.x, 0.1);
 		this.y = this.lerp(y, this.dest.y, 0.1);
 
-		let deg;
 		if (this.game.onMobile) {
-			deg = Phaser.Math.radToDeg(this.stick.rotation);
+			if (this.stick.isDown) {
+				this.deg = Phaser.Math.radToDeg(this.stick.rotation);
+			}
 		} else {
-			deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+			this.deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
 		}
 
-		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(deg));
+		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.deg));
 		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.1);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
 	}
@@ -189,34 +191,23 @@ class Player extends Phaser.Sprite {
 			let deg;
 
 			if (this.game.onMobile) {
-				deg = Phaser.Math.radToDeg(this.stick.rotation) + 90;
+				deg = this.stick.isDown ? Phaser.Math.radToDeg(this.stick.rotation) + 90 : this.deg + 90;
 			} else {
 				deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
 			}
+
 			let destAngle = deg < 0 ? deg + 360 : deg;
 			this.game.room.send({updateAngle: Math.round(destAngle)});
 			this.lastUpdate = Date.now() + this.angleRate;
 		}
 	}
 
-	stickControls() {
-		let t = this._this;
-		if (t.stick.isDown && this.temp) {
-			t.game.room.send({moveUp: this.moveUp});
-		}
+	playerControls(obj) {
+		this.game.room.send({moveUp: obj.isDown});
 	}
 
-	buttonShoot() {
-		let t = this._this;
-		t.game.room.send({shoot: this.shoot});
-	}
-
-	playerControls(t) {
-		t.game.room.send({moveUp: this.moveUp});
-	}
-
-	playerShoot(t) {
-		t.game.room.send({shoot: this.shoot});
+	playerShoot(obj) {
+		this.game.room.send({shoot: obj.isDown});
 	}
 
 	updateText(type, text) {
