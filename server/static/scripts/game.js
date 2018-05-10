@@ -6838,21 +6838,23 @@ var Player = function (_Phaser$Sprite) {
 		_this.statButtonGroup.fixedToCamera = true;
 
 		//Inputs
-		_this.game.input.activePointer.rightButton.onDown.add(_this.playerControls, { moveUp: true });
-		_this.game.input.activePointer.rightButton.onUp.add(_this.playerControls, { moveUp: false });
-		_this.game.input.activePointer.leftButton.onDown.add(_this.playerShoot, { shoot: true });
-		_this.game.input.activePointer.leftButton.onUp.add(_this.playerShoot, { shoot: false });
+		if (_this.game.onMobile) {
+			_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
+			_this.stick.alignBottomLeft();
 
-		_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
-		_this.stick.alignBottomLeft();
+			_this.stick.onDown.add(_this.stickControls, { moveUp: true, _this: _this, temp: true });
+			_this.stick.onUp.add(_this.stickControls, { moveUp: false, _this: _this, temp: true });
 
-		_this.stick.onDown.add(_this.stickControls, { moveUp: true, _this: _this, temp: true });
-		_this.stick.onUp.add(_this.stickControls, { moveUp: false, _this: _this, temp: true });
-
-		_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
-		_this.buttonA.alignBottomRight();
-		_this.buttonA.onDown.add(_this.buttonShoot, { shoot: true, _this: _this });
-		_this.buttonA.onUp.add(_this.buttonShoot, { shoot: false, _this: _this });
+			_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
+			_this.buttonA.alignBottomRight();
+			_this.buttonA.onDown.add(_this.buttonShoot, { shoot: true, _this: _this });
+			_this.buttonA.onUp.add(_this.buttonShoot, { shoot: false, _this: _this });
+		} else {
+			_this.game.input.activePointer.rightButton.onDown.add(_this.playerControls, { moveUp: true });
+			_this.game.input.activePointer.rightButton.onUp.add(_this.playerControls, { moveUp: false });
+			_this.game.input.activePointer.leftButton.onDown.add(_this.playerShoot, { shoot: true });
+			_this.game.input.activePointer.leftButton.onUp.add(_this.playerShoot, { shoot: false });
+		}
 
 		_this.game.add.existing(_this);
 		_this.game.add.existing(_this.statTextGroup);
@@ -6902,12 +6904,14 @@ var Player = function (_Phaser$Sprite) {
 			var y = this.y + Math.cos(this.angle * Math.PI / 180);
 			this.x = this.lerp(x, this.dest.x, 0.1);
 			this.y = this.lerp(y, this.dest.y, 0.1);
+
 			var deg = void 0;
-			if (this.stick.isDown) {
+			if (this.game.onMobile) {
 				deg = Phaser.Math.radToDeg(this.stick.rotation);
 			} else {
 				deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
 			}
+
 			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(deg));
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
@@ -6939,7 +6943,7 @@ var Player = function (_Phaser$Sprite) {
 			if (this.lastUpdate < Date.now()) {
 				var deg = void 0;
 
-				if (this.stick.isDown) {
+				if (this.game.onMobile) {
 					deg = Phaser.Math.radToDeg(this.stick.rotation) + 90;
 				} else {
 					deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
@@ -7181,7 +7185,8 @@ var Main = function (_Phaser$State) {
 			this.game.stage.backgroundColor = '#000022';
 			this.game.stage.disableVisibilityChange = true;
 			this.game.world.setBounds(0, 0, 1920, 1920);
-
+			this.game.onMobile = !this.game.device.desktop;
+			//Background
 			this.starfield2 = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
 			this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
 			this.planet_blue = this.game.add.image(0, 0, 'planet_blue');
@@ -7190,6 +7195,7 @@ var Main = function (_Phaser$State) {
 			this.planet_blue.fixedToCamera = true;
 			this.starfield2.alpha = 0.5;
 
+			//Pools and network
 			this.game.room = this.game.colyseus.join('game');
 			this.bulletPool = this.game.add.group();
 			this.bitsPool = this.game.add.group();

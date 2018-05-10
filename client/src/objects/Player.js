@@ -94,21 +94,23 @@ class Player extends Phaser.Sprite {
 
 
 		//Inputs
-		this.game.input.activePointer.rightButton.onDown.add(this.playerControls, {moveUp: true});
-		this.game.input.activePointer.rightButton.onUp.add(this.playerControls, {moveUp: false});
-		this.game.input.activePointer.leftButton.onDown.add(this.playerShoot, {shoot: true});
-		this.game.input.activePointer.leftButton.onUp.add(this.playerShoot, {shoot: false});
+		if (this.game.onMobile) {
+	        this.stick = this.pad.addStick(0, 0, 200, 'arcade');
+	        this.stick.alignBottomLeft();
 
-        this.stick = this.pad.addStick(0, 0, 200, 'arcade');
-        this.stick.alignBottomLeft();
+			this.stick.onDown.add(this.stickControls, {moveUp: true, _this: this, temp: true});
+			this.stick.onUp.add(this.stickControls, {moveUp: false, _this: this, temp: true});
 
-		this.stick.onDown.add(this.stickControls, {moveUp: true, _this: this, temp: true});
-		this.stick.onUp.add(this.stickControls, {moveUp: false, _this: this, temp: true});
-
-        this.buttonA = this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
-        this.buttonA.alignBottomRight();
-        this.buttonA.onDown.add(this.buttonShoot, {shoot: true, _this: this});
-        this.buttonA.onUp.add(this.buttonShoot, {shoot: false, _this: this});
+	        this.buttonA = this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
+	        this.buttonA.alignBottomRight();
+	        this.buttonA.onDown.add(this.buttonShoot, {shoot: true, _this: this});
+	        this.buttonA.onUp.add(this.buttonShoot, {shoot: false, _this: this});
+        } else {
+			this.game.input.activePointer.rightButton.onDown.add(this.playerControls, {moveUp: true});
+			this.game.input.activePointer.rightButton.onUp.add(this.playerControls, {moveUp: false});
+			this.game.input.activePointer.leftButton.onDown.add(this.playerShoot, {shoot: true});
+			this.game.input.activePointer.leftButton.onUp.add(this.playerShoot, {shoot: false});
+        }
 
 		this.game.add.existing(this);
 		this.game.add.existing(this.statTextGroup);
@@ -149,12 +151,14 @@ class Player extends Phaser.Sprite {
 		let y = this.y + Math.cos(this.angle * Math.PI / 180);
 		this.x = this.lerp(x, this.dest.x, 0.1);
 		this.y = this.lerp(y, this.dest.y, 0.1);
+
 		let deg;
-		if (this.stick.isDown) {
+		if (this.game.onMobile) {
 			deg = Phaser.Math.radToDeg(this.stick.rotation);
 		} else {
 			deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
 		}
+
 		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(deg));
 		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.1);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
@@ -184,7 +188,7 @@ class Player extends Phaser.Sprite {
 		if (this.lastUpdate < Date.now()) {
 			let deg;
 
-			if (this.stick.isDown) {
+			if (this.game.onMobile) {
 				deg = Phaser.Math.radToDeg(this.stick.rotation) + 90;
 			} else {
 				deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;

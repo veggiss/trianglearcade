@@ -11,7 +11,8 @@ class Main extends Phaser.State {
 		this.game.stage.backgroundColor = '#000022';
 		this.game.stage.disableVisibilityChange = true;
 		this.game.world.setBounds(0, 0, 1920, 1920);
-
+		this.game.onMobile = !this.game.device.desktop;
+		//Background
 		this.starfield2 = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
 		this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
 		this.planet_blue = this.game.add.image(0, 0, 'planet_blue');
@@ -20,6 +21,7 @@ class Main extends Phaser.State {
 		this.planet_blue.fixedToCamera = true
 		this.starfield2.alpha = 0.5;
 
+		//Pools and network
 		this.game.room = this.game.colyseus.join('game');
 		this.bulletPool = this.game.add.group();
 		this.bitsPool = this.game.add.group();
