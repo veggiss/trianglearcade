@@ -11,7 +11,7 @@ class Main extends Phaser.State {
 		this.game.stage.backgroundColor = '#000022';
 		this.game.stage.disableVisibilityChange = true;
 		this.game.world.setBounds(0, 0, 1920, 1920);
-		this.game.onMobile = this.game.device.desktop;
+		this.game.onMobile = !this.game.device.desktop;
 		//Background
 		this.starfield2 = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
 		this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
