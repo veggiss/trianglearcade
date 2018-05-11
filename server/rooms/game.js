@@ -6,11 +6,18 @@ module.exports = class StateHandlerRoom extends Room {
     onInit (options) {
         this.setPatchRate(100);
         this.setState(new State(this));
+        this.maxClients = 2;
+        console.log(this.maxClients);
         /*this.state.timeline = createTimeline();
         this.state.timeline.maxSnapshots = 1;
         this.state.timeline.takeSnapshot(this.state.players);*/
         this.state.populateBits();
         this.setSimulationInterval(() => this.update(), 1000 / 20);
+    }
+
+    requestJoin(options) {
+        console.log(options);
+        return this.clients.filter(c => c.id === options.clientId).length === 0;
     }
 
     onJoin (client) {

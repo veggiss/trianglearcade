@@ -1,25 +1,26 @@
 import DebugBody from './DebugBody';
 import HealthBar from './HealthBar';
+import UI from './UI';
 
 class Player extends Phaser.Sprite {
 	constructor(game, x, y, health, angle) {
 		super(game, x, y, 'spaceship_white');
 
 		this.pad = this.game.plugins.add(Phaser.VirtualJoystick);
-		
 		this.game = game;
 		this.health = health;
 		this.maxHealth = 100;
 		this.angle = angle;
 		this.deg = 0;
-		this.level = 1;
 		this.exp = 0;
 		this.expAmount = 0;
-		this.points = 0;
-		this.angleRate = 200;
+		this.angleRate = 100;
 		this.lastUpdate = Date.now() + this.angleRate;
 		this.dest = {x: x, y: y, angle: this.angle};
+
 		this.stats = {
+			level: 1,
+			points: 0,
 			firerate: 1,
 			speed: 1,
 			damage: 1,
@@ -34,10 +35,6 @@ class Player extends Phaser.Sprite {
 		//Sprite
 		this.anchor.setTo(0.5, 0.5);
 		this.scale.setTo(0.75, 0.75);
-
-		// UI
-		this.statTextGroup = this.game.add.group();
-		this.statButtonGroup = this.game.add.group();
 		
 		//Healthbar
 		this.playerHealthBar = new HealthBar(this.game, {
@@ -47,52 +44,6 @@ class Player extends Phaser.Sprite {
 			height: 8,
 			animationDuration: 10
 		});
-
-		//Experience bar
-		this.expBar = new HealthBar(this.game, {
-			x: 100, 
-			y: 50,
-			width: 128,
-			height: 16,
-			animationDuration: 200
-		});
-		this.expBar.setPercent(0);
-
-		// Text
-		this.levelText = this.game.add.bitmapText(156, 100, 'font', 'Level: ' + this.level, 32);
-		this.pointsText = this.game.add.bitmapText(156, 225, 'font', 'Points: ' + this.points, 23);
-		this.firerateText = this.game.add.bitmapText(156, 250, 'font', 'Firerate: ' + this.stats.firerate, 23);
-		this.speedText = this.game.add.bitmapText(156, 275, 'font', 'Speed: ' + this.stats.speed, 23);
-		this.damageText = this.game.add.bitmapText(156, 300, 'font', 'Damage: ' + this.stats.damage, 23);
-		this.healthText = this.game.add.bitmapText(156, 325, 'font', 'Health: ' + this.stats.health, 23);
-
-
-		this.statTextGroup.add(this.levelText);
-		this.statTextGroup.add(this.pointsText);
-		this.statTextGroup.add(this.firerateText);
-		this.statTextGroup.add(this.speedText);
-		this.statTextGroup.add(this.damageText);
-		this.statTextGroup.add(this.healthText);
-
-		this.statTextGroup.forEach(item => {
-			item.anchor.setTo(1, 1);
-			item.inputEnabled = true;
-			let name = item.text.substring(0, item.text.indexOf(':')).toLowerCase();
-
-			if (['firerate', 'speed', 'damage', 'health'].toString().includes(name)) {
-				item.alpha = 0.5;
-				item.name = name;
-				item.events.onInputDown.add(this.addStat, this);
-				item.events.onInputOver.add(this.textOver, this);
-				item.events.﻿﻿﻿onInputOut.add(this.textOut, this);
-			}
-		});
-
-		this.expBar.barSprite.fixedToCamera = true;
-		this.expBar.bgSprite.fixedToCamera = true;
-		this.statTextGroup.fixedToCamera = true;
-		this.statButtonGroup.fixedToCamera = true;
-
 
 		//Inputs
 		if (this.game.onMobile) {
@@ -113,34 +64,16 @@ class Player extends Phaser.Sprite {
 			this.game.input.activePointer.leftButton.onUp.add(this.playerShoot, this, 1, false);
         }
 
+		//UI
+		this.ui = new UI(this.game, this.stats);
+
+        //Add player to stage
 		this.game.add.existing(this);
-		this.game.add.existing(this.statTextGroup);
 	}
 
 	update() {
 		this.updateAngle();
 		this.updatePlayerPos();
-	}
-
-	addStat(button, mouse) {
-		if (this.points > 0) {
-			this.game.room.send({pointsAdded: button.name});
-			this.points--;
-			this.updateText('points');
-		}
-	}
-
-	textOver(button, mouse) {
-		button.alpha = 1;
-	}
-
-	textOut(button, mouse) {
-		button.alpha = 0.5;
-	}
-
-	addPoints() {
-		this.points++;
-		this.updateText('points');
 	}
 
 	setHealth(value) {
@@ -166,6 +99,11 @@ class Player extends Phaser.Sprite {
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
 	}
 
+	levelUp(value) {
+		this.stats.level = value;
+		this.ui.updateText('level', value);
+	}
+
 	upgradeStat(type, value) {
 		switch(type) {
 			case 'firerate':
@@ -183,7 +121,7 @@ class Player extends Phaser.Sprite {
 			break;
 		}
 
-		this.updateText(type);
+		this.ui.updateText(type);
 	}
 
 	updateAngle() {
@@ -208,29 +146,6 @@ class Player extends Phaser.Sprite {
 
 	playerShoot(obj) {
 		this.game.room.send({shoot: obj.isDown});
-	}
-
-	updateText(type, text) {
-		switch(type) {
-			case 'level':
-				this.levelText.text = 'Level: ' + this.level;
-			break;
-			case 'points':
-				this.pointsText.text = 'Points: ' + this.points;
-			break;
-			case 'firerate':
-				this.firerateText.text = 'Firerate: ' + this.stats.firerate;
-			break;
-			case 'speed':
-				this.speedText.text = 'Speed: ' + this.stats.speed;
-			break;
-			case 'damage':
-				this.damageText.text = 'Damage: ' + this.stats.damage;
-			break;
-			case 'health':
-				this.healthText.text = 'Health: ' + this.stats.health;
-			break;
-		}
 	}
 
 	respawn() {

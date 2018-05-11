@@ -2364,7 +2364,7 @@ var Client = /** @class */ (function () {
 }());
 exports.Client = Client;
 
-},{"./Connection":10,"./Protocol":11,"./Room":12,"notepack.io":22,"signals.js":28}],10:[function(require,module,exports){
+},{"./Connection":10,"./Protocol":11,"./Room":12,"notepack.io":21,"signals.js":22}],10:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -2412,7 +2412,7 @@ var Connection = /** @class */ (function (_super) {
 }(websocket_1.default));
 exports.Connection = Connection;
 
-},{"@gamestdio/websocket":6,"notepack.io":22}],11:[function(require,module,exports){
+},{"@gamestdio/websocket":6,"notepack.io":21}],11:[function(require,module,exports){
 "use strict";
 // Use codes between 0~127 for lesser throughput (1 byte)
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -2553,7 +2553,7 @@ exports.Room = Room;
 
 }).call(this,require("buffer").Buffer)
 
-},{"./Protocol":11,"@gamestdio/clock":1,"@gamestdio/state-listener":4,"buffer":8,"fossil-delta":16,"notepack.io":22,"signals.js":28}],13:[function(require,module,exports){
+},{"./Protocol":11,"@gamestdio/clock":1,"@gamestdio/state-listener":4,"buffer":8,"fossil-delta":16,"notepack.io":21,"signals.js":22}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Client_1 = require("./Client");
@@ -3370,160 +3370,6 @@ module.exports = Array.isArray || function (arr) {
 };
 
 },{}],19:[function(require,module,exports){
-/**
- * Helpers.
- */
-
-var s = 1000;
-var m = s * 60;
-var h = m * 60;
-var d = h * 24;
-var y = d * 365.25;
-
-/**
- * Parse or format the given `val`.
- *
- * Options:
- *
- *  - `long` verbose formatting [false]
- *
- * @param {String|Number} val
- * @param {Object} [options]
- * @throws {Error} throw an error if val is not a non-empty string or a number
- * @return {String|Number}
- * @api public
- */
-
-module.exports = function(val, options) {
-  options = options || {};
-  var type = typeof val;
-  if (type === 'string' && val.length > 0) {
-    return parse(val);
-  } else if (type === 'number' && isNaN(val) === false) {
-    return options.long ? fmtLong(val) : fmtShort(val);
-  }
-  throw new Error(
-    'val is not a non-empty string or a valid number. val=' +
-      JSON.stringify(val)
-  );
-};
-
-/**
- * Parse the given `str` and return milliseconds.
- *
- * @param {String} str
- * @return {Number}
- * @api private
- */
-
-function parse(str) {
-  str = String(str);
-  if (str.length > 100) {
-    return;
-  }
-  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(
-    str
-  );
-  if (!match) {
-    return;
-  }
-  var n = parseFloat(match[1]);
-  var type = (match[2] || 'ms').toLowerCase();
-  switch (type) {
-    case 'years':
-    case 'year':
-    case 'yrs':
-    case 'yr':
-    case 'y':
-      return n * y;
-    case 'days':
-    case 'day':
-    case 'd':
-      return n * d;
-    case 'hours':
-    case 'hour':
-    case 'hrs':
-    case 'hr':
-    case 'h':
-      return n * h;
-    case 'minutes':
-    case 'minute':
-    case 'mins':
-    case 'min':
-    case 'm':
-      return n * m;
-    case 'seconds':
-    case 'second':
-    case 'secs':
-    case 'sec':
-    case 's':
-      return n * s;
-    case 'milliseconds':
-    case 'millisecond':
-    case 'msecs':
-    case 'msec':
-    case 'ms':
-      return n;
-    default:
-      return undefined;
-  }
-}
-
-/**
- * Short format for `ms`.
- *
- * @param {Number} ms
- * @return {String}
- * @api private
- */
-
-function fmtShort(ms) {
-  if (ms >= d) {
-    return Math.round(ms / d) + 'd';
-  }
-  if (ms >= h) {
-    return Math.round(ms / h) + 'h';
-  }
-  if (ms >= m) {
-    return Math.round(ms / m) + 'm';
-  }
-  if (ms >= s) {
-    return Math.round(ms / s) + 's';
-  }
-  return ms + 'ms';
-}
-
-/**
- * Long format for `ms`.
- *
- * @param {Number} ms
- * @return {String}
- * @api private
- */
-
-function fmtLong(ms) {
-  return plural(ms, d, 'day') ||
-    plural(ms, h, 'hour') ||
-    plural(ms, m, 'minute') ||
-    plural(ms, s, 'second') ||
-    ms + ' ms';
-}
-
-/**
- * Pluralization helper.
- */
-
-function plural(ms, n, name) {
-  if (ms < n) {
-    return;
-  }
-  if (ms < n * 1.5) {
-    return Math.floor(ms / n) + ' ' + name;
-  }
-  return Math.ceil(ms / n) + ' ' + name + 's';
-}
-
-},{}],20:[function(require,module,exports){
 'use strict';
 
 function Decoder(buffer) {
@@ -3806,7 +3652,7 @@ function decode(buffer) {
 
 module.exports = decode;
 
-},{}],21:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 function utf8Write(view, offset, str) {
@@ -4113,849 +3959,11 @@ function encode(value) {
 
 module.exports = encode;
 
-},{}],22:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 exports.encode = require('./encode');
 exports.decode = require('./decode');
 
-},{"./decode":20,"./encode":21}],23:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.postUpdate = postUpdate;
-exports.isItemMoving = isItemMoving;
-exports.moveToXY = moveToXY;
-exports.moveToObject = moveToObject;
-exports.stopToMove = stopToMove;
-
-var _debug = require('debug');
-
-var _debug2 = _interopRequireDefault(_debug);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var debug = (0, _debug2.default)('phaser-move-and-stop-plugin:moveAndStop');
-var debugObjectToMove = function debugObjectToMove(objectsToMove, objectToMove, label) {
-	return debug(objectsToMove.indexOf(objectToMove) + ': ' + label);
-};
-
-var STATE = {
-	isMoving: 'isMoving',
-	hasStopped: 'hasStopped'
-};
-
-function findObjectToMove(objectsToMove, displayObject) {
-	if (displayObject) {
-		return objectsToMove.find(function (objectToMove) {
-			return objectToMove.displayObject === displayObject;
-		});
-	}
-	return undefined;
-}
-
-function addDisplayObjectToList(objectsToMove, displayObject) {
-	var info = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-	var objectToMove = {
-		displayObject: displayObject,
-		info: info
-	};
-	objectsToMove.push(objectToMove);
-	debugObjectToMove(objectsToMove, objectToMove, 'addDisplayObjectToList x:' + info.x + ' y:' + info.y + ' speed:' + info.speed + ' maxTime:' + info.maxTime + ' events:' + (info.events ? Object.keys(info.events) : info.events));
-}
-
-function removeObjectToMove(objectsToMove, objectToMove) {
-	debugObjectToMove(objectsToMove, objectToMove, "removeObjectToMove");
-	if (objectToMove) {
-		var index = objectsToMove.indexOf(objectToMove);
-		if (index > -1) {
-			objectsToMove.splice(index, 1);
-		}
-	}
-}
-
-function stopObjectMovement(objectToMove) {
-	var displayObject = objectToMove.displayObject,
-	    info = objectToMove.info;
-
-	displayObject.body.velocity.x = 0;
-	displayObject.body.velocity.y = 0;
-
-	if (info.events) {
-		if (info.events.onPositionReached) {
-			info.events.onPositionReached(displayObject);
-		}
-		if (info.events.onStopped) {
-			info.events.onStopped(displayObject);
-		}
-	}
-
-	info.move = STATE.hasStopped;
-}
-
-function updateObjectMovement(game, objectToMove) {
-	var displayObject = objectToMove.displayObject,
-	    info = objectToMove.info;
-
-	if (displayObject.alive && info.moveDistFromTarget && displayObject.body) {
-
-		if (isMoving(objectToMove)) {
-			var updatedDist = game.physics.arcade.distanceToXY(displayObject, info.x, info.y);
-			if (updatedDist === 0 || updatedDist > info.moveDistFromTarget) {
-				// update coordinates
-				displayObject.x = info.x;
-				displayObject.y = info.y;
-
-				// if displayObject is still moving, we ask to pahser to stop it (stop velocity)
-				stopObjectMovement(objectToMove);
-			} else {
-				//if not stopped, or no need to stop, we update last distance between current displayObject and targetted corrdinates
-				info.moveDistFromTarget = updatedDist;
-			}
-		}
-	}
-}
-
-function isMoving(objectToMove) {
-	var info = objectToMove.info;
-
-	return info.move === STATE.isMoving;
-}
-
-function hasStopped(objectToMove) {
-	var info = objectToMove.info;
-
-	return info.move === STATE.hasStopped;
-}
-
-function postUpdate(objectsToMove, game) {
-	var objectsNotAlive = [];
-	objectsToMove.forEach(function (objectToMove) {
-		var displayObject = objectToMove.displayObject,
-		    info = objectToMove.info;
-
-		if (!displayObject || !displayObject.alive || hasStopped(objectToMove)) {
-			if (info && info.events) {
-				if (info.events.onStopped) {
-					info.events.onStopped(displayObject);
-				}
-			}
-			objectsNotAlive.push(objectToMove);
-		} else {
-			updateObjectMovement(game, objectToMove);
-			if (hasStopped(objectToMove)) {
-				objectsNotAlive.push(objectToMove);
-			}
-		}
-	});
-
-	objectsNotAlive.forEach(function (objectToMove) {
-		removeObjectToMove(objectsToMove, objectToMove);
-	});
-}
-
-function isItemMoving(displayObject) {
-	if (!displayObject) {
-		throw new Error("object is undefined");
-	}
-	return displayObject.body && displayObject.body.velocity && (displayObject.body.velocity.x || displayObject.body.velocity.y);
-}
-
-function moveToXY(objectsToMove, game, displayObject, x, y, speed, maxTime, events) {
-	if (displayObject && displayObject.alive && displayObject.body) {
-		var objectToMove = findObjectToMove(objectsToMove, displayObject);
-
-		if (!objectToMove || objectToMove.info.x !== x || objectToMove.info.y !== y || objectToMove.info.speed !== speed || objectToMove.info.maxTime !== maxTime || objectToMove.info.events !== events) {
-			if (objectToMove) {
-				removeObjectToMove(objectsToMove, objectToMove);
-			}
-			var moveDistFromTarget = game.physics.arcade.distanceToXY(displayObject, x, y);
-			addDisplayObjectToList(objectsToMove, displayObject, {
-				move: STATE.isMoving,
-				x: x,
-				y: y,
-				speed: speed,
-				maxTime: maxTime,
-				events: events,
-				moveDistFromTarget: moveDistFromTarget,
-				moveDistFromTargetOrigin: moveDistFromTarget
-			});
-			return game.physics.arcade.moveToXY(displayObject, x, y, speed, maxTime);
-		}
-	}
-}
-
-function moveToObject(objectsToMove, game, displayObject, destination, speed, maxTime, events) {
-	return moveToXY(objectsToMove, game, displayObject, destination.x, destination.y, speed, maxTime, events);
-}
-
-function stopToMove(objectsToMove, displayObject) {
-	var objectToMove = findObjectToMove(objectsToMove, displayObject);
-	if (objectToMove) {
-		if (isMoving(objectToMove)) {
-			stopObjectMovement(objectToMove);
-		}
-	}
-}
-},{"debug":25}],24:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _moveAndStopCore = require('./move-and-stop-core');
-
-//Plugin Core definition
-
-function MoveAndStop(game, parent) {
-	Phaser.Plugin.call(this, game, parent);
-	this.objectsToMove = [];
-	this.active = true; //enable reUpdate and update methods called by the parent
-}
-
-MoveAndStop.prototype = Object.create(Phaser.Plugin.prototype);
-
-MoveAndStop.prototype.postUpdate = function postUpdate_() {
-	return (0, _moveAndStopCore.postUpdate)(this.objectsToMove, this.game);
-};
-
-//Plugin moving functions
-
-MoveAndStop.prototype.toXY = function toXY(displayObject, x, y, speed, maxTime, events) {
-	return (0, _moveAndStopCore.moveToXY)(this.objectsToMove, this.game, displayObject, x, y, speed, maxTime, events);
-};
-
-MoveAndStop.prototype.toObject = function toObject(displayObject, destination, speed, maxTime, events) {
-	return (0, _moveAndStopCore.moveToObject)(this.objectsToMove, this.game, displayObject, destination, speed, maxTime, events);
-};
-
-MoveAndStop.prototype.stop = function stop(displayObject) {
-	return (0, _moveAndStopCore.stopToMove)(this.objectsToMove, displayObject);
-};
-
-// Utils
-
-MoveAndStop.prototype.isItemMoving = function (displayObject) {
-	return (0, _moveAndStopCore.isItemMoving)(displayObject);
-};
-
-exports.default = MoveAndStop;
-},{"./move-and-stop-core":23}],25:[function(require,module,exports){
-(function (process){
-/**
- * This is the web browser implementation of `debug()`.
- *
- * Expose `debug()` as the module.
- */
-
-exports = module.exports = require('./debug');
-exports.log = log;
-exports.formatArgs = formatArgs;
-exports.save = save;
-exports.load = load;
-exports.useColors = useColors;
-exports.storage = 'undefined' != typeof chrome
-               && 'undefined' != typeof chrome.storage
-                  ? chrome.storage.local
-                  : localstorage();
-
-/**
- * Colors.
- */
-
-exports.colors = [
-  '#0000CC', '#0000FF', '#0033CC', '#0033FF', '#0066CC', '#0066FF', '#0099CC',
-  '#0099FF', '#00CC00', '#00CC33', '#00CC66', '#00CC99', '#00CCCC', '#00CCFF',
-  '#3300CC', '#3300FF', '#3333CC', '#3333FF', '#3366CC', '#3366FF', '#3399CC',
-  '#3399FF', '#33CC00', '#33CC33', '#33CC66', '#33CC99', '#33CCCC', '#33CCFF',
-  '#6600CC', '#6600FF', '#6633CC', '#6633FF', '#66CC00', '#66CC33', '#9900CC',
-  '#9900FF', '#9933CC', '#9933FF', '#99CC00', '#99CC33', '#CC0000', '#CC0033',
-  '#CC0066', '#CC0099', '#CC00CC', '#CC00FF', '#CC3300', '#CC3333', '#CC3366',
-  '#CC3399', '#CC33CC', '#CC33FF', '#CC6600', '#CC6633', '#CC9900', '#CC9933',
-  '#CCCC00', '#CCCC33', '#FF0000', '#FF0033', '#FF0066', '#FF0099', '#FF00CC',
-  '#FF00FF', '#FF3300', '#FF3333', '#FF3366', '#FF3399', '#FF33CC', '#FF33FF',
-  '#FF6600', '#FF6633', '#FF9900', '#FF9933', '#FFCC00', '#FFCC33'
-];
-
-/**
- * Currently only WebKit-based Web Inspectors, Firefox >= v31,
- * and the Firebug extension (any Firefox version) are known
- * to support "%c" CSS customizations.
- *
- * TODO: add a `localStorage` variable to explicitly enable/disable colors
- */
-
-function useColors() {
-  // NB: In an Electron preload script, document will be defined but not fully
-  // initialized. Since we know we're in Chrome, we'll just detect this case
-  // explicitly
-  if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
-    return true;
-  }
-
-  // Internet Explorer and Edge do not support colors.
-  if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
-    return false;
-  }
-
-  // is webkit? http://stackoverflow.com/a/16459606/376773
-  // document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
-  return (typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance) ||
-    // is firebug? http://stackoverflow.com/a/398120/376773
-    (typeof window !== 'undefined' && window.console && (window.console.firebug || (window.console.exception && window.console.table))) ||
-    // is firefox >= v31?
-    // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-    (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31) ||
-    // double check webkit in userAgent just in case we are in a worker
-    (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/));
-}
-
-/**
- * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
- */
-
-exports.formatters.j = function(v) {
-  try {
-    return JSON.stringify(v);
-  } catch (err) {
-    return '[UnexpectedJSONParseError]: ' + err.message;
-  }
-};
-
-
-/**
- * Colorize log arguments if enabled.
- *
- * @api public
- */
-
-function formatArgs(args) {
-  var useColors = this.useColors;
-
-  args[0] = (useColors ? '%c' : '')
-    + this.namespace
-    + (useColors ? ' %c' : ' ')
-    + args[0]
-    + (useColors ? '%c ' : ' ')
-    + '+' + exports.humanize(this.diff);
-
-  if (!useColors) return;
-
-  var c = 'color: ' + this.color;
-  args.splice(1, 0, c, 'color: inherit')
-
-  // the final "%c" is somewhat tricky, because there could be other
-  // arguments passed either before or after the %c, so we need to
-  // figure out the correct index to insert the CSS into
-  var index = 0;
-  var lastC = 0;
-  args[0].replace(/%[a-zA-Z%]/g, function(match) {
-    if ('%%' === match) return;
-    index++;
-    if ('%c' === match) {
-      // we only are interested in the *last* %c
-      // (the user may have provided their own)
-      lastC = index;
-    }
-  });
-
-  args.splice(lastC, 0, c);
-}
-
-/**
- * Invokes `console.log()` when available.
- * No-op when `console.log` is not a "function".
- *
- * @api public
- */
-
-function log() {
-  // this hackery is required for IE8/9, where
-  // the `console.log` function doesn't have 'apply'
-  return 'object' === typeof console
-    && console.log
-    && Function.prototype.apply.call(console.log, console, arguments);
-}
-
-/**
- * Save `namespaces`.
- *
- * @param {String} namespaces
- * @api private
- */
-
-function save(namespaces) {
-  try {
-    if (null == namespaces) {
-      exports.storage.removeItem('debug');
-    } else {
-      exports.storage.debug = namespaces;
-    }
-  } catch(e) {}
-}
-
-/**
- * Load `namespaces`.
- *
- * @return {String} returns the previously persisted debug modes
- * @api private
- */
-
-function load() {
-  var r;
-  try {
-    r = exports.storage.debug;
-  } catch(e) {}
-
-  // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
-  if (!r && typeof process !== 'undefined' && 'env' in process) {
-    r = process.env.DEBUG;
-  }
-
-  return r;
-}
-
-/**
- * Enable namespaces listed in `localStorage.debug` initially.
- */
-
-exports.enable(load());
-
-/**
- * Localstorage attempts to return the localstorage.
- *
- * This is necessary because safari throws
- * when a user disables cookies/localstorage
- * and you attempt to access it.
- *
- * @return {LocalStorage}
- * @api private
- */
-
-function localstorage() {
-  try {
-    return window.localStorage;
-  } catch (e) {}
-}
-
-}).call(this,require('_process'))
-
-},{"./debug":26,"_process":27}],26:[function(require,module,exports){
-
-/**
- * This is the common logic for both the Node.js and web browser
- * implementations of `debug()`.
- *
- * Expose `debug()` as the module.
- */
-
-exports = module.exports = createDebug.debug = createDebug['default'] = createDebug;
-exports.coerce = coerce;
-exports.disable = disable;
-exports.enable = enable;
-exports.enabled = enabled;
-exports.humanize = require('ms');
-
-/**
- * Active `debug` instances.
- */
-exports.instances = [];
-
-/**
- * The currently active debug mode names, and names to skip.
- */
-
-exports.names = [];
-exports.skips = [];
-
-/**
- * Map of special "%n" handling functions, for the debug "format" argument.
- *
- * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
- */
-
-exports.formatters = {};
-
-/**
- * Select a color.
- * @param {String} namespace
- * @return {Number}
- * @api private
- */
-
-function selectColor(namespace) {
-  var hash = 0, i;
-
-  for (i in namespace) {
-    hash  = ((hash << 5) - hash) + namespace.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
-  }
-
-  return exports.colors[Math.abs(hash) % exports.colors.length];
-}
-
-/**
- * Create a debugger with the given `namespace`.
- *
- * @param {String} namespace
- * @return {Function}
- * @api public
- */
-
-function createDebug(namespace) {
-
-  var prevTime;
-
-  function debug() {
-    // disabled?
-    if (!debug.enabled) return;
-
-    var self = debug;
-
-    // set `diff` timestamp
-    var curr = +new Date();
-    var ms = curr - (prevTime || curr);
-    self.diff = ms;
-    self.prev = prevTime;
-    self.curr = curr;
-    prevTime = curr;
-
-    // turn the `arguments` into a proper Array
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i];
-    }
-
-    args[0] = exports.coerce(args[0]);
-
-    if ('string' !== typeof args[0]) {
-      // anything else let's inspect with %O
-      args.unshift('%O');
-    }
-
-    // apply any `formatters` transformations
-    var index = 0;
-    args[0] = args[0].replace(/%([a-zA-Z%])/g, function(match, format) {
-      // if we encounter an escaped % then don't increase the array index
-      if (match === '%%') return match;
-      index++;
-      var formatter = exports.formatters[format];
-      if ('function' === typeof formatter) {
-        var val = args[index];
-        match = formatter.call(self, val);
-
-        // now we need to remove `args[index]` since it's inlined in the `format`
-        args.splice(index, 1);
-        index--;
-      }
-      return match;
-    });
-
-    // apply env-specific formatting (colors, etc.)
-    exports.formatArgs.call(self, args);
-
-    var logFn = debug.log || exports.log || console.log.bind(console);
-    logFn.apply(self, args);
-  }
-
-  debug.namespace = namespace;
-  debug.enabled = exports.enabled(namespace);
-  debug.useColors = exports.useColors();
-  debug.color = selectColor(namespace);
-  debug.destroy = destroy;
-
-  // env-specific initialization logic for debug instances
-  if ('function' === typeof exports.init) {
-    exports.init(debug);
-  }
-
-  exports.instances.push(debug);
-
-  return debug;
-}
-
-function destroy () {
-  var index = exports.instances.indexOf(this);
-  if (index !== -1) {
-    exports.instances.splice(index, 1);
-    return true;
-  } else {
-    return false;
-  }
-}
-
-/**
- * Enables a debug mode by namespaces. This can include modes
- * separated by a colon and wildcards.
- *
- * @param {String} namespaces
- * @api public
- */
-
-function enable(namespaces) {
-  exports.save(namespaces);
-
-  exports.names = [];
-  exports.skips = [];
-
-  var i;
-  var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
-  var len = split.length;
-
-  for (i = 0; i < len; i++) {
-    if (!split[i]) continue; // ignore empty strings
-    namespaces = split[i].replace(/\*/g, '.*?');
-    if (namespaces[0] === '-') {
-      exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
-    } else {
-      exports.names.push(new RegExp('^' + namespaces + '$'));
-    }
-  }
-
-  for (i = 0; i < exports.instances.length; i++) {
-    var instance = exports.instances[i];
-    instance.enabled = exports.enabled(instance.namespace);
-  }
-}
-
-/**
- * Disable debug output.
- *
- * @api public
- */
-
-function disable() {
-  exports.enable('');
-}
-
-/**
- * Returns true if the given mode name is enabled, false otherwise.
- *
- * @param {String} name
- * @return {Boolean}
- * @api public
- */
-
-function enabled(name) {
-  if (name[name.length - 1] === '*') {
-    return true;
-  }
-  var i, len;
-  for (i = 0, len = exports.skips.length; i < len; i++) {
-    if (exports.skips[i].test(name)) {
-      return false;
-    }
-  }
-  for (i = 0, len = exports.names.length; i < len; i++) {
-    if (exports.names[i].test(name)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Coerce `val`.
- *
- * @param {Mixed} val
- * @return {Mixed}
- * @api private
- */
-
-function coerce(val) {
-  if (val instanceof Error) return val.stack || val.message;
-  return val;
-}
-
-},{"ms":19}],27:[function(require,module,exports){
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-},{}],28:[function(require,module,exports){
+},{"./decode":19,"./encode":20}],22:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var DeluxeSignal_1 = require("./org/osflash/signals/DeluxeSignal");
@@ -4985,7 +3993,7 @@ exports.Slot = Slot_1.Slot;
 var SlotList_1 = require("./org/osflash/signals/SlotList");
 exports.SlotList = SlotList_1.SlotList;
 
-},{"./org/osflash/signals/DeluxeSignal":29,"./org/osflash/signals/IOnceSignal":30,"./org/osflash/signals/IPrioritySignal":31,"./org/osflash/signals/ISignal":32,"./org/osflash/signals/ISlot":33,"./org/osflash/signals/MonoSignal":34,"./org/osflash/signals/OnceSignal":35,"./org/osflash/signals/PrioritySignal":36,"./org/osflash/signals/Promise":37,"./org/osflash/signals/Signal":38,"./org/osflash/signals/Slot":39,"./org/osflash/signals/SlotList":40,"./org/osflash/signals/events/GenericEvent":41}],29:[function(require,module,exports){
+},{"./org/osflash/signals/DeluxeSignal":23,"./org/osflash/signals/IOnceSignal":24,"./org/osflash/signals/IPrioritySignal":25,"./org/osflash/signals/ISignal":26,"./org/osflash/signals/ISlot":27,"./org/osflash/signals/MonoSignal":28,"./org/osflash/signals/OnceSignal":29,"./org/osflash/signals/PrioritySignal":30,"./org/osflash/signals/Promise":31,"./org/osflash/signals/Signal":32,"./org/osflash/signals/Slot":33,"./org/osflash/signals/SlotList":34,"./org/osflash/signals/events/GenericEvent":35}],23:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -5121,7 +4129,7 @@ var DeluxeSignal = (function (_super) {
 }(PrioritySignal_1.PrioritySignal));
 exports.DeluxeSignal = DeluxeSignal;
 
-},{"./PrioritySignal":36}],30:[function(require,module,exports){
+},{"./PrioritySignal":30}],24:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -5129,7 +4137,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 exports.IOnceSignal = Symbol("IOnceSignal");
 
-},{}],31:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -5137,7 +4145,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 exports.IPrioritySignal = Symbol("IPrioritySignal");
 
-},{}],32:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -5145,7 +4153,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 exports.ISignal = Symbol("ISignal");
 
-},{}],33:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -5157,7 +4165,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 exports.ISlot = Symbol("ISlot");
 
-},{}],34:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Slot_1 = require("./Slot");
@@ -5296,7 +4304,7 @@ var MonoSignal = (function () {
 }());
 exports.MonoSignal = MonoSignal;
 
-},{"./Slot":39}],35:[function(require,module,exports){
+},{"./Slot":33}],29:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var SlotList_1 = require("./SlotList");
@@ -5452,7 +4460,7 @@ var OnceSignal = (function () {
 }());
 exports.OnceSignal = OnceSignal;
 
-},{"./Slot":39,"./SlotList":40}],36:[function(require,module,exports){
+},{"./Slot":33,"./SlotList":34}],30:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -5517,7 +4525,7 @@ var PrioritySignal = (function (_super) {
 }(Signal_1.Signal));
 exports.PrioritySignal = PrioritySignal;
 
-},{"./Signal":38,"./Slot":39}],37:[function(require,module,exports){
+},{"./Signal":32,"./Slot":33}],31:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -5569,7 +4577,7 @@ var Promise = (function (_super) {
 }(OnceSignal_1.OnceSignal));
 exports.Promise = Promise;
 
-},{"./OnceSignal":35}],38:[function(require,module,exports){
+},{"./OnceSignal":29}],32:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
@@ -5634,7 +4642,7 @@ var Signal = (function (_super) {
 }(OnceSignal_1.OnceSignal));
 exports.Signal = Signal;
 
-},{"./OnceSignal":35}],39:[function(require,module,exports){
+},{"./OnceSignal":29}],33:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -5817,7 +4825,7 @@ var Slot = (function () {
 }());
 exports.Slot = Slot;
 
-},{}],40:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -6027,7 +5035,7 @@ var SlotList = (function () {
 }());
 exports.SlotList = SlotList;
 
-},{}],41:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
@@ -6092,7 +5100,7 @@ var GenericEvent = (function () {
 }());
 exports.GenericEvent = GenericEvent;
 
-},{}],42:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 'use strict';
 
 var _colyseus = require('colyseus.js');
@@ -6131,16 +5139,23 @@ function _inherits(subClass, superClass) {
 	}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 }
 
+var config = {
+	width: 0,
+	height: 0,
+	renderer: Phaser.AUTO,
+	parent: 'trianglearcade'
+};
+
 var Game = function (_Phaser$Game) {
 	_inherits(Game, _Phaser$Game);
 
 	function Game() {
 		_classCallCheck(this, Game);
 
-		var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, 1, 1, Phaser.WEBGL, 'trianglearcade'));
+		var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this, config));
 
 		var endpoint = window.location.hostname.indexOf("herokuapp") === -1 ? "ws://localhost:3000" // - Local
-		: window.location.protocol.replace("https", "wss") + '//' + window.location.hostname; // - Heroku/remote
+		: window.location.protocol.replace("http", "ws") + '//' + window.location.hostname; // - Heroku/remote
 		_this.colyseus = new _colyseus.Client(endpoint);
 		_this.state.add('Boot', _Boot2.default, false);
 		_this.state.add('Preload', _Preload2.default, false);
@@ -6154,7 +5169,7 @@ var Game = function (_Phaser$Game) {
 
 new Game();
 
-},{"colyseus.js":13,"states/Boot":49,"states/Main":50,"states/Preload":51}],43:[function(require,module,exports){
+},{"colyseus.js":13,"states/Boot":44,"states/Main":45,"states/Preload":46}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6243,7 +5258,7 @@ var Bit = function (_Phaser$Sprite) {
 
 exports.default = Bit;
 
-},{}],44:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6317,7 +5332,7 @@ var Bullet = function (_Phaser$Sprite) {
 
 exports.default = Bullet;
 
-},{}],45:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6446,7 +5461,7 @@ var Client = function (_Phaser$Sprite) {
 
 exports.default = Client;
 
-},{"./DebugBody":46,"./HealthBar":47}],46:[function(require,module,exports){
+},{"./DebugBody":40,"./HealthBar":41}],40:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6520,7 +5535,7 @@ var DebugBody = function (_Phaser$Sprite) {
 
 exports.default = DebugBody;
 
-},{}],47:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 'use strict';
 
 /**
@@ -6697,7 +5712,7 @@ function hexToRgb(hex) {
     } : null;
 }
 
-},{}],48:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6721,6 +5736,10 @@ var _DebugBody2 = _interopRequireDefault(_DebugBody);
 var _HealthBar = require('./HealthBar');
 
 var _HealthBar2 = _interopRequireDefault(_HealthBar);
+
+var _UI = require('./UI');
+
+var _UI2 = _interopRequireDefault(_UI);
 
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj };
@@ -6753,20 +5772,20 @@ var Player = function (_Phaser$Sprite) {
 		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'spaceship_white'));
 
 		_this.pad = _this.game.plugins.add(Phaser.VirtualJoystick);
-
 		_this.game = game;
 		_this.health = health;
 		_this.maxHealth = 100;
 		_this.angle = angle;
 		_this.deg = 0;
-		_this.level = 1;
 		_this.exp = 0;
 		_this.expAmount = 0;
-		_this.points = 0;
-		_this.angleRate = 200;
+		_this.angleRate = 100;
 		_this.lastUpdate = Date.now() + _this.angleRate;
 		_this.dest = { x: x, y: y, angle: _this.angle };
+
 		_this.stats = {
+			level: 1,
+			points: 0,
 			firerate: 1,
 			speed: 1,
 			damage: 1,
@@ -6781,10 +5800,6 @@ var Player = function (_Phaser$Sprite) {
 		_this.anchor.setTo(0.5, 0.5);
 		_this.scale.setTo(0.75, 0.75);
 
-		// UI
-		_this.statTextGroup = _this.game.add.group();
-		_this.statButtonGroup = _this.game.add.group();
-
 		//Healthbar
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
 			x: _this.x,
@@ -6793,50 +5808,6 @@ var Player = function (_Phaser$Sprite) {
 			height: 8,
 			animationDuration: 10
 		});
-
-		//Experience bar
-		_this.expBar = new _HealthBar2.default(_this.game, {
-			x: 100,
-			y: 50,
-			width: 128,
-			height: 16,
-			animationDuration: 200
-		});
-		_this.expBar.setPercent(0);
-
-		// Text
-		_this.levelText = _this.game.add.bitmapText(156, 100, 'font', 'Level: ' + _this.level, 32);
-		_this.pointsText = _this.game.add.bitmapText(156, 225, 'font', 'Points: ' + _this.points, 23);
-		_this.firerateText = _this.game.add.bitmapText(156, 250, 'font', 'Firerate: ' + _this.stats.firerate, 23);
-		_this.speedText = _this.game.add.bitmapText(156, 275, 'font', 'Speed: ' + _this.stats.speed, 23);
-		_this.damageText = _this.game.add.bitmapText(156, 300, 'font', 'Damage: ' + _this.stats.damage, 23);
-		_this.healthText = _this.game.add.bitmapText(156, 325, 'font', 'Health: ' + _this.stats.health, 23);
-
-		_this.statTextGroup.add(_this.levelText);
-		_this.statTextGroup.add(_this.pointsText);
-		_this.statTextGroup.add(_this.firerateText);
-		_this.statTextGroup.add(_this.speedText);
-		_this.statTextGroup.add(_this.damageText);
-		_this.statTextGroup.add(_this.healthText);
-
-		_this.statTextGroup.forEach(function (item) {
-			item.anchor.setTo(1, 1);
-			item.inputEnabled = true;
-			var name = item.text.substring(0, item.text.indexOf(':')).toLowerCase();
-
-			if (['firerate', 'speed', 'damage', 'health'].toString().includes(name)) {
-				item.alpha = 0.5;
-				item.name = name;
-				item.events.onInputDown.add(_this.addStat, _this);
-				item.events.onInputOver.add(_this.textOver, _this);
-				item.events.onInputOut.add(_this.textOut, _this);
-			}
-		});
-
-		_this.expBar.barSprite.fixedToCamera = true;
-		_this.expBar.bgSprite.fixedToCamera = true;
-		_this.statTextGroup.fixedToCamera = true;
-		_this.statButtonGroup.fixedToCamera = true;
 
 		//Inputs
 		if (_this.game.onMobile) {
@@ -6857,8 +5828,11 @@ var Player = function (_Phaser$Sprite) {
 			_this.game.input.activePointer.leftButton.onUp.add(_this.playerShoot, _this, 1, false);
 		}
 
+		//UI
+		_this.ui = new _UI2.default(_this.game, _this.stats);
+
+		//Add player to stage
 		_this.game.add.existing(_this);
-		_this.game.add.existing(_this.statTextGroup);
 		return _this;
 	}
 
@@ -6867,31 +5841,6 @@ var Player = function (_Phaser$Sprite) {
 		value: function update() {
 			this.updateAngle();
 			this.updatePlayerPos();
-		}
-	}, {
-		key: 'addStat',
-		value: function addStat(button, mouse) {
-			if (this.points > 0) {
-				this.game.room.send({ pointsAdded: button.name });
-				this.points--;
-				this.updateText('points');
-			}
-		}
-	}, {
-		key: 'textOver',
-		value: function textOver(button, mouse) {
-			button.alpha = 1;
-		}
-	}, {
-		key: 'textOut',
-		value: function textOut(button, mouse) {
-			button.alpha = 0.5;
-		}
-	}, {
-		key: 'addPoints',
-		value: function addPoints() {
-			this.points++;
-			this.updateText('points');
 		}
 	}, {
 		key: 'setHealth',
@@ -6919,6 +5868,12 @@ var Player = function (_Phaser$Sprite) {
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
 	}, {
+		key: 'levelUp',
+		value: function levelUp(value) {
+			this.stats.level = value;
+			this.ui.updateText('level', value);
+		}
+	}, {
 		key: 'upgradeStat',
 		value: function upgradeStat(type, value) {
 			switch (type) {
@@ -6937,7 +5892,7 @@ var Player = function (_Phaser$Sprite) {
 					break;
 			}
 
-			this.updateText(type);
+			this.ui.updateText(type);
 		}
 	}, {
 		key: 'updateAngle',
@@ -6965,30 +5920,6 @@ var Player = function (_Phaser$Sprite) {
 		key: 'playerShoot',
 		value: function playerShoot(obj) {
 			this.game.room.send({ shoot: obj.isDown });
-		}
-	}, {
-		key: 'updateText',
-		value: function updateText(type, text) {
-			switch (type) {
-				case 'level':
-					this.levelText.text = 'Level: ' + this.level;
-					break;
-				case 'points':
-					this.pointsText.text = 'Points: ' + this.points;
-					break;
-				case 'firerate':
-					this.firerateText.text = 'Firerate: ' + this.stats.firerate;
-					break;
-				case 'speed':
-					this.speedText.text = 'Speed: ' + this.stats.speed;
-					break;
-				case 'damage':
-					this.damageText.text = 'Damage: ' + this.stats.damage;
-					break;
-				case 'health':
-					this.healthText.text = 'Health: ' + this.stats.health;
-					break;
-			}
 		}
 	}, {
 		key: 'respawn',
@@ -7030,7 +5961,159 @@ var Player = function (_Phaser$Sprite) {
 
 exports.default = Player;
 
-},{"./DebugBody":46,"./HealthBar":47}],49:[function(require,module,exports){
+},{"./DebugBody":40,"./HealthBar":41,"./UI":43}],43:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
+var _HealthBar = require('./HealthBar');
+
+var _HealthBar2 = _interopRequireDefault(_HealthBar);
+
+function _interopRequireDefault(obj) {
+	return obj && obj.__esModule ? obj : { default: obj };
+}
+
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+//import Player from './Player';
+
+var UI = function () {
+	function UI(game, stats) {
+		var _this = this;
+
+		_classCallCheck(this, UI);
+
+		//super();
+
+		this.game = game;
+		this.stats = stats;
+
+		this.statTextGroup = this.game.add.group();
+		this.statButtonGroup = this.game.add.group();
+
+		//Experience bar
+		this.expBar = new _HealthBar2.default(this.game, {
+			x: 100,
+			y: 50,
+			width: 128,
+			height: 16,
+			animationDuration: 200
+		});
+		this.expBar.setPercent(0);
+
+		// Text
+		this.levelText = this.game.add.bitmapText(156, 100, 'font', 'Level: ' + 1, 32);
+		this.pointsText = this.game.add.bitmapText(156, 225, 'font', 'Points: ' + 0, 23);
+		this.firerateText = this.game.add.bitmapText(156, 250, 'font', 'Firerate: ' + 1, 23);
+		this.speedText = this.game.add.bitmapText(156, 275, 'font', 'Speed: ' + 1, 23);
+		this.damageText = this.game.add.bitmapText(156, 300, 'font', 'Damage: ' + 1, 23);
+		this.healthText = this.game.add.bitmapText(156, 325, 'font', 'Health: ' + 1, 23);
+
+		this.statTextGroup.add(this.levelText);
+		this.statTextGroup.add(this.pointsText);
+		this.statTextGroup.add(this.firerateText);
+		this.statTextGroup.add(this.speedText);
+		this.statTextGroup.add(this.damageText);
+		this.statTextGroup.add(this.healthText);
+
+		this.statTextGroup.forEach(function (item) {
+			item.anchor.setTo(1, 1);
+			item.inputEnabled = true;
+			var name = item.text.substring(0, item.text.indexOf(':')).toLowerCase();
+
+			if (['firerate', 'speed', 'damage', 'health'].toString().includes(name)) {
+				item.alpha = 0.5;
+				item.name = name;
+				item.events.onInputDown.add(_this.addStat, _this);
+				item.events.onInputOver.add(_this.textOver, _this);
+				item.events.onInputOut.add(_this.textOut, _this);
+			}
+		});
+
+		this.expBar.barSprite.fixedToCamera = true;
+		this.expBar.bgSprite.fixedToCamera = true;
+		this.statTextGroup.fixedToCamera = true;
+		this.statButtonGroup.fixedToCamera = true;
+
+		this.game.add.existing(this.statTextGroup);
+
+		return this;
+	}
+
+	_createClass(UI, [{
+		key: 'updateText',
+		value: function updateText(type, text) {
+			switch (type) {
+				case 'level':
+					this.levelText.text = 'Level: ' + this.stats.level;
+					break;
+				case 'points':
+					this.pointsText.text = 'Points: ' + this.stats.points;
+					break;
+				case 'firerate':
+					this.firerateText.text = 'Firerate: ' + this.stats.firerate;
+					break;
+				case 'speed':
+					this.speedText.text = 'Speed: ' + this.stats.speed;
+					break;
+				case 'damage':
+					this.damageText.text = 'Damage: ' + this.stats.damage;
+					break;
+				case 'health':
+					this.healthText.text = 'Health: ' + this.stats.health;
+					break;
+			}
+		}
+	}, {
+		key: 'addPoints',
+		value: function addPoints() {
+			this.stats.points++;
+			this.updateText('points', this.stats.points);
+		}
+	}, {
+		key: 'addStat',
+		value: function addStat(button, mouse) {
+			if (this.stats.points > 0) {
+				this.game.room.send({ pointsAdded: button.name });
+				this.stats.points--;
+				this.updateText('points', this.stats.points);
+			}
+		}
+	}, {
+		key: 'textOver',
+		value: function textOver(button, mouse) {
+			button.alpha = 1;
+		}
+	}, {
+		key: 'textOut',
+		value: function textOut(button, mouse) {
+			button.alpha = 0.5;
+		}
+	}]);
+
+	return UI;
+}();
+
+exports.default = UI;
+
+},{"./HealthBar":41}],44:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -7099,7 +6182,7 @@ var Boot = function (_Phaser$State) {
 
 exports.default = Boot;
 
-},{}],50:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7115,10 +6198,6 @@ var _createClass = function () {
 		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
 	};
 }();
-
-var _phaserMoveAndStopPlugin = require('phaser-move-and-stop-plugin');
-
-var _phaserMoveAndStopPlugin2 = _interopRequireDefault(_phaserMoveAndStopPlugin);
 
 var _Player = require('objects/Player');
 
@@ -7170,7 +6249,6 @@ var Main = function (_Phaser$State) {
 	_createClass(Main, [{
 		key: 'create',
 		value: function create() {
-			this.game.moveAndStop = this.game.plugins.add(_phaserMoveAndStopPlugin2.default);
 			this.game.stage.backgroundColor = '#000022';
 			this.game.stage.disableVisibilityChange = true;
 			this.game.world.setBounds(0, 0, 1920, 1920);
@@ -7245,11 +6323,11 @@ var Main = function (_Phaser$State) {
 					var _player = _this2.clients[_this2.id];
 					_player.exp = message.expGain.exp;
 					_player.expAmount = message.expGain.expAmount;
-					_player.expBar.setPercent(_player.exp / _player.expAmount * 100);
+					_player.ui.expBar.setPercent(_player.exp / _player.expAmount * 100);
 				}
 
 				if (message.levelUp) {
-					_this2.clients[_this2.id].addPoints();
+					_this2.clients[_this2.id].ui.addPoints();
 				}
 
 				if (message.statUpgrade) {
@@ -7287,8 +6365,7 @@ var Main = function (_Phaser$State) {
 								if (change.path.id !== _this2.id) {
 									console.log("Player: " + change.path.id + " dinged to level " + change.value);
 								} else {
-									player.level = change.value;
-									player.updateText('level');
+									player.levelUp(change.value);
 								}
 								break;
 						}
@@ -7373,7 +6450,7 @@ var Main = function (_Phaser$State) {
 
 exports.default = Main;
 
-},{"objects/Bit":43,"objects/Bullet":44,"objects/Client":45,"objects/Player":48,"phaser-move-and-stop-plugin":24}],51:[function(require,module,exports){
+},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Player":42}],46:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7447,5 +6524,5 @@ var Preload = function (_Phaser$State) {
 
 exports.default = Preload;
 
-},{}]},{},[42])
+},{}]},{},[36])
 //# sourceMappingURL=game.js.map

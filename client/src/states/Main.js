@@ -1,4 +1,3 @@
-import MoveAndStopPlugin from "phaser-move-and-stop-plugin";
 import Player from 'objects/Player';
 import Client from 'objects/Client';
 import Bullet from 'objects/Bullet';
@@ -7,7 +6,6 @@ import Bit from 'objects/Bit';
 class Main extends Phaser.State {
 
 	create() {
-		this.game.moveAndStop = this.game.plugins.add(MoveAndStopPlugin);
 		this.game.stage.backgroundColor = '#000022';
 		this.game.stage.disableVisibilityChange = true;
 		this.game.world.setBounds(0, 0, 1920, 1920);
@@ -78,11 +76,11 @@ class Main extends Phaser.State {
 				let player = this.clients[this.id];
 				player.exp = message.expGain.exp;
 				player.expAmount = message.expGain.expAmount;
-				player.expBar.setPercent((player.exp / player.expAmount) * 100);
+				player.ui.expBar.setPercent((player.exp / player.expAmount) * 100);
 			}
 
 			if (message.levelUp) {
-				this.clients[this.id].addPoints();
+				this.clients[this.id].ui.addPoints();
 			}
 
 			if (message.statUpgrade) {
@@ -120,8 +118,7 @@ class Main extends Phaser.State {
 							if (change.path.id !== this.id) {
 								console.log("Player: " + change.path.id + " dinged to level " + change.value);
 							} else {
-								player.level = change.value;
-								player.updateText('level');
+								player.levelUp(change.value);
 							}
 						break;
 					}

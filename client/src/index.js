@@ -3,13 +3,20 @@ import Boot from 'states/Boot';
 import Preload from 'states/Preload';
 import Main from 'states/Main';
 
+const config = {
+	width: 0,
+	height: 0,
+	renderer: Phaser.AUTO,
+	parent: 'trianglearcade'
+}
+
 class Game extends Phaser.Game {
 	constructor() {
-		super(1, 1, Phaser.WEBGL, 'trianglearcade');
+		super(config);
 		
 		const endpoint = (window.location.hostname.indexOf("herokuapp") === -1)
 			? "ws://localhost:3000" // - Local
-			: `${window.location.protocol.replace("https", "wss")}//${window.location.hostname}`; // - Heroku/remote
+			: `${window.location.protocol.replace("http", "ws")}//${window.location.hostname}`; // - Heroku/remote
 		this.colyseus = new Client(endpoint);
 		this.state.add('Boot', Boot, false);
 		this.state.add('Preload', Preload, false);
