@@ -68,6 +68,7 @@ class Main extends Phaser.State {
 				bullet.owner = message.bullet.owner;
 				bullet.id = message.bullet.id;
 				bullet.angle = message.bullet.angle;
+				bullet.speed = message.bullet.speed;
 				bullet.timer = Date.now() + 1000;
 				bullet.reset(message.bullet.x, message.bullet.y);
 			}
@@ -105,7 +106,11 @@ class Main extends Phaser.State {
 							player.dest.y = change.value;
 						break;
 						case 'health':
-							player.playerHealthBar.setPercent((change.value / player.maxHealth) * 100);
+							player.setHealth(change.value);
+						break;
+						case 'maxHealth':
+							player.maxHealth = change.value;
+							player.setHealth(player.health);
 						break;
 						case 'alive':
 							if (change.value) {
@@ -129,7 +134,7 @@ class Main extends Phaser.State {
 		this.game.room.listen("players/:id", change => {
 			if (change.operation === "add") {
 				if (change.path.id !== this.id) {
-					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health);
+					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health, change.value.maxHealth);
 				}
 			} else if (change.operation === "remove") {
 				this.clients[change.path.id].leave();

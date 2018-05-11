@@ -5296,7 +5296,7 @@ function _inherits(subClass, superClass) {
 var Bullet = function (_Phaser$Sprite) {
 	_inherits(Bullet, _Phaser$Sprite);
 
-	function Bullet(game, x, y, speed) {
+	function Bullet(game, x, y) {
 		_classCallCheck(this, Bullet);
 
 		var _this = _possibleConstructorReturn(this, (Bullet.__proto__ || Object.getPrototypeOf(Bullet)).call(this, game, x, y, 'bullet'));
@@ -5304,6 +5304,7 @@ var Bullet = function (_Phaser$Sprite) {
 		_this.owner;
 		_this.id;
 		_this.angle;
+		_this.speed = 0;
 		_this.game = game;
 		_this.timer = Date.now() + 1000;
 		_this.anchor.setTo(0.5, 0.5);
@@ -5317,8 +5318,8 @@ var Bullet = function (_Phaser$Sprite) {
 		key: 'update',
 		value: function update() {
 			if (this.alive) {
-				this.x += Math.sin(this.angle * Math.PI / 180) * 24 / 3;
-				this.y -= Math.cos(this.angle * Math.PI / 180) * 24 / 3;
+				this.x += Math.sin(this.angle * Math.PI / 180) * (24 + this.speed) / 3;
+				this.y -= Math.cos(this.angle * Math.PI / 180) * (24 + this.speed) / 3;
 
 				if (Date.now() > this.timer) {
 					this.kill();
@@ -5382,14 +5383,14 @@ function _inherits(subClass, superClass) {
 var Client = function (_Phaser$Sprite) {
 	_inherits(Client, _Phaser$Sprite);
 
-	function Client(game, x, y, health) {
+	function Client(game, x, y, health, maxHealth) {
 		_classCallCheck(this, Client);
 
 		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, x, y, 'spaceship_white'));
 
 		_this.game = game;
 		_this.health = health;
-		_this.maxHealth = 100;
+		_this.maxHealth = maxHealth;
 		_this.angle = 0;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
@@ -5442,6 +5443,11 @@ var Client = function (_Phaser$Sprite) {
 			this.alpha = 0;
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
+		}
+	}, {
+		key: 'setHealth',
+		value: function setHealth(value) {
+			this.playerHealthBar.setPercent(value / this.maxHealth * 100);
 		}
 	}, {
 		key: 'leave',
@@ -6315,6 +6321,7 @@ var Main = function (_Phaser$State) {
 					bullet.owner = message.bullet.owner;
 					bullet.id = message.bullet.id;
 					bullet.angle = message.bullet.angle;
+					bullet.speed = message.bullet.speed;
 					bullet.timer = Date.now() + 1000;
 					bullet.reset(message.bullet.x, message.bullet.y);
 				}
@@ -6352,7 +6359,11 @@ var Main = function (_Phaser$State) {
 								player.dest.y = change.value;
 								break;
 							case 'health':
-								player.playerHealthBar.setPercent(change.value / player.maxHealth * 100);
+								player.setHealth(change.value);
+								break;
+							case 'maxHealth':
+								player.maxHealth = change.value;
+								player.setHealth(player.health);
 								break;
 							case 'alive':
 								if (change.value) {
@@ -6376,7 +6387,7 @@ var Main = function (_Phaser$State) {
 			this.game.room.listen("players/:id", function (change) {
 				if (change.operation === "add") {
 					if (change.path.id !== _this2.id) {
-						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health);
+						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health, change.value.maxHealth);
 					}
 				} else if (change.operation === "remove") {
 					_this2.clients[change.path.id].leave();

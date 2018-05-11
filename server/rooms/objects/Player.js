@@ -7,7 +7,9 @@ module.exports = class Player {
         this.id = id;
         this.x = x;
         this.y = y;
-        this.alive = false;        this.health = 100;
+        this.alive = false;
+        this.health = 100;
+        this.maxHealth = 100;
         this.level = 1;
 
         this.private = util.setEnumerable({
@@ -29,7 +31,6 @@ module.exports = class Player {
             exp: 0,
             expNeeded: 200,
             points: 0,
-            maxHealth: 100,
             speed: 0,
             maxSpeed: 8,
             damage: 10
@@ -46,13 +47,14 @@ module.exports = class Player {
         if (this.private.shooting && (Date.now() > this.private.lastShot)) {
             this.private.lastShot = Date.now() + this.private.fireRate;
             let pos = this.private.speed > 4 ? this.private.bodyPos : {x: this.x, y: this.y};
-            let bullet = new Bullet(pos.x, pos.y, this.private.angle, this.id);
+            let bullet = new Bullet(pos.x, pos.y, this.private.angle, this.id, this.private.speed);
             this.private.bullets.push(bullet);
             this.private.network.sendToAll({bullet: {
                 id: bullet.owner,
                 x: bullet.x,
                 y: bullet.y,
-                angle: bullet.angle
+                angle: bullet.angle,
+                speed: bullet.speed
             }});
         }
     }
@@ -76,13 +78,13 @@ module.exports = class Player {
 
     accelerate() {
         if (this.private.speed < this.private.maxSpeed) {
-            this.private.speed += 2;
+            this.private.speed += 1;
         }
     }
 
     decelerate() {
         if (this.private.speed > 0) {
-            this.private.speed -= 1;
+            this.private.speed -= 0.5;
         } else {
             this.private.speed = 0;
         }
@@ -147,7 +149,7 @@ module.exports = class Player {
                     this.sendUpgrade(type, this.private.fireRate);
                 break;
                 case 'speed':
-                    this.private.maxSpeed++;
+                    this.private.maxSpeed += 0.75;
                     this.sendUpgrade(type, this.private.maxSpeed);
                 break;
                 case 'damage':
@@ -155,9 +157,9 @@ module.exports = class Player {
                     this.sendUpgrade(type, this.private.damage);
                 break;
                 case 'health':
-                    this.private.maxHealth += 50;
+                    this.maxHealth += 50;
                     this.health += 50;
-                    this.sendUpgrade(type, this.private.maxHealth);
+                    this.sendUpgrade(type, this.maxHealth);
                 break;
                 default:
                     passed = false;
@@ -188,7 +190,7 @@ module.exports = class Player {
 
     respawn() {
         this.alive = true;
-        this.health = this.private.maxHealth;
+        this.health = this.maxHealth;
     }
 
     updateBullets() {

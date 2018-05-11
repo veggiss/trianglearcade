@@ -59,10 +59,6 @@ module.exports = class StateHandlerRoom extends Room {
         }
     }
 
-    onDispose () {
-        console.log("Dispose room");
-    }
-
     sendToAll(message, exclude) {
         let excludeList = Array.isArray(exclude) ? exclude : [];
 

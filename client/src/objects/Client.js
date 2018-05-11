@@ -2,12 +2,12 @@ import DebugBody from './DebugBody';
 import HealthBar from './HealthBar';
 
 class Client extends Phaser.Sprite {
-	constructor(game, x, y, health) {
+	constructor(game, x, y, health, maxHealth) {
 		super(game, x, y, 'spaceship_white');
 
 		this.game = game;
 		this.health = health;
-		this.maxHealth = 100;
+		this.maxHealth = maxHealth;
 		this.angle = 0;
 		this.dest = {x: x, y: y, angle: this.angle};
 
@@ -55,6 +55,10 @@ class Client extends Phaser.Sprite {
 		this.alpha = 0;
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
+	}
+
+	setHealth(value) {
+		this.playerHealthBar.setPercent((value/this.maxHealth) * 100);
 	}
 
 	leave() {
