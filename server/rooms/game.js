@@ -11,6 +11,7 @@ module.exports = class StateHandlerRoom extends Room {
         this.state.timeline.maxSnapshots = 1;
         this.state.timeline.takeSnapshot(this.state.players);*/
         this.state.populateBits();
+        this.state.populatePowerUps();
         this.setSimulationInterval(() => this.update(), 1000 / 20);
     }
 

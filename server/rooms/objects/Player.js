@@ -33,6 +33,7 @@ module.exports = class Player {
             points: 0,
             speed: 0,
             maxSpeed: 8,
+            speedBoost: 0,
             damage: 10
         });
     }
@@ -77,7 +78,7 @@ module.exports = class Player {
     }
 
     accelerate() {
-        if (this.private.speed < this.private.maxSpeed) {
+        if (this.private.speed < (this.private.maxSpeed + this.private.speedBoost)) {
             this.private.speed += 1;
         }
     }

@@ -2,6 +2,7 @@ import Player from 'objects/Player';
 import Client from 'objects/Client';
 import Bullet from 'objects/Bullet';
 import Bit from 'objects/Bit';
+import PowerUp from 'objects/PowerUp';
 
 class Main extends Phaser.State {
 
@@ -23,6 +24,7 @@ class Main extends Phaser.State {
 		this.game.room = this.game.colyseus.join('game');
 		this.bulletPool = this.game.add.group();
 		this.bitsPool = this.game.add.group();
+		this.powerUpPool = this.game.add.group();
 		this.clients = {};
 		this.id;
 
@@ -34,6 +36,7 @@ class Main extends Phaser.State {
 	    //Create bullets
 	    this.createBulletPool();
 	    this.createBitsPool();
+	    this.createPowerUpPool();
 
 		this.netListener();
 	}
@@ -55,11 +58,20 @@ class Main extends Phaser.State {
 			}
 
 			if (message.bitHit) {
-				let bit = this.findBit(message.bitHit.id);
+				let bit = this.findInGroup(message.bitHit.id, this.bitsPool);
 				if (bit) {
 					let player = this.clients[message.bitHit.player];
 					bit.target = player;
 					bit.activated = true;
+				}
+			}
+
+			if (message.powerUpHit) {
+				let powerup = this.findInGroup(message.powerUpHit.id, this.powerUpPool);
+				if (powerup) {
+					let player = this.clients[message.powerUpHit.player];
+					powerup.target = player;
+					powerup.activated = true;
 				}
 			}
 
@@ -150,6 +162,15 @@ class Main extends Phaser.State {
 				bit.reset(change.value.x, change.value.y);
 			}
 		});
+
+		this.game.room.listen("powerUps/:id", change => {
+			if (change.operation === 'add') {
+				let powerUp = this.powerUpPool.getFirstDead();
+				powerUp.id = change.path.id;
+				powerUp.type = change.value.type;
+				powerUp.reset(change.value.x, change.value.y);
+			}
+		});
 	}
 
 	createBulletPool() {
@@ -164,17 +185,23 @@ class Main extends Phaser.State {
 		}
 	}
 
-	findBit(id) {
-		let foundBit;
+	createPowerUpPool() {
+		for (let i = 0; i < 10; i++) {
+			this.powerUpPool.add(new PowerUp(this.game));
+		}
+	}
 
-		this.bitsPool.forEachAlive(bit => {
-			if (bit.id === id) {
-				bit.id = id;
-				foundBit = bit;
+	findInGroup(id, group) {
+		let foundItem;
+
+		group.forEachAlive(item => {
+			if (item.id === id) {
+				item.id = id;
+				foundItem = item;
 			}
 		});
 
-		return foundBit;
+		return foundItem;
 	}
 
 	updateBullets() {

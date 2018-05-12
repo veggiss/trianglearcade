@@ -5169,7 +5169,7 @@ var Game = function (_Phaser$Game) {
 
 new Game();
 
-},{"colyseus.js":13,"states/Boot":44,"states/Main":45,"states/Preload":46}],37:[function(require,module,exports){
+},{"colyseus.js":13,"states/Boot":45,"states/Main":46,"states/Preload":47}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5967,7 +5967,98 @@ var Player = function (_Phaser$Sprite) {
 
 exports.default = Player;
 
-},{"./DebugBody":40,"./HealthBar":41,"./UI":43}],43:[function(require,module,exports){
+},{"./DebugBody":40,"./HealthBar":41,"./UI":44}],43:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+function _possibleConstructorReturn(self, call) {
+	if (!self) {
+		throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	}return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+	if (typeof superClass !== "function" && superClass !== null) {
+		throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+	}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var PowerUp = function (_Phaser$Sprite) {
+	_inherits(PowerUp, _Phaser$Sprite);
+
+	function PowerUp(game, x, y) {
+		_classCallCheck(this, PowerUp);
+
+		var _this = _possibleConstructorReturn(this, (PowerUp.__proto__ || Object.getPrototypeOf(PowerUp)).call(this, game, x, y, 'powerUp'));
+
+		_this.id;
+		_this.target;
+		_this.type = undefined;
+		_this.game = game;
+		_this.anchor.setTo(0.5, 0.5);
+		_this.kill();
+
+		_this.game.add.existing(_this);
+		return _this;
+	}
+
+	_createClass(PowerUp, [{
+		key: 'update',
+		value: function update() {
+			if (this.activated) {
+				this.moveToTarget();
+			}
+		}
+	}, {
+		key: 'moveToTarget',
+		value: function moveToTarget() {
+			if (this.target) {
+				this.x = this.lerp(this.x, this.target.x, 0.1);
+				this.y = this.lerp(this.y, this.target.y, 0.1);
+
+				var dx = this.target.x - this.x;
+				var dy = this.target.y - this.y;
+				var dist = Math.sqrt(dx * dx + dy * dy);
+
+				if (dist < 25) {
+					this.activated = false;
+					this.type = undefined;
+					this.kill();
+				}
+			}
+		}
+	}, {
+		key: 'lerp',
+		value: function lerp(a, b, n) {
+			return (1 - n) * a + n * b;
+		}
+	}]);
+
+	return PowerUp;
+}(Phaser.Sprite);
+
+exports.default = PowerUp;
+
+},{}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6119,7 +6210,7 @@ var UI = function () {
 
 exports.default = UI;
 
-},{"./HealthBar":41}],44:[function(require,module,exports){
+},{"./HealthBar":41}],45:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6188,7 +6279,7 @@ var Boot = function (_Phaser$State) {
 
 exports.default = Boot;
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6220,6 +6311,10 @@ var _Bullet2 = _interopRequireDefault(_Bullet);
 var _Bit = require('objects/Bit');
 
 var _Bit2 = _interopRequireDefault(_Bit);
+
+var _PowerUp = require('objects/PowerUp');
+
+var _PowerUp2 = _interopRequireDefault(_PowerUp);
 
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj };
@@ -6272,6 +6367,7 @@ var Main = function (_Phaser$State) {
 			this.game.room = this.game.colyseus.join('game');
 			this.bulletPool = this.game.add.group();
 			this.bitsPool = this.game.add.group();
+			this.powerUpPool = this.game.add.group();
 			this.clients = {};
 			this.id;
 
@@ -6283,6 +6379,7 @@ var Main = function (_Phaser$State) {
 			//Create bullets
 			this.createBulletPool();
 			this.createBitsPool();
+			this.createPowerUpPool();
 
 			this.netListener();
 		}
@@ -6308,11 +6405,20 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.bitHit) {
-					var bit = _this2.findBit(message.bitHit.id);
+					var bit = _this2.findInGroup(message.bitHit.id, _this2.bitsPool);
 					if (bit) {
 						var player = _this2.clients[message.bitHit.player];
 						bit.target = player;
 						bit.activated = true;
+					}
+				}
+
+				if (message.powerUpHit) {
+					var powerup = _this2.findInGroup(message.powerUpHit.id, _this2.powerUpPool);
+					if (powerup) {
+						var _player = _this2.clients[message.powerUpHit.player];
+						powerup.target = _player;
+						powerup.activated = true;
 					}
 				}
 
@@ -6327,10 +6433,10 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.expGain) {
-					var _player = _this2.clients[_this2.id];
-					_player.exp = message.expGain.exp;
-					_player.expAmount = message.expGain.expAmount;
-					_player.ui.expBar.setPercent(_player.exp / _player.expAmount * 100);
+					var _player2 = _this2.clients[_this2.id];
+					_player2.exp = message.expGain.exp;
+					_player2.expAmount = message.expGain.expAmount;
+					_player2.ui.expBar.setPercent(_player2.exp / _player2.expAmount * 100);
 				}
 
 				if (message.levelUp) {
@@ -6403,6 +6509,15 @@ var Main = function (_Phaser$State) {
 					bit.reset(change.value.x, change.value.y);
 				}
 			});
+
+			this.game.room.listen("powerUps/:id", function (change) {
+				if (change.operation === 'add') {
+					var powerUp = _this2.powerUpPool.getFirstDead();
+					powerUp.id = change.path.id;
+					powerUp.type = change.value.type;
+					powerUp.reset(change.value.x, change.value.y);
+				}
+			});
 		}
 	}, {
 		key: 'createBulletPool',
@@ -6419,18 +6534,25 @@ var Main = function (_Phaser$State) {
 			}
 		}
 	}, {
-		key: 'findBit',
-		value: function findBit(id) {
-			var foundBit = void 0;
+		key: 'createPowerUpPool',
+		value: function createPowerUpPool() {
+			for (var i = 0; i < 10; i++) {
+				this.powerUpPool.add(new _PowerUp2.default(this.game));
+			}
+		}
+	}, {
+		key: 'findInGroup',
+		value: function findInGroup(id, group) {
+			var foundItem = void 0;
 
-			this.bitsPool.forEachAlive(function (bit) {
-				if (bit.id === id) {
-					bit.id = id;
-					foundBit = bit;
+			group.forEachAlive(function (item) {
+				if (item.id === id) {
+					item.id = id;
+					foundItem = item;
 				}
 			});
 
-			return foundBit;
+			return foundItem;
 		}
 	}, {
 		key: 'updateBullets',
@@ -6461,7 +6583,7 @@ var Main = function (_Phaser$State) {
 
 exports.default = Main;
 
-},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Player":42}],46:[function(require,module,exports){
+},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Player":42,"objects/PowerUp":43}],47:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6511,6 +6633,7 @@ var Preload = function (_Phaser$State) {
 			this.game.load.image('player', 'assets/player.png');
 			this.game.load.image('spaceship_white', 'assets/spaceship_white.png');
 			this.game.load.image('bit', 'assets/bit.png');
+			this.game.load.image('powerUp', 'assets/powerUp.png');
 			this.game.load.image('bullet', 'assets/bullet.png');
 			this.game.load.image('deathParticle', 'assets/deathParticle.png');
 			this.game.load.image('starfield', 'assets/starfield.png');

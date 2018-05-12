@@ -31,10 +31,15 @@ function setEnumerable(object) {
     return private;
 }
 
+function ranNumBetween(min, max) {
+    return Math.floor(Math.random() * max) + min;
+}
+
 module.exports = {
     ranWorldPos: ranWorldPos,
     ranPlayerAngle: ranPlayerAngle,
     distanceFrom: distanceFrom,
     uniqueId: uniqueId,
-    setEnumerable: setEnumerable
+    setEnumerable: setEnumerable,
+    ranNumBetween: ranNumBetween
 }

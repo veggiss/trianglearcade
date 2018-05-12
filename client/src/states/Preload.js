@@ -4,6 +4,7 @@ class Preload extends Phaser.State {
 		this.game.load.image('player', 'assets/player.png');
 		this.game.load.image('spaceship_white', 'assets/spaceship_white.png');
 		this.game.load.image('bit', 'assets/bit.png');
+		this.game.load.image('powerUp', 'assets/powerUp.png');
 		this.game.load.image('bullet', 'assets/bullet.png');
 		this.game.load.image('deathParticle', 'assets/deathParticle.png');
 		this.game.load.image('starfield', 'assets/starfield.png');

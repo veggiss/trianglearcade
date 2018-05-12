@@ -1,20 +1,27 @@
 const Room = require('colyseus').Room;
 const Player = require('./../objects/Player');
 const Bit = require('./../objects/Bit');
+const PowerUp = require('./../objects/PowerUp');
+const Comet = require('./../objects/Comet');
 const game = require('./../game');
 const util = require('./../utility/util');
-
-let bitsTimer = Date.now() + 1000;
 
 module.exports = class State {
     constructor(network) {
         this.players = {};
         this.bits = {};
+        this.powerUps = {};
+        this.comets = {};
 
         this.private = util.setEnumerable({
             network: network,
-            bitsTimer: Date.now() + 1000,
-            bitExpAmount: 25
+            bitsTimer: Date.now(),
+            powerUpTimer: Date.now(),
+            bitExpAmount: 25,
+            powerUpTypes: ['healthBoost', 'slowDownAll', 'speedBoost', 'enrage'],
+            maxBits: 75,
+            maxPowerUps: 4,
+            maxComets: 4
         });
     }
 
@@ -39,9 +46,23 @@ module.exports = class State {
         player.private.angle = angle;
     }
 
+    populateComets() {
+        for (let i = 0; i < this.private.maxBits; i++) {
+            this.addNewComet();
+        }
+    }
+
     populateBits() {
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < this.private.maxBits; i++) {
             this.addNewBit();
+        }
+    }
+
+    populatePowerUps() {
+        for (let i = 0; i < this.private.maxPowerUps; i++) {
+            setTimeout(() => {
+                this.addNewPowerUp();
+            }, util.ranNumBetween(30000, 60000));
         }
     }
 
@@ -51,17 +72,54 @@ module.exports = class State {
         while (this.bits[id]) {
             id = util.uniqueId(4);
         }
+
         this.bits[id] = new Bit(pos.x, pos.y);
     }
 
-    bitOffset() {
-        return Object.keys(this.bits).length * 10;
+    addNewPowerUp() {
+        let pos = util.ranWorldPos();
+        let type = this.private.powerUpTypes[Math.floor(Math.random()*this.private.powerUpTypes.length)];
+        let id = util.uniqueId(4);
+        while (this.powerUps[id]) {
+            id = util.uniqueId(4);
+        }
+
+        this.powerUps[id] = new PowerUp(pos.x, pos.y, type);
+    }
+
+    addNewComet() {
+        let id = util.uniqueId(4);
+        while (this.comets[id]) {
+            id = util.uniqueId(4);
+        }
+        this.comets[id] = new Comet();
+
+    }
+
+    activatePowerUp(type, player) {
+        switch(type) {
+            case 'healthBoost':
+                if ((0.4 * player.maxHealth) + player.health < player.maxHealth) {
+                    player.health += (0.4 * player.maxHealth);
+                } else {
+                    player.health = player.maxHealth;
+                }
+            break;
+            case 'speedBoost':
+                player.private.speedBoost = 5;
+                setTimeout(() => {
+                    player.private.speedBoost = 0;
+                    if (player.private.speed > player.private.maxSpeed) player.private.speed = player.private.maxSpeed;
+                }, 5000);
+            break;
+            default:
+                console.log(`Error: Could not activate powerup on player: ${player.id}, type ${type} was not found.`);
+        }
     }
 
     //Updaters
     globalUpdate() {
         this.updatePlayers();
-        this.updateBits();
     }
 
     updatePlayers() {
@@ -71,15 +129,7 @@ module.exports = class State {
             this.playerWorldCollision(currentPlayer);
             this.playerBulletCollision(currentPlayer);
             this.playerBitsCollision(currentPlayer);
-        }
-    }
-
-    updateBits() {
-        if (Object.keys(this.bits).length < 100) {
-            if (Date.now() > bitsTimer) {
-                this.addNewBit();
-                bitsTimer = Date.now() + this.bitOffset();
-            }
+            this.playerPowerUpCollision(currentPlayer);
         }
     }
 
@@ -115,11 +165,35 @@ module.exports = class State {
                 let dist = util.distanceFrom(bit, player);
                 if (dist < 40) {
                     delete this.bits[id];
+                    setTimeout(() => {
+                        this.addNewBit();
+                    }, util.ranNumBetween(500, 3000));
                     player.addXp(this.private.bitExpAmount);
                     this.private.network.sendToAll({bitHit: {
                         id: id,
                         player: player.id
                     }});
+                }
+            }
+        }
+    }
+
+    playerPowerUpCollision(player) {
+        for (let id in this.powerUps) {
+            let powerup = this.powerUps[id];
+            if (player) {
+                let dist = util.distanceFrom(powerup, player.private.bodyPos);
+                if (dist < 25) {
+                    delete this.powerUps[id];
+                    setTimeout(() => {
+                        this.addNewPowerUp();
+                    }, util.ranNumBetween(30000, 60000));
+                    this.private.network.sendToAll({powerUpHit: {
+                        id: id,
+                        player: player.id
+                    }});
+
+                    this.activatePowerUp(powerup.type, player);
                 }
             }
         }
