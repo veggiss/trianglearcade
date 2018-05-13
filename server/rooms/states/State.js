@@ -41,9 +41,9 @@ module.exports = class State {
         //Dies and respawns after 3 seconds with these positions
         let pos = util.ranWorldPos();
         let angle = util.ranPlayerAngle();
-        player.x = pos.x;
-        player.y = pos.y;
-        player.angle = angle;
+        player.pos.x = pos.x;
+        player.pos.y = pos.y;
+        player.pos.angle = angle;
     }
 
     populateBits() {
@@ -131,9 +131,36 @@ module.exports = class State {
         }
     }
 
+    sendProximity() {
+        for (let id in this.players) {
+            let currentPlayer = this.players[id];
+
+            if (currentPlayer) {
+                this.private.network.sendToClient(id, {updateClient: {
+                    id: id,
+                    x: currentPlayer.pos.x,
+                    y: currentPlayer.pos.y,
+                    angle: currentPlayer.pos.angle,
+                    health: currentPlayer.pos.health
+                }});
+
+                let list = util.getProximityList(currentPlayer, this.players, true, 1000);
+                list.forEach(targetId => {
+                    this.private.network.sendToClient(targetId, {updateClient: {
+                        id: id,
+                        x: currentPlayer.pos.x,
+                        y: currentPlayer.pos.y,
+                        angle: currentPlayer.pos.angle,
+                        health: currentPlayer.pos.health
+                    }});
+                });
+            }
+        }
+    }
+
     playerWorldCollision(player) {
-        if (player.x < 0 || player.x > 1920) this.killPlayer(player);
-        else if (player.y < 0 || player.y > 1920) this.killPlayer(player);
+        if (player.pos.x < 0 || player.pos.x > 1920) this.killPlayer(player);
+        else if (player.pos.y < 0 || player.pos.y > 1920) this.killPlayer(player);
     }
 
     playerBulletCollision(player) {
@@ -167,10 +194,10 @@ module.exports = class State {
                     this.addNewBit();
 
                     player.addXp(this.private.bitExpAmount);
-                    this.private.network.sendToAll({bitHit: {
+                    this.private.network.sendToAllWithinProxy({bitHit: {
                         id: id,
                         player: player.id
-                    }});
+                    }}, {x: player.pos.x, y: player.pos.y, id: player.id}, 1000);
                 }
             }
         }

@@ -7,8 +7,26 @@ function ranPlayerAngle() {
 }
 
 function distanceFrom(source, target) {
-    let dx = source.x - target.x; 
-    let dy = source.y - target.y;
+    let sx, sy, tx, ty
+
+    if (source.pos) {
+        sx = source.pos.x;
+        sy = source.pos.y
+    } else {
+        sx = source.x;
+        sy = source.y;
+    }
+
+    if (target.pos) {
+        tx = target.pos.x;
+        ty = target.pos.y;
+    } else {
+        tx = target.x;
+        ty = target.y;
+    }
+
+    let dx = sx - tx; 
+    let dy = sy - ty;
 
     return Math.sqrt(dx * dx + dy * dy);
 }

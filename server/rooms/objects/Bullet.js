@@ -5,6 +5,7 @@ module.exports = class Bullet {
         this.y = y;
         this.angle = angle;
         this.speed = speed;
+        this.timer = Date.now() + 900;
     }
 
     update() {

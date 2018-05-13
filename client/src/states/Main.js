@@ -106,16 +106,13 @@ class Main extends Phaser.State {
 			if (message.updateClient) {
 				let m = message.updateClient;
 				let client = this.clients[m.id];
-
 				if (client) {
 					client.dest.x = m.x;
 					client.dest.y = m.y;
 					client.dest.angle = m.angle - 90;
-					if (client.health != m.health) client.setHealth(m.health);
+					client.setHealth(m.health);
 				}
 			}
-
-			console.log(message);
 
 			if (message.clientDeath) {
 				let m = message.clientDeath;
@@ -142,18 +139,6 @@ class Main extends Phaser.State {
 
 				if (player) {
 					switch(change.path.variable) {
-						case 'x':
-							player.dest.x = change.value;
-						break;
-						case 'y':
-							player.dest.y = change.value;
-						break;
-						case 'angle':
-							player.dest.angle = change.value - 90;
-						break;
-						case 'health':
-							player.setHealth(change.value);
-						break;
 						case 'maxHealth':
 							player.maxHealth = change.value;
 							player.setHealth(player.health);
@@ -180,7 +165,7 @@ class Main extends Phaser.State {
 		this.game.room.listen("players/:id", change => {
 			if (change.operation === "add") {
 				if (change.path.id !== this.id) {
-					this.clients[change.path.id] = new Client(this.game, change.value.x, change.value.y, change.value.health, change.value.maxHealth);
+					this.clients[change.path.id] = new Client(this.game, change.value.level, change.value.health, change.value.maxHealth);
 				}
 			} else if (change.operation === "remove") {
 				this.clients[change.path.id].leave();
@@ -194,15 +179,13 @@ class Main extends Phaser.State {
 				let bit = this.bitsPool.getFirstDead();
 				bit.id = change.path.id;
 				bit.reset(change.value.x, change.value.y);
-			} /*else if (change.operation === 'remove') {
+			} else if (change.operation === 'remove') {
 				setTimeout(() => {
 					let bit = this.findInGroup(change.path.id, this.bitsPool);
 
 					if (bit && !bit.activated) bit.kill();
-
-					console.log("lol");
 				}, 1000);
-			}*/
+			}
 		});
 
 		this.game.room.listen("powerUps/:id", change => {
@@ -211,6 +194,12 @@ class Main extends Phaser.State {
 				powerUp.id = change.path.id;
 				powerUp.type = change.value.type;
 				powerUp.reset(change.value.x, change.value.y);
+			} else if (change.operation === 'remove') {
+				setTimeout(() => {
+					let powerUp = this.findInGroup(change.path.id, this.powerUpPool);
+
+					if (powerUp && !powerUp.activated) powerUp.kill();
+				}, 1000);
 			}
 		});
 
@@ -219,7 +208,6 @@ class Main extends Phaser.State {
 				let comet = this.cometPool.getFirstDead();
 				comet.id = change.path.id;
 				comet.reset(change.value.x, change.value.y);
-				console.log(comet.x, comet.y);
 			} else if (change.operation === 'remove') {
 				let comet = this.findInGroup(change.path.id, this.cometPool);
 				if (comet) comet.kill();

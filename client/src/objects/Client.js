@@ -2,14 +2,15 @@ import DebugBody from './DebugBody';
 import HealthBar from './HealthBar';
 
 class Client extends Phaser.Sprite {
-	constructor(game, x, y, health, maxHealth) {
-		super(game, x, y, 'spaceship_white');
+	constructor(game, level, health, maxHealth) {
+		super(game, 0, 0, 'spaceship_white');
 
 		this.game = game;
 		this.health = health;
 		this.maxHealth = maxHealth;
+		this.level = level;
 		this.angle = 0;
-		this.dest = {x: x, y: y, angle: this.angle};
+		this.dest = {x: 0, y: 0, angle: this.angle};
 
 		//Emitter
 	    this.emitter = this.game.add.emitter(0, 0, 100);

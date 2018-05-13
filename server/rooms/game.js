@@ -14,6 +14,7 @@ module.exports = class StateHandlerRoom extends Room {
         this.state.populateBits();
         this.state.populateComets();
         this.setSimulationInterval(() => this.update(), 1000 / 20);
+        setInterval(() => this.updateProximity(), 100);
     }
 
     requestJoin(options) {
@@ -25,10 +26,10 @@ module.exports = class StateHandlerRoom extends Room {
         let player = this.state.players[client.sessionId];
         this.send(client, {me: {
             id: client.sessionId,
-            x: player.x,
-            y: player.y,
-            health: player.health,
-            angle: player.angle
+            x: player.pos.x,
+            y: player.pos.y,
+            health: player.pos.health,
+            angle: player.pos.angle
         }});
     }
 
@@ -56,6 +57,10 @@ module.exports = class StateHandlerRoom extends Room {
                 player.updateAngle(data.updateAngle);
             }
         }
+    }
+
+    updateProximity() {
+        this.state.sendProximity();
     }
 
     sendToAll(message, exclude) {

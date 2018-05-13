@@ -7,19 +7,22 @@ module.exports = class Player {
         this.id = id;
         this.maxHealth = 100;
         this.level = 1;
-        this.x = x;
-        this.y = y;
-        this.angle = angle;
         this.alive = false;
-        this.health = 100;
+
+        this.pos = util.setEnumerable({
+            x: x,
+            y: y,
+            angle: angle,
+            health: 100
+        });
 
         this.private = util.setEnumerable({
             network: network,
-            destAngle: this.angle,
+            destAngle: this.pos.angle,
             acceleration: 0.02,
             fireRate: 500,
             lastShot: Date.now(),
-            bodyPos: {x: this.x, y: this.y},
+            bodyPos: {x: this.pos.x, y: this.pos.y},
             moveUp: false,
             shooting: false,
             lastDeath: Date.now(),
@@ -46,8 +49,8 @@ module.exports = class Player {
     updateShoot() {
         if (this.private.shooting && (Date.now() > this.private.lastShot)) {
             this.private.lastShot = Date.now() + this.private.fireRate;
-            let pos = this.private.speed > 4 ? this.private.bodyPos : {x: this.x, y: this.y};
-            let bullet = new Bullet(pos.x, pos.y, this.angle, this.id, this.private.speed);
+            let pos = this.private.speed > 4 ? this.private.bodyPos : {x: this.pos.x, y: this.pos.y};
+            let bullet = new Bullet(pos.x, pos.y, this.pos.angle, this.id, this.private.speed);
             this.private.bullets.push(bullet);
 
             this.private.network.sendToAllWithinProxy({bullet: {
@@ -56,7 +59,7 @@ module.exports = class Player {
                 y: bullet.y,
                 angle: bullet.angle,
                 speed: bullet.speed
-            }}, {x: this.x, y: this.y, id: this.id}, 1000);
+            }}, {x: this.pos.x, y: this.pos.y, id: this.id}, 1000);
         }
     }
 
@@ -90,8 +93,8 @@ module.exports = class Player {
     }
 
     getNewAngle() {
-        let shortestAngle = util.getShortestAngle(util.wrapAngle(this.angle), util.wrapAngle(this.private.destAngle));
-        return this.lerp(this.angle, this.angle + shortestAngle, this.private.angVel);
+        let shortestAngle = util.getShortestAngle(util.wrapAngle(this.pos.angle), util.wrapAngle(this.private.destAngle));
+        return this.lerp(this.pos.angle, this.pos.angle + shortestAngle, this.private.angVel);
     }
 
     updateAngle(angle) {
@@ -99,12 +102,12 @@ module.exports = class Player {
     }
 
     updateBody() {
-        let rad = this.angle * Math.PI / 180;
-        this.x += Math.sin(rad) * this.private.speed;
-        this.y -= Math.cos(rad) * this.private.speed;
-        this.private.bodyPos.x = this.lerp(this.private.bodyPos.x, this.x, 0.175);
-        this.private.bodyPos.y = this.lerp(this.private.bodyPos.y, this.y, 0.175);
-        this.angle = this.getNewAngle();
+        let rad = this.pos.angle * Math.PI / 180;
+        this.pos.x += Math.round(Math.sin(rad) * this.private.speed);
+        this.pos.y -= Math.round(Math.cos(rad) * this.private.speed);
+        this.private.bodyPos.x = this.lerp(this.private.bodyPos.x, this.pos.x, 0.175);
+        this.private.bodyPos.y = this.lerp(this.private.bodyPos.y, this.pos.y, 0.175);
+        this.pos.angle = Math.round(this.getNewAngle());
     }
 
     setMoveup(data) {
@@ -120,10 +123,10 @@ module.exports = class Player {
     }
 
     bulletHit(damage) {
-        this.health -= damage;
+        this.pos.health -= damage;
         let died = false;
 
-        if (this.health <= 0) { 
+        if (this.pos.health <= 0) { 
             this.die();
             died = true;
         }
@@ -170,7 +173,7 @@ module.exports = class Player {
                 break;
                 case 'health':
                     this.maxHealth += 50;
-                    this.health += 50;
+                    this.pos.health += 50;
                     this.sendUpgrade(type, this.maxHealth);
                 break;
                 default:
@@ -203,14 +206,14 @@ module.exports = class Player {
         this.private.lastDeath = Date.now() + this.private.respawnTime;
         let pos = util.ranWorldPos();
         let angle = util.ranPlayerAngle();
-        this.x = pos.x;
-        this.y = pos.y;
-        this.angle = angle;
+        this.pos.x = pos.x;
+        this.pos.y = pos.y;
+        this.pos.angle = angle;
     }
 
     respawn() {
         this.alive = true;
-        this.health = this.maxHealth;
+        this.pos.health = this.maxHealth;
     }
 
     updateBullets() {

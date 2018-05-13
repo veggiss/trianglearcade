@@ -5383,16 +5383,17 @@ function _inherits(subClass, superClass) {
 var Client = function (_Phaser$Sprite) {
 	_inherits(Client, _Phaser$Sprite);
 
-	function Client(game, x, y, health, maxHealth) {
+	function Client(game, level, health, maxHealth) {
 		_classCallCheck(this, Client);
 
-		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, x, y, 'spaceship_white'));
+		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, 0, 0, 'spaceship_white'));
 
 		_this.game = game;
 		_this.health = health;
 		_this.maxHealth = maxHealth;
+		_this.level = level;
 		_this.angle = 0;
-		_this.dest = { x: x, y: y, angle: _this.angle };
+		_this.dest = { x: 0, y: 0, angle: _this.angle };
 
 		//Emitter
 		_this.emitter = _this.game.add.emitter(0, 0, 100);
@@ -6530,16 +6531,13 @@ var Main = function (_Phaser$State) {
 				if (message.updateClient) {
 					var m = message.updateClient;
 					var client = _this2.clients[m.id];
-
 					if (client) {
 						client.dest.x = m.x;
 						client.dest.y = m.y;
 						client.dest.angle = m.angle - 90;
-						if (client.health != m.health) client.setHealth(m.health);
+						client.setHealth(m.health);
 					}
 				}
-
-				console.log(message);
 
 				if (message.clientDeath) {
 					var _m = message.clientDeath;
@@ -6566,18 +6564,6 @@ var Main = function (_Phaser$State) {
 
 					if (player) {
 						switch (change.path.variable) {
-							case 'x':
-								player.dest.x = change.value;
-								break;
-							case 'y':
-								player.dest.y = change.value;
-								break;
-							case 'angle':
-								player.dest.angle = change.value - 90;
-								break;
-							case 'health':
-								player.setHealth(change.value);
-								break;
 							case 'maxHealth':
 								player.maxHealth = change.value;
 								player.setHealth(player.health);
@@ -6604,7 +6590,7 @@ var Main = function (_Phaser$State) {
 			this.game.room.listen("players/:id", function (change) {
 				if (change.operation === "add") {
 					if (change.path.id !== _this2.id) {
-						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.x, change.value.y, change.value.health, change.value.maxHealth);
+						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.level, change.value.health, change.value.maxHealth);
 					}
 				} else if (change.operation === "remove") {
 					_this2.clients[change.path.id].leave();
@@ -6618,13 +6604,13 @@ var Main = function (_Phaser$State) {
 					var bit = _this2.bitsPool.getFirstDead();
 					bit.id = change.path.id;
 					bit.reset(change.value.x, change.value.y);
-				} /*else if (change.operation === 'remove') {
-      setTimeout(() => {
-      let bit = this.findInGroup(change.path.id, this.bitsPool);
-      		if (bit && !bit.activated) bit.kill();
-      		console.log("lol");
-      }, 1000);
-      }*/
+				} else if (change.operation === 'remove') {
+					setTimeout(function () {
+						var bit = _this2.findInGroup(change.path.id, _this2.bitsPool);
+
+						if (bit && !bit.activated) bit.kill();
+					}, 1000);
+				}
 			});
 
 			this.game.room.listen("powerUps/:id", function (change) {
@@ -6633,6 +6619,12 @@ var Main = function (_Phaser$State) {
 					powerUp.id = change.path.id;
 					powerUp.type = change.value.type;
 					powerUp.reset(change.value.x, change.value.y);
+				} else if (change.operation === 'remove') {
+					setTimeout(function () {
+						var powerUp = _this2.findInGroup(change.path.id, _this2.powerUpPool);
+
+						if (powerUp && !powerUp.activated) powerUp.kill();
+					}, 1000);
 				}
 			});
 
@@ -6641,7 +6633,6 @@ var Main = function (_Phaser$State) {
 					var comet = _this2.cometPool.getFirstDead();
 					comet.id = change.path.id;
 					comet.reset(change.value.x, change.value.y);
-					console.log(comet.x, comet.y);
 				} else if (change.operation === 'remove') {
 					var _comet = _this2.findInGroup(change.path.id, _this2.cometPool);
 					if (_comet) _comet.kill();
