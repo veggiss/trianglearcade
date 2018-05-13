@@ -1,6 +1,7 @@
 const Room = require('colyseus').Room;
 const State = require('./states/State');
 const {createTimeline} = require('@gamestdio/timeline');
+const util = require('./utility/util');
 
 module.exports = class StateHandlerRoom extends Room {
     onInit (options) {
@@ -11,7 +12,7 @@ module.exports = class StateHandlerRoom extends Room {
         this.state.timeline.maxSnapshots = 1;
         this.state.timeline.takeSnapshot(this.state.players);*/
         this.state.populateBits();
-        this.state.populatePowerUps();
+        this.state.populateComets();
         this.setSimulationInterval(() => this.update(), 1000 / 20);
     }
 
@@ -27,7 +28,7 @@ module.exports = class StateHandlerRoom extends Room {
             x: player.x,
             y: player.y,
             health: player.health,
-            angle: player.private.angle
+            angle: player.angle
         }});
     }
 
@@ -52,10 +53,7 @@ module.exports = class StateHandlerRoom extends Room {
             }
 
             if (typeof(data.updateAngle) === 'number') {
-                player.private.angle = data.updateAngle;
-                this.sendToAll({playerAngle: {
-                    id: client.sessionId,
-                    angle: data.updateAngle}}, [client.sessionId]);
+                player.updateAngle(data.updateAngle);
             }
         }
     }
@@ -68,6 +66,11 @@ module.exports = class StateHandlerRoom extends Room {
                 this.send(client, message);
             }
         });
+    }
+
+    sendToAllWithinProxy(message, player, range) {
+        let excludeList = util.getProximityList(player, this.state.players, false, range);
+        this.sendToAll(message, excludeList);
     }
 
     sendToClient(id, message) {

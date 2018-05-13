@@ -3,6 +3,7 @@ import Client from 'objects/Client';
 import Bullet from 'objects/Bullet';
 import Bit from 'objects/Bit';
 import PowerUp from 'objects/PowerUp';
+import Comet from 'objects/Comet';
 
 class Main extends Phaser.State {
 
@@ -25,6 +26,7 @@ class Main extends Phaser.State {
 		this.bulletPool = this.game.add.group();
 		this.bitsPool = this.game.add.group();
 		this.powerUpPool = this.game.add.group();
+		this.cometPool = this.game.add.group();
 		this.clients = {};
 		this.id;
 
@@ -37,6 +39,7 @@ class Main extends Phaser.State {
 	    this.createBulletPool();
 	    this.createBitsPool();
 	    this.createPowerUpPool();
+	    this.createCometPool();
 
 		this.netListener();
 	}
@@ -100,8 +103,36 @@ class Main extends Phaser.State {
 				this.clients[this.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
 			}
 
-			if (message.playerAngle) {
-				this.clients[message.playerAngle.id].dest.angle = message.playerAngle.angle;
+			if (message.updateClient) {
+				let m = message.updateClient;
+				let client = this.clients[m.id];
+
+				if (client) {
+					client.dest.x = m.x;
+					client.dest.y = m.y;
+					client.dest.angle = m.angle - 90;
+					if (client.health != m.health) client.setHealth(m.health);
+				}
+			}
+
+			console.log(message);
+
+			if (message.clientDeath) {
+				let m = message.clientDeath;
+				let client = this.clients[m.id];
+
+				if (client) {
+					client.die();
+				}
+			}
+
+			if (message.clientRespawn) {
+				let m = message.clientRespawn;
+				let client = this.clients[m.id];
+
+				if (client) {
+					client.respawn();
+				}
 			}
 		});
 
@@ -116,6 +147,9 @@ class Main extends Phaser.State {
 						break;
 						case 'y':
 							player.dest.y = change.value;
+						break;
+						case 'angle':
+							player.dest.angle = change.value - 90;
 						break;
 						case 'health':
 							player.setHealth(change.value);
@@ -160,7 +194,15 @@ class Main extends Phaser.State {
 				let bit = this.bitsPool.getFirstDead();
 				bit.id = change.path.id;
 				bit.reset(change.value.x, change.value.y);
-			}
+			} /*else if (change.operation === 'remove') {
+				setTimeout(() => {
+					let bit = this.findInGroup(change.path.id, this.bitsPool);
+
+					if (bit && !bit.activated) bit.kill();
+
+					console.log("lol");
+				}, 1000);
+			}*/
 		});
 
 		this.game.room.listen("powerUps/:id", change => {
@@ -169,6 +211,18 @@ class Main extends Phaser.State {
 				powerUp.id = change.path.id;
 				powerUp.type = change.value.type;
 				powerUp.reset(change.value.x, change.value.y);
+			}
+		});
+
+		this.game.room.listen("comets/:id", change => {
+			if (change.operation === 'add') {
+				let comet = this.cometPool.getFirstDead();
+				comet.id = change.path.id;
+				comet.reset(change.value.x, change.value.y);
+				console.log(comet.x, comet.y);
+			} else if (change.operation === 'remove') {
+				let comet = this.findInGroup(change.path.id, this.cometPool);
+				if (comet) comet.kill();
 			}
 		});
 	}
@@ -188,6 +242,12 @@ class Main extends Phaser.State {
 	createPowerUpPool() {
 		for (let i = 0; i < 10; i++) {
 			this.powerUpPool.add(new PowerUp(this.game));
+		}
+	}
+
+	createCometPool() {
+		for (let i = 0; i < 20; i++) {
+			this.cometPool.add(new Comet(this.game));
 		}
 	}
 

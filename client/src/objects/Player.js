@@ -24,7 +24,9 @@ class Player extends Phaser.Sprite {
 			firerate: 1,
 			speed: 1,
 			damage: 1,
-			health: 1
+			health: 1,
+			acceleration: 1,
+			angulation: 1
 		}
 
 		//Emitter
@@ -86,15 +88,7 @@ class Player extends Phaser.Sprite {
 		this.x = this.lerp(x, this.dest.x, 0.1);
 		this.y = this.lerp(y, this.dest.y, 0.1);
 
-		if (this.game.onMobile) {
-			if (this.stick.isDown) {
-				this.deg = Phaser.Math.radToDeg(this.stick.rotation);
-			}
-		} else {
-			this.deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
-		}
-
-		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.deg));
+		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.1);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
 	}
@@ -118,6 +112,12 @@ class Player extends Phaser.Sprite {
 			case 'health':
 				this.stats.health++;
 				this.maxHealth = value;
+			break;
+			case 'acceleration':
+				this.stats.acceleration++;
+			break;
+			case 'angulation':
+				this.stats.angulation++;
 			break;
 		}
 

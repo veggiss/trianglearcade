@@ -17,11 +17,11 @@ module.exports = class State {
             network: network,
             bitsTimer: Date.now(),
             powerUpTimer: Date.now(),
-            bitExpAmount: 25,
+            bitExpAmount: 1000,
             powerUpTypes: ['healthBoost', 'slowDownAll', 'speedBoost', 'enrage'],
             maxBits: 75,
             maxPowerUps: 4,
-            maxComets: 4
+            maxComets: 6
         });
     }
 
@@ -43,13 +43,7 @@ module.exports = class State {
         let angle = util.ranPlayerAngle();
         player.x = pos.x;
         player.y = pos.y;
-        player.private.angle = angle;
-    }
-
-    populateComets() {
-        for (let i = 0; i < this.private.maxBits; i++) {
-            this.addNewComet();
-        }
+        player.angle = angle;
     }
 
     populateBits() {
@@ -58,11 +52,9 @@ module.exports = class State {
         }
     }
 
-    populatePowerUps() {
-        for (let i = 0; i < this.private.maxPowerUps; i++) {
-            setTimeout(() => {
-                this.addNewPowerUp();
-            }, util.ranNumBetween(30000, 60000));
+    populateComets() {
+        for (let i = 0; i < this.private.maxComets; i++) {
+            this.addNewComet();
         }
     }
 
@@ -73,26 +65,31 @@ module.exports = class State {
             id = util.uniqueId(4);
         }
 
-        this.bits[id] = new Bit(pos.x, pos.y);
+        setTimeout(() => {
+            this.bits[id] = new Bit(pos.x, pos.y);
+        }, util.ranNumBetween(500, 3000));
     }
 
-    addNewPowerUp() {
-        let pos = util.ranWorldPos();
+    addNewPowerUp(x, y) {
         let type = this.private.powerUpTypes[Math.floor(Math.random()*this.private.powerUpTypes.length)];
         let id = util.uniqueId(4);
         while (this.powerUps[id]) {
             id = util.uniqueId(4);
         }
 
-        this.powerUps[id] = new PowerUp(pos.x, pos.y, type);
+        this.powerUps[id] = new PowerUp(x, y, type);
     }
 
     addNewComet() {
+        let pos = util.ranWorldPos();
         let id = util.uniqueId(4);
         while (this.comets[id]) {
             id = util.uniqueId(4);
         }
-        this.comets[id] = new Comet();
+
+        setTimeout(() => {
+            this.comets[id] = new Comet(pos.x, pos.y);
+        }, util.ranNumBetween(5000, 40000));
 
     }
 
@@ -130,6 +127,7 @@ module.exports = class State {
             this.playerBulletCollision(currentPlayer);
             this.playerBitsCollision(currentPlayer);
             this.playerPowerUpCollision(currentPlayer);
+            this.cometBulletCollision(currentPlayer);
         }
     }
 
@@ -165,9 +163,9 @@ module.exports = class State {
                 let dist = util.distanceFrom(bit, player);
                 if (dist < 40) {
                     delete this.bits[id];
-                    setTimeout(() => {
-                        this.addNewBit();
-                    }, util.ranNumBetween(500, 3000));
+
+                    this.addNewBit();
+
                     player.addXp(this.private.bitExpAmount);
                     this.private.network.sendToAll({bitHit: {
                         id: id,
@@ -185,9 +183,7 @@ module.exports = class State {
                 let dist = util.distanceFrom(powerup, player.private.bodyPos);
                 if (dist < 25) {
                     delete this.powerUps[id];
-                    setTimeout(() => {
-                        this.addNewPowerUp();
-                    }, util.ranNumBetween(30000, 60000));
+
                     this.private.network.sendToAll({powerUpHit: {
                         id: id,
                         player: player.id
@@ -196,6 +192,22 @@ module.exports = class State {
                     this.activatePowerUp(powerup.type, player);
                 }
             }
+        }
+    }
+
+    cometBulletCollision(player) {
+        for (let id in this.comets) {
+            let comet = this.comets[id];
+            player.private.bullets.forEach(bullet => {
+                let dist = util.distanceFrom(comet, bullet);
+                if (dist < 25) {
+                    if (comet.bulletHit(player.private.damage)) {
+                        delete this.comets[id];
+                        this.addNewPowerUp(comet.x, comet.y);
+                        this.addNewComet();
+                    }
+                }
+            });
         }
     }
 }

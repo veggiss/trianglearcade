@@ -5169,7 +5169,7 @@ var Game = function (_Phaser$Game) {
 
 new Game();
 
-},{"colyseus.js":13,"states/Boot":45,"states/Main":46,"states/Preload":47}],37:[function(require,module,exports){
+},{"colyseus.js":13,"states/Boot":46,"states/Main":47,"states/Preload":48}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5421,7 +5421,7 @@ var Client = function (_Phaser$Sprite) {
 			var y = this.y + Math.cos(this.angle * Math.PI / 180);
 			this.x = this.lerp(x, this.dest.x, 0.1);
 			this.y = this.lerp(y, this.dest.y, 0.1);
-			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle - 90));
+			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
@@ -5467,7 +5467,71 @@ var Client = function (_Phaser$Sprite) {
 
 exports.default = Client;
 
-},{"./DebugBody":40,"./HealthBar":41}],40:[function(require,module,exports){
+},{"./DebugBody":41,"./HealthBar":42}],40:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+function _possibleConstructorReturn(self, call) {
+	if (!self) {
+		throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	}return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+	if (typeof superClass !== "function" && superClass !== null) {
+		throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+	}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var Comet = function (_Phaser$Sprite) {
+	_inherits(Comet, _Phaser$Sprite);
+
+	function Comet(game, x, y) {
+		_classCallCheck(this, Comet);
+
+		var _this = _possibleConstructorReturn(this, (Comet.__proto__ || Object.getPrototypeOf(Comet)).call(this, game, x, y, 'comet'));
+
+		_this.id;
+		_this.game = game;
+		_this.anchor.setTo(0.5, 0.5);
+		_this.kill();
+
+		_this.game.add.existing(_this);
+		return _this;
+	}
+
+	_createClass(Comet, [{
+		key: 'update',
+		value: function update() {
+			//this.rotation = 0.005;
+		}
+	}]);
+
+	return Comet;
+}(Phaser.Sprite);
+
+exports.default = Comet;
+
+},{}],41:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5541,7 +5605,7 @@ var DebugBody = function (_Phaser$Sprite) {
 
 exports.default = DebugBody;
 
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 'use strict';
 
 /**
@@ -5718,7 +5782,7 @@ function hexToRgb(hex) {
     } : null;
 }
 
-},{}],42:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5795,7 +5859,9 @@ var Player = function (_Phaser$Sprite) {
 			firerate: 1,
 			speed: 1,
 			damage: 1,
-			health: 1
+			health: 1,
+			acceleration: 1,
+			angulation: 1
 
 			//Emitter
 		};_this.emitter = _this.game.add.emitter(0, 0, 100);
@@ -5861,15 +5927,7 @@ var Player = function (_Phaser$Sprite) {
 			this.x = this.lerp(x, this.dest.x, 0.1);
 			this.y = this.lerp(y, this.dest.y, 0.1);
 
-			if (this.game.onMobile) {
-				if (this.stick.isDown) {
-					this.deg = Phaser.Math.radToDeg(this.stick.rotation);
-				}
-			} else {
-				this.deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
-			}
-
-			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.deg));
+			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
@@ -5895,6 +5953,12 @@ var Player = function (_Phaser$Sprite) {
 				case 'health':
 					this.stats.health++;
 					this.maxHealth = value;
+					break;
+				case 'acceleration':
+					this.stats.acceleration++;
+					break;
+				case 'angulation':
+					this.stats.angulation++;
 					break;
 			}
 
@@ -5967,7 +6031,7 @@ var Player = function (_Phaser$Sprite) {
 
 exports.default = Player;
 
-},{"./DebugBody":40,"./HealthBar":41,"./UI":44}],43:[function(require,module,exports){
+},{"./DebugBody":41,"./HealthBar":42,"./UI":45}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6058,7 +6122,7 @@ var PowerUp = function (_Phaser$Sprite) {
 
 exports.default = PowerUp;
 
-},{}],44:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6122,6 +6186,8 @@ var UI = function () {
 		this.speedText = this.game.add.bitmapText(156, 275, 'font', 'Speed: ' + 1, 23);
 		this.damageText = this.game.add.bitmapText(156, 300, 'font', 'Damage: ' + 1, 23);
 		this.healthText = this.game.add.bitmapText(156, 325, 'font', 'Health: ' + 1, 23);
+		this.accelerationText = this.game.add.bitmapText(156, 350, 'font', 'Acceleration: ' + 1, 23);
+		this.angulationText = this.game.add.bitmapText(156, 375, 'font', 'Angulation: ' + 1, 23);
 
 		this.statTextGroup.add(this.levelText);
 		this.statTextGroup.add(this.pointsText);
@@ -6129,13 +6195,15 @@ var UI = function () {
 		this.statTextGroup.add(this.speedText);
 		this.statTextGroup.add(this.damageText);
 		this.statTextGroup.add(this.healthText);
+		this.statTextGroup.add(this.accelerationText);
+		this.statTextGroup.add(this.angulationText);
 
 		this.statTextGroup.forEach(function (item) {
 			item.anchor.setTo(1, 1);
 			item.inputEnabled = true;
 			var name = item.text.substring(0, item.text.indexOf(':')).toLowerCase();
 
-			if (['firerate', 'speed', 'damage', 'health'].toString().includes(name)) {
+			if (['firerate', 'speed', 'damage', 'health', 'acceleration', 'angulation'].toString().includes(name)) {
 				item.alpha = 0.5;
 				item.name = name;
 				item.events.onInputDown.add(_this.addStat, _this);
@@ -6176,6 +6244,12 @@ var UI = function () {
 				case 'health':
 					this.healthText.text = 'Health: ' + this.stats.health;
 					break;
+				case 'acceleration':
+					this.accelerationText.text = 'Acceleration: ' + this.stats.acceleration;
+					break;
+				case 'angulation':
+					this.angulationText.text = 'Angulation: ' + this.stats.angulation;
+					break;
 			}
 		}
 	}, {
@@ -6210,7 +6284,7 @@ var UI = function () {
 
 exports.default = UI;
 
-},{"./HealthBar":41}],45:[function(require,module,exports){
+},{"./HealthBar":42}],46:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6279,7 +6353,7 @@ var Boot = function (_Phaser$State) {
 
 exports.default = Boot;
 
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6315,6 +6389,10 @@ var _Bit2 = _interopRequireDefault(_Bit);
 var _PowerUp = require('objects/PowerUp');
 
 var _PowerUp2 = _interopRequireDefault(_PowerUp);
+
+var _Comet = require('objects/Comet');
+
+var _Comet2 = _interopRequireDefault(_Comet);
 
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj };
@@ -6368,6 +6446,7 @@ var Main = function (_Phaser$State) {
 			this.bulletPool = this.game.add.group();
 			this.bitsPool = this.game.add.group();
 			this.powerUpPool = this.game.add.group();
+			this.cometPool = this.game.add.group();
 			this.clients = {};
 			this.id;
 
@@ -6380,6 +6459,7 @@ var Main = function (_Phaser$State) {
 			this.createBulletPool();
 			this.createBitsPool();
 			this.createPowerUpPool();
+			this.createCometPool();
 
 			this.netListener();
 		}
@@ -6447,8 +6527,36 @@ var Main = function (_Phaser$State) {
 					_this2.clients[_this2.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
 				}
 
-				if (message.playerAngle) {
-					_this2.clients[message.playerAngle.id].dest.angle = message.playerAngle.angle;
+				if (message.updateClient) {
+					var m = message.updateClient;
+					var client = _this2.clients[m.id];
+
+					if (client) {
+						client.dest.x = m.x;
+						client.dest.y = m.y;
+						client.dest.angle = m.angle - 90;
+						if (client.health != m.health) client.setHealth(m.health);
+					}
+				}
+
+				console.log(message);
+
+				if (message.clientDeath) {
+					var _m = message.clientDeath;
+					var _client = _this2.clients[_m.id];
+
+					if (_client) {
+						_client.die();
+					}
+				}
+
+				if (message.clientRespawn) {
+					var _m2 = message.clientRespawn;
+					var _client2 = _this2.clients[_m2.id];
+
+					if (_client2) {
+						_client2.respawn();
+					}
 				}
 			});
 
@@ -6463,6 +6571,9 @@ var Main = function (_Phaser$State) {
 								break;
 							case 'y':
 								player.dest.y = change.value;
+								break;
+							case 'angle':
+								player.dest.angle = change.value - 90;
 								break;
 							case 'health':
 								player.setHealth(change.value);
@@ -6507,7 +6618,13 @@ var Main = function (_Phaser$State) {
 					var bit = _this2.bitsPool.getFirstDead();
 					bit.id = change.path.id;
 					bit.reset(change.value.x, change.value.y);
-				}
+				} /*else if (change.operation === 'remove') {
+      setTimeout(() => {
+      let bit = this.findInGroup(change.path.id, this.bitsPool);
+      		if (bit && !bit.activated) bit.kill();
+      		console.log("lol");
+      }, 1000);
+      }*/
 			});
 
 			this.game.room.listen("powerUps/:id", function (change) {
@@ -6516,6 +6633,18 @@ var Main = function (_Phaser$State) {
 					powerUp.id = change.path.id;
 					powerUp.type = change.value.type;
 					powerUp.reset(change.value.x, change.value.y);
+				}
+			});
+
+			this.game.room.listen("comets/:id", function (change) {
+				if (change.operation === 'add') {
+					var comet = _this2.cometPool.getFirstDead();
+					comet.id = change.path.id;
+					comet.reset(change.value.x, change.value.y);
+					console.log(comet.x, comet.y);
+				} else if (change.operation === 'remove') {
+					var _comet = _this2.findInGroup(change.path.id, _this2.cometPool);
+					if (_comet) _comet.kill();
 				}
 			});
 		}
@@ -6538,6 +6667,13 @@ var Main = function (_Phaser$State) {
 		value: function createPowerUpPool() {
 			for (var i = 0; i < 10; i++) {
 				this.powerUpPool.add(new _PowerUp2.default(this.game));
+			}
+		}
+	}, {
+		key: 'createCometPool',
+		value: function createCometPool() {
+			for (var i = 0; i < 20; i++) {
+				this.cometPool.add(new _Comet2.default(this.game));
 			}
 		}
 	}, {
@@ -6583,7 +6719,7 @@ var Main = function (_Phaser$State) {
 
 exports.default = Main;
 
-},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Player":42,"objects/PowerUp":43}],47:[function(require,module,exports){
+},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Comet":40,"objects/Player":43,"objects/PowerUp":44}],48:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6635,6 +6771,7 @@ var Preload = function (_Phaser$State) {
 			this.game.load.image('bit', 'assets/bit.png');
 			this.game.load.image('powerUp', 'assets/powerUp.png');
 			this.game.load.image('bullet', 'assets/bullet.png');
+			this.game.load.image('comet', 'assets/comet.png');
 			this.game.load.image('deathParticle', 'assets/deathParticle.png');
 			this.game.load.image('starfield', 'assets/starfield.png');
 			this.game.load.image('starfield2', 'assets/starfield2.png');

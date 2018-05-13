@@ -35,7 +35,7 @@ class Client extends Phaser.Sprite {
 		let y = this.y + Math.cos(this.angle * Math.PI / 180);
 		this.x = this.lerp(x, this.dest.x, 0.1);
 		this.y = this.lerp(y, this.dest.y, 0.1);
-		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle - 90));
+		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.075);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
 	}

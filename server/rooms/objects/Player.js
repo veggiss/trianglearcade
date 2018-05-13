@@ -3,22 +3,20 @@ const Bullet = require('./Bullet');
 const util = require('./../utility/util');
 
 module.exports = class Player {
-    constructor(id, x, y, angle, network, client) {
+    constructor(id, x, y, angle, network) {
         this.id = id;
-        this.x = x;
-        this.y = y;
-        this.alive = false;
-        this.health = 100;
         this.maxHealth = 100;
         this.level = 1;
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.alive = false;
+        this.health = 100;
 
         this.private = util.setEnumerable({
             network: network,
-            client: client,
-            angle: angle,
-            velX: 0,
-            velY: 0,
-            acceleration: 0.2,
+            destAngle: this.angle,
+            acceleration: 0.02,
             fireRate: 500,
             lastShot: Date.now(),
             bodyPos: {x: this.x, y: this.y},
@@ -34,7 +32,8 @@ module.exports = class Player {
             speed: 0,
             maxSpeed: 8,
             speedBoost: 0,
-            damage: 10
+            damage: 10,
+            angVel: 0.1
         });
     }
 
@@ -48,15 +47,16 @@ module.exports = class Player {
         if (this.private.shooting && (Date.now() > this.private.lastShot)) {
             this.private.lastShot = Date.now() + this.private.fireRate;
             let pos = this.private.speed > 4 ? this.private.bodyPos : {x: this.x, y: this.y};
-            let bullet = new Bullet(pos.x, pos.y, this.private.angle, this.id, this.private.speed);
+            let bullet = new Bullet(pos.x, pos.y, this.angle, this.id, this.private.speed);
             this.private.bullets.push(bullet);
-            this.private.network.sendToAll({bullet: {
+
+            this.private.network.sendToAllWithinProxy({bullet: {
                 id: bullet.owner,
                 x: bullet.x,
                 y: bullet.y,
                 angle: bullet.angle,
                 speed: bullet.speed
-            }});
+            }}, {x: this.x, y: this.y, id: this.id}, 1000);
         }
     }
 
@@ -66,9 +66,6 @@ module.exports = class Player {
             
             if (this.private.moveUp) {
                 this.accelerate();
-                let rad = this.private.angle * Math.PI / 180;
-                this.x += Math.sin(rad) * this.private.speed;
-                this.y -= Math.cos(rad) * this.private.speed;
             } else {
                 this.decelerate();
             }
@@ -79,21 +76,35 @@ module.exports = class Player {
 
     accelerate() {
         if (this.private.speed < (this.private.maxSpeed + this.private.speedBoost)) {
-            this.private.speed += 1;
+            this.private.speed += this.private.maxSpeed * this.private.acceleration;
+            if (this.private.speed > this.private.maxSpeed) this.private.speed = this.private.maxSpeed;
         }
     }
 
     decelerate() {
         if (this.private.speed > 0) {
-            this.private.speed -= 0.5;
+            this.private.speed -= this.private.maxSpeed * this.private.acceleration;
         } else {
             this.private.speed = 0;
         }
     }
 
+    getNewAngle() {
+        let shortestAngle = util.getShortestAngle(util.wrapAngle(this.angle), util.wrapAngle(this.private.destAngle));
+        return this.lerp(this.angle, this.angle + shortestAngle, this.private.angVel);
+    }
+
+    updateAngle(angle) {
+        this.private.destAngle = angle;
+    }
+
     updateBody() {
+        let rad = this.angle * Math.PI / 180;
+        this.x += Math.sin(rad) * this.private.speed;
+        this.y -= Math.cos(rad) * this.private.speed;
         this.private.bodyPos.x = this.lerp(this.private.bodyPos.x, this.x, 0.175);
         this.private.bodyPos.y = this.lerp(this.private.bodyPos.y, this.y, 0.175);
+        this.angle = this.getNewAngle();
     }
 
     setMoveup(data) {
@@ -164,11 +175,19 @@ module.exports = class Player {
                 break;
                 default:
                     passed = false;
-                    console.log(`Case "${type}" does not exist`);
+                    console.log(`Error: Could not upgrade stats on player: ${this.id}, stat type "${type}" does not exist`);
+                break;
+                case 'acceleration':
+                    this.private.acceleration += 0.01;
+                    this.sendUpgrade(type, this.private.acceleration);
+                break;
+                case 'angulation':
+                    this.private.angVel += 0.01;
+                    this.sendUpgrade(type, this.private.angVel);
                 break;
             }
 
-            this.private.points--;
+            if (passed) this.private.points--;
         }
     }
 
@@ -186,7 +205,7 @@ module.exports = class Player {
         let angle = util.ranPlayerAngle();
         this.x = pos.x;
         this.y = pos.y;
-        this.private.angle = angle;
+        this.angle = angle;
     }
 
     respawn() {
