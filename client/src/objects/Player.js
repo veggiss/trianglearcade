@@ -31,7 +31,7 @@ class Player extends Phaser.Sprite {
 		}
 
 		//Emitters
-		this.emitter = this.game.add.emitter(0, 0, 100);
+		/*this.emitter = this.game.add.emitter(0, 0, 100);
 		this.emitter.makeParticles('deathParticle');
 		this.emitter.setAlpha(1, 0, 2000);
 		this.emitter.gravity = 0;
@@ -46,7 +46,7 @@ class Player extends Phaser.Sprite {
 		this.spaceJuice.gravity = 0;
 		this.spaceJuice.children.forEach(child => {
 			child.tint = this.tint;
-		});
+		});*/
 
 		//Sprite
 		this.anchor.setTo(0.5, 0.5);
@@ -90,7 +90,7 @@ class Player extends Phaser.Sprite {
 	update() {
 		this.updateAngle();
 		this.updatePlayerPos();
-		this.updateSpaceJuice();
+		//this.updateSpaceJuice();
 	}
 
 	setHealth(value) {
@@ -163,11 +163,11 @@ class Player extends Phaser.Sprite {
 	playerControls(obj) {
 		this.game.room.send({moveUp: obj.isDown});
 
-		if (obj.isDown) {
+		/*if (obj.isDown) {
 			this.spaceJuice.start(false, 1000);
 		} else {
 			this.spaceJuice.on = false
-		}
+		}*/
 	}
 
 	playerShoot(obj) {
@@ -186,9 +186,9 @@ class Player extends Phaser.Sprite {
 	die() {
 		this.game.camera.shake(0.01, 250);
 		this.game.camera.target = null;
-		this.emitter.x = this.x;
+		/*this.emitter.x = this.x;
 		this.emitter.y = this.y;
-		this.emitter.start(true, 2000 - (this.stats.speed * 10), null, 20);
+		this.emitter.start(true, 2000 - (this.stats.speed * 10), null, 20);*/
 		this.alpha = 0;
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;

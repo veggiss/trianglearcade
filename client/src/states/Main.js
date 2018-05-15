@@ -28,10 +28,20 @@ class Main extends Phaser.State {
 		this.clients = {};
 		this.id;
 
-		//Emitter
+		//Emitters
 	    this.emBulletHit = this.game.add.emitter(0, 0, 100);
 	    this.emBulletHit.makeParticles('deathParticle');
 	    this.emBulletHit.gravity = 0;
+
+		this.bulletTrailer = this.game.add.emitter(0, 0, 100);
+		this.bulletTrailer.makeParticles('deathParticle');
+		this.bulletTrailer.setAlpha(1, 0, 600);
+		this.bulletTrailer.setXSpeed(0, 0);
+		this.bulletTrailer.setYSpeed(0, 0);
+		this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
+		this.bulletTrailer.frequency = 10;
+		this.bulletTrailer.lifespan = 400;
+		this.bulletTrailer.gravity = 0;
 
 	    //Create bullets
 	    this.createBulletPool();

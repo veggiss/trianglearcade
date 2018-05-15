@@ -5311,15 +5311,15 @@ var Bullet = function (_Phaser$Sprite) {
 		_this.kill();
 
 		//Emitter
-		_this.bulletTrailer = _this.game.add.emitter(0, 0, 40);
-		_this.bulletTrailer.makeParticles('deathParticle');
-		_this.bulletTrailer.setAlpha(1, 0, 600);
-		_this.bulletTrailer.setXSpeed(0, 0);
-		_this.bulletTrailer.setYSpeed(0, 0);
-		_this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
-		_this.bulletTrailer.frequency = 10;
-		_this.bulletTrailer.lifespan = 400;
-		_this.bulletTrailer.gravity = 0;
+		/*this.bulletTrailer = this.game.add.emitter(0, 0, 40);
+  this.bulletTrailer.makeParticles('deathParticle');
+  this.bulletTrailer.setAlpha(1, 0, 600);
+  this.bulletTrailer.setXSpeed(0, 0);
+  this.bulletTrailer.setYSpeed(0, 0);
+  this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
+  this.bulletTrailer.frequency = 10;
+  this.bulletTrailer.lifespan = 400;
+  this.bulletTrailer.gravity = 0;*/
 		_this.game.add.existing(_this);
 		return _this;
 	}
@@ -5328,14 +5328,14 @@ var Bullet = function (_Phaser$Sprite) {
 		key: 'update',
 		value: function update() {
 			if (this.alive && this.dest) {
-				this.bulletTrailer.on = true;
+				//this.bulletTrailer.on = true;
 				this.x = this.lerp(this.x, this.dest.x, 0.03);
 				this.y = this.lerp(this.y, this.dest.y, 0.03);
-				this.bulletTrailer.x = this.x;
-				this.bulletTrailer.y = this.y;
+				// this.bulletTrailer.x = this.x;
+				//this.bulletTrailer.y = this.y;
 
 				if (Date.now() > this.timer) {
-					this.bulletTrailer.on = false;
+					//this.bulletTrailer.on = false;
 					this.kill();
 				}
 			}
@@ -5343,7 +5343,7 @@ var Bullet = function (_Phaser$Sprite) {
 	}, {
 		key: 'setTint',
 		value: function setTint(tint) {
-			this.bulletTrailer.setAllChildren('tint', tint);
+			//this.bulletTrailer.setAllChildren('tint', tint);
 		}
 	}, {
 		key: 'setDest',
@@ -5428,22 +5428,21 @@ var Client = function (_Phaser$Sprite) {
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.dest = { x: 0, y: 0, angle: _this.angle };
 
-		//Emitter
-		_this.emitter = _this.game.add.emitter(0, 0, 100);
-		_this.emitter.makeParticles('deathParticle');
-		_this.emitter.gravity = 0;
-
-		_this.spaceJuice = _this.game.add.emitter(0, 0, 20);
-		_this.spaceJuice.makeParticles('spaceJuiceParticle');
-		_this.spaceJuice.setAlpha(1, 0, 2000);
-		_this.spaceJuice.setRotation(50, 400);
-		_this.spaceJuice.setScale(0, 10, 0, 10, 2000);
-		_this.spaceJuice.setXSpeed(0, 0);
-		_this.spaceJuice.setYSpeed(0, 0);
-		_this.spaceJuice.gravity = 0;
-		_this.spaceJuice.children.forEach(function (child) {
-			child.tint = _this.tint;
-		});
+		/*//Emitter
+     this.emitter = this.game.add.emitter(0, 0, 100);
+     this.emitter.makeParticles('deathParticle');
+     this.emitter.gravity = 0;
+  		this.spaceJuice = this.game.add.emitter(0, 0, 20);
+  this.spaceJuice.makeParticles('spaceJuiceParticle');
+  this.spaceJuice.setAlpha(1, 0, 2000);
+  this.spaceJuice.setRotation(50, 400);
+  this.spaceJuice.setScale(0, 10, 0, 10, 2000);
+  this.spaceJuice.setXSpeed(0, 0);
+  this.spaceJuice.setYSpeed(0, 0);
+  this.spaceJuice.gravity = 0;
+  this.spaceJuice.children.forEach(child => {
+  	child.tint = this.tint;
+  });*/
 
 		//Sprite
 		_this.scale.setTo(0.75, 0.75);
@@ -5483,9 +5482,9 @@ var Client = function (_Phaser$Sprite) {
 	}, {
 		key: 'die',
 		value: function die() {
-			this.emitter.x = this.x;
-			this.emitter.y = this.y;
-			this.emitter.start(true, 2000, null, 20);
+			/*this.emitter.x = this.x;
+   this.emitter.y = this.y;
+   this.emitter.start(true, 2000, null, 20);*/
 			this.alpha = 0;
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
@@ -5500,7 +5499,7 @@ var Client = function (_Phaser$Sprite) {
 		value: function leave() {
 			this.playerHealthBar.barSprite.destroy();
 			this.playerHealthBar.bgSprite.destroy();
-			this.spaceJuice.destroy();
+			//this.spaceJuice.destroy();
 		}
 	}, {
 		key: 'lerp',
@@ -5912,25 +5911,24 @@ var Player = function (_Phaser$Sprite) {
 			angulation: 1
 
 			//Emitters
-		};_this.emitter = _this.game.add.emitter(0, 0, 100);
-		_this.emitter.makeParticles('deathParticle');
-		_this.emitter.setAlpha(1, 0, 2000);
-		_this.emitter.gravity = 0;
+			/*this.emitter = this.game.add.emitter(0, 0, 100);
+   this.emitter.makeParticles('deathParticle');
+   this.emitter.setAlpha(1, 0, 2000);
+   this.emitter.gravity = 0;
+   		this.spaceJuice = this.game.add.emitter(0, 0, 20);
+   this.spaceJuice.makeParticles('spaceJuiceParticle');
+   this.spaceJuice.setAlpha(1, 0, 2000);
+   this.spaceJuice.setRotation(50, 400);
+   this.spaceJuice.setScale(0, 10, 0, 10, 2000);
+   this.spaceJuice.setXSpeed(0, 0);
+   this.spaceJuice.setYSpeed(0, 0);
+   this.spaceJuice.gravity = 0;
+   this.spaceJuice.children.forEach(child => {
+   	child.tint = this.tint;
+   });*/
 
-		_this.spaceJuice = _this.game.add.emitter(0, 0, 20);
-		_this.spaceJuice.makeParticles('spaceJuiceParticle');
-		_this.spaceJuice.setAlpha(1, 0, 2000);
-		_this.spaceJuice.setRotation(50, 400);
-		_this.spaceJuice.setScale(0, 10, 0, 10, 2000);
-		_this.spaceJuice.setXSpeed(0, 0);
-		_this.spaceJuice.setYSpeed(0, 0);
-		_this.spaceJuice.gravity = 0;
-		_this.spaceJuice.children.forEach(function (child) {
-			child.tint = _this.tint;
-		});
-
-		//Sprite
-		_this.anchor.setTo(0.5, 0.5);
+			//Sprite
+		};_this.anchor.setTo(0.5, 0.5);
 		_this.scale.setTo(0.75, 0.75);
 
 		//Healthbar
@@ -5974,7 +5972,7 @@ var Player = function (_Phaser$Sprite) {
 		value: function update() {
 			this.updateAngle();
 			this.updatePlayerPos();
-			this.updateSpaceJuice();
+			//this.updateSpaceJuice();
 		}
 	}, {
 		key: 'setHealth',
@@ -6054,11 +6052,11 @@ var Player = function (_Phaser$Sprite) {
 		value: function playerControls(obj) {
 			this.game.room.send({ moveUp: obj.isDown });
 
-			if (obj.isDown) {
-				this.spaceJuice.start(false, 1000);
-			} else {
-				this.spaceJuice.on = false;
-			}
+			/*if (obj.isDown) {
+   	this.spaceJuice.start(false, 1000);
+   } else {
+   	this.spaceJuice.on = false
+   }*/
 		}
 	}, {
 		key: 'playerShoot',
@@ -6080,9 +6078,9 @@ var Player = function (_Phaser$Sprite) {
 		value: function die() {
 			this.game.camera.shake(0.01, 250);
 			this.game.camera.target = null;
-			this.emitter.x = this.x;
-			this.emitter.y = this.y;
-			this.emitter.start(true, 2000 - this.stats.speed * 10, null, 20);
+			/*this.emitter.x = this.x;
+   this.emitter.y = this.y;
+   this.emitter.start(true, 2000 - (this.stats.speed * 10), null, 20);*/
 			this.alpha = 0;
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
@@ -6520,10 +6518,20 @@ var Main = function (_Phaser$State) {
 			this.clients = {};
 			this.id;
 
-			//Emitter
+			//Emitters
 			this.emBulletHit = this.game.add.emitter(0, 0, 100);
 			this.emBulletHit.makeParticles('deathParticle');
 			this.emBulletHit.gravity = 0;
+
+			this.bulletTrailer = this.game.add.emitter(0, 0, 100);
+			this.bulletTrailer.makeParticles('deathParticle');
+			this.bulletTrailer.setAlpha(1, 0, 600);
+			this.bulletTrailer.setXSpeed(0, 0);
+			this.bulletTrailer.setYSpeed(0, 0);
+			this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
+			this.bulletTrailer.frequency = 10;
+			this.bulletTrailer.lifespan = 400;
+			this.bulletTrailer.gravity = 0;
 
 			//Create bullets
 			this.createBulletPool();

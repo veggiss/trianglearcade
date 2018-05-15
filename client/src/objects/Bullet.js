@@ -12,7 +12,7 @@ class Bullet extends Phaser.Sprite {
 		this.kill();
 
 		//Emitter
-		this.bulletTrailer = this.game.add.emitter(0, 0, 40);
+		/*this.bulletTrailer = this.game.add.emitter(0, 0, 40);
 		this.bulletTrailer.makeParticles('deathParticle');
 		this.bulletTrailer.setAlpha(1, 0, 600);
 		this.bulletTrailer.setXSpeed(0, 0);
@@ -20,27 +20,27 @@ class Bullet extends Phaser.Sprite {
 		this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
 		this.bulletTrailer.frequency = 10;
 		this.bulletTrailer.lifespan = 400;
-		this.bulletTrailer.gravity = 0;
+		this.bulletTrailer.gravity = 0;*/
 		this.game.add.existing(this);
 	}
 
 	update() {
 		if (this.alive && this.dest) {
-			this.bulletTrailer.on = true;
+			//this.bulletTrailer.on = true;
 	        this.x = this.lerp(this.x, this.dest.x, 0.03);
 	        this.y = this.lerp(this.y, this.dest.y, 0.03);
-	        this.bulletTrailer.x = this.x;
-	        this.bulletTrailer.y = this.y;
+	       // this.bulletTrailer.x = this.x;
+	        //this.bulletTrailer.y = this.y;
 
 	        if (Date.now() > this.timer) {
-	        	this.bulletTrailer.on = false;
+	        	//this.bulletTrailer.on = false;
 	        	this.kill();
 	        }
         }
 	}
 
 	setTint(tint) {
-		this.bulletTrailer.setAllChildren('tint', tint);
+		//this.bulletTrailer.setAllChildren('tint', tint);
 	}
 
 	setDest(x, y) {
