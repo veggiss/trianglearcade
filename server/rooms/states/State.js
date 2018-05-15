@@ -18,9 +18,8 @@ module.exports = class State {
             bitsTimer: Date.now(),
             powerUpTimer: Date.now(),
             bitExpAmount: 1000,
-            powerUpTypes: ['healthBoost', 'slowDownAll', 'speedBoost', 'enrage'],
+            powerUpTypes: ['healthBoost', 'xpBoost', 'speedBoost'],
             maxBits: 75,
-            maxPowerUps: 4,
             maxComets: 6
         });
     }
@@ -135,7 +134,7 @@ module.exports = class State {
         for (let id in this.players) {
             let currentPlayer = this.players[id];
 
-            if (currentPlayer) {
+            if (currentPlayer && currentPlayer.alive) {
                 this.private.network.sendToClient(id, {updateClient: {
                     id: id,
                     x: currentPlayer.pos.x,
@@ -146,13 +145,15 @@ module.exports = class State {
 
                 let list = util.getProximityList(currentPlayer, this.players, true, 1000);
                 list.forEach(targetId => {
-                    this.private.network.sendToClient(targetId, {updateClient: {
-                        id: id,
-                        x: currentPlayer.pos.x,
-                        y: currentPlayer.pos.y,
-                        angle: currentPlayer.pos.angle,
-                        health: currentPlayer.pos.health
-                    }});
+                    if (this.players[targetId].alive) {
+                        this.private.network.sendToClient(targetId, {updateClient: {
+                            id: id,
+                            x: currentPlayer.pos.x,
+                            y: currentPlayer.pos.y,
+                            angle: currentPlayer.pos.angle,
+                            health: currentPlayer.pos.health
+                        }});
+                    }
                 });
             }
         }
@@ -225,7 +226,7 @@ module.exports = class State {
     cometBulletCollision(player) {
         for (let id in this.comets) {
             let comet = this.comets[id];
-            player.private.bullets.forEach(bullet => {
+            player.private.bullets.forEach((bullet, i, obj) => {
                 let dist = util.distanceFrom(comet, bullet);
                 if (dist < 25) {
                     if (comet.bulletHit(player.private.damage)) {
@@ -233,6 +234,8 @@ module.exports = class State {
                         this.addNewPowerUp(comet.x, comet.y);
                         this.addNewComet();
                     }
+
+                    obj.splice(i, 1);
                 }
             });
         }

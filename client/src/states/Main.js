@@ -12,14 +12,12 @@ class Main extends Phaser.State {
 		this.game.stage.disableVisibilityChange = true;
 		this.game.world.setBounds(0, 0, 1920, 1920);
 		this.game.onMobile = !this.game.device.desktop;
+		this.game.time.advancedTiming = true;
+		
 		//Background
-		this.starfield2 = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
-		this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
-		this.planet_blue = this.game.add.image(0, 0, 'planet_blue');
+		this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
 		this.starfield.fixedToCamera = true;
-		this.starfield2.fixedToCamera = true;
-		this.planet_blue.fixedToCamera = true
-		this.starfield2.alpha = 0.5;
+		this.starfield.alpha = 0.5;
 
 		//Pools and network
 		this.game.room = this.game.colyseus.join('game');
@@ -46,9 +44,7 @@ class Main extends Phaser.State {
 
 	update() {
 		this.updateBullets();
-		this.starfield.tilePosition.set(-(this.game.camera.x * 0.07), -(this.game.camera.y * 0.07));
-		this.starfield2.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
-		this.planet_blue.cameraOffset.set(-(this.game.camera.x * 0.2), -(this.game.camera.y * 0.2));
+		this.starfield.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
 	}
 
 	netListener() {
@@ -84,7 +80,9 @@ class Main extends Phaser.State {
 				bullet.id = message.bullet.id;
 				bullet.angle = message.bullet.angle;
 				bullet.speed = message.bullet.speed;
-				bullet.timer = Date.now() + 1000;
+				bullet.timer = Date.now() + 400;
+				bullet.setDest(message.bullet.x, message.bullet.y);
+				bullet.setTint(this.clients[message.bullet.id].tint);
 				bullet.reset(message.bullet.x, message.bullet.y);
 			}
 
@@ -136,7 +134,6 @@ class Main extends Phaser.State {
 		this.game.room.listen("players/:id/:variable", change => {
 			if (change.operation === 'replace') {
 				let player = this.clients[change.path.id];
-
 				if (player) {
 					switch(change.path.variable) {
 						case 'maxHealth':
@@ -256,15 +253,17 @@ class Main extends Phaser.State {
 		this.bulletPool.forEachAlive(bullet => {
 			for (let id in this.clients) {
 				if (bullet.id !== id) {
-					let dx = this.clients[id].x - bullet.x; 
-					let dy = this.clients[id].y - bullet.y;
-					let dist = Math.sqrt(dx * dx + dy * dy);
+					if (this.clients[id].alive) {
+						let dx = this.clients[id].x - bullet.x; 
+						let dy = this.clients[id].y - bullet.y;
+						let dist = Math.sqrt(dx * dx + dy * dy);
 
-					if (dist < 30) {
-						bullet.kill();
-						this.emBulletHit.x = bullet.x;
-						this.emBulletHit.y = bullet.y;
-						this.emBulletHit.start(true, 500, null, 5);
+						if (dist < 30) {
+							bullet.kill();
+							this.emBulletHit.x = bullet.x;
+							this.emBulletHit.y = bullet.y;
+							this.emBulletHit.start(true, 500, null, 5);
+						}
 					}
 				}
 			}

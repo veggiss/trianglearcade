@@ -10,12 +10,25 @@ class Client extends Phaser.Sprite {
 		this.maxHealth = maxHealth;
 		this.level = level;
 		this.angle = 0;
+		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.dest = {x: 0, y: 0, angle: this.angle};
 
 		//Emitter
 	    this.emitter = this.game.add.emitter(0, 0, 100);
 	    this.emitter.makeParticles('deathParticle');
 	    this.emitter.gravity = 0;
+
+		this.spaceJuice = this.game.add.emitter(0, 0, 20);
+		this.spaceJuice.makeParticles('spaceJuiceParticle');
+		this.spaceJuice.setAlpha(1, 0, 2000);
+		this.spaceJuice.setRotation(50, 400);
+		this.spaceJuice.setScale(0, 10, 0, 10, 2000);
+		this.spaceJuice.setXSpeed(0, 0);
+		this.spaceJuice.setYSpeed(0, 0);
+		this.spaceJuice.gravity = 0;
+		this.spaceJuice.children.forEach(child => {
+			child.tint = this.tint;
+		});
 
 	    //Sprite
 	    this.scale.setTo(0.75, 0.75);
@@ -65,6 +78,7 @@ class Client extends Phaser.Sprite {
 	leave() {
 		this.playerHealthBar.barSprite.destroy();
 		this.playerHealthBar.bgSprite.destroy();
+		this.spaceJuice.destroy();
 	}
 
 	lerp(a, b, n) {

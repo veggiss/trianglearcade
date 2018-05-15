@@ -5306,10 +5306,20 @@ var Bullet = function (_Phaser$Sprite) {
 		_this.angle;
 		_this.speed = 0;
 		_this.game = game;
-		_this.timer = Date.now() + 1000;
+		_this.timer = Date.now();
 		_this.anchor.setTo(0.5, 0.5);
 		_this.kill();
 
+		//Emitter
+		_this.bulletTrailer = _this.game.add.emitter(0, 0, 40);
+		_this.bulletTrailer.makeParticles('deathParticle');
+		_this.bulletTrailer.setAlpha(1, 0, 600);
+		_this.bulletTrailer.setXSpeed(0, 0);
+		_this.bulletTrailer.setYSpeed(0, 0);
+		_this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
+		_this.bulletTrailer.frequency = 10;
+		_this.bulletTrailer.lifespan = 400;
+		_this.bulletTrailer.gravity = 0;
 		_this.game.add.existing(_this);
 		return _this;
 	}
@@ -5317,14 +5327,36 @@ var Bullet = function (_Phaser$Sprite) {
 	_createClass(Bullet, [{
 		key: 'update',
 		value: function update() {
-			if (this.alive) {
-				this.x += Math.sin(this.angle * Math.PI / 180) * (24 + this.speed) / 3;
-				this.y -= Math.cos(this.angle * Math.PI / 180) * (24 + this.speed) / 3;
+			if (this.alive && this.dest) {
+				this.bulletTrailer.on = true;
+				this.x = this.lerp(this.x, this.dest.x, 0.03);
+				this.y = this.lerp(this.y, this.dest.y, 0.03);
+				this.bulletTrailer.x = this.x;
+				this.bulletTrailer.y = this.y;
 
 				if (Date.now() > this.timer) {
+					this.bulletTrailer.on = false;
 					this.kill();
 				}
 			}
+		}
+	}, {
+		key: 'setTint',
+		value: function setTint(tint) {
+			this.bulletTrailer.setAllChildren('tint', tint);
+		}
+	}, {
+		key: 'setDest',
+		value: function setDest(x, y) {
+			this.dest = {
+				x: x + Math.sin(this.angle / 180.0 * Math.PI) * 750,
+				y: y - Math.cos(this.angle / 180.0 * Math.PI) * 750
+			};
+		}
+	}, {
+		key: 'lerp',
+		value: function lerp(a, b, n) {
+			return (1 - n) * a + n * b;
 		}
 	}]);
 
@@ -5393,12 +5425,25 @@ var Client = function (_Phaser$Sprite) {
 		_this.maxHealth = maxHealth;
 		_this.level = level;
 		_this.angle = 0;
+		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.dest = { x: 0, y: 0, angle: _this.angle };
 
 		//Emitter
 		_this.emitter = _this.game.add.emitter(0, 0, 100);
 		_this.emitter.makeParticles('deathParticle');
 		_this.emitter.gravity = 0;
+
+		_this.spaceJuice = _this.game.add.emitter(0, 0, 20);
+		_this.spaceJuice.makeParticles('spaceJuiceParticle');
+		_this.spaceJuice.setAlpha(1, 0, 2000);
+		_this.spaceJuice.setRotation(50, 400);
+		_this.spaceJuice.setScale(0, 10, 0, 10, 2000);
+		_this.spaceJuice.setXSpeed(0, 0);
+		_this.spaceJuice.setYSpeed(0, 0);
+		_this.spaceJuice.gravity = 0;
+		_this.spaceJuice.children.forEach(function (child) {
+			child.tint = _this.tint;
+		});
 
 		//Sprite
 		_this.scale.setTo(0.75, 0.75);
@@ -5455,6 +5500,7 @@ var Client = function (_Phaser$Sprite) {
 		value: function leave() {
 			this.playerHealthBar.barSprite.destroy();
 			this.playerHealthBar.bgSprite.destroy();
+			this.spaceJuice.destroy();
 		}
 	}, {
 		key: 'lerp',
@@ -5837,7 +5883,7 @@ function _inherits(subClass, superClass) {
 var Player = function (_Phaser$Sprite) {
 	_inherits(Player, _Phaser$Sprite);
 
-	function Player(game, x, y, health, angle) {
+	function Player(game, x, y, health, angle, color) {
 		_classCallCheck(this, Player);
 
 		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'spaceship_white'));
@@ -5852,6 +5898,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.expAmount = 0;
 		_this.angleRate = 100;
 		_this.lastUpdate = Date.now() + _this.angleRate;
+		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
 		_this.stats = {
@@ -5864,10 +5911,23 @@ var Player = function (_Phaser$Sprite) {
 			acceleration: 1,
 			angulation: 1
 
-			//Emitter
+			//Emitters
 		};_this.emitter = _this.game.add.emitter(0, 0, 100);
 		_this.emitter.makeParticles('deathParticle');
+		_this.emitter.setAlpha(1, 0, 2000);
 		_this.emitter.gravity = 0;
+
+		_this.spaceJuice = _this.game.add.emitter(0, 0, 20);
+		_this.spaceJuice.makeParticles('spaceJuiceParticle');
+		_this.spaceJuice.setAlpha(1, 0, 2000);
+		_this.spaceJuice.setRotation(50, 400);
+		_this.spaceJuice.setScale(0, 10, 0, 10, 2000);
+		_this.spaceJuice.setXSpeed(0, 0);
+		_this.spaceJuice.setYSpeed(0, 0);
+		_this.spaceJuice.gravity = 0;
+		_this.spaceJuice.children.forEach(function (child) {
+			child.tint = _this.tint;
+		});
 
 		//Sprite
 		_this.anchor.setTo(0.5, 0.5);
@@ -5914,6 +5974,7 @@ var Player = function (_Phaser$Sprite) {
 		value: function update() {
 			this.updateAngle();
 			this.updatePlayerPos();
+			this.updateSpaceJuice();
 		}
 	}, {
 		key: 'setHealth',
@@ -5983,9 +6044,21 @@ var Player = function (_Phaser$Sprite) {
 			}
 		}
 	}, {
+		key: 'updateSpaceJuice',
+		value: function updateSpaceJuice() {
+			this.spaceJuice.x = this.x;
+			this.spaceJuice.y = this.y;
+		}
+	}, {
 		key: 'playerControls',
 		value: function playerControls(obj) {
 			this.game.room.send({ moveUp: obj.isDown });
+
+			if (obj.isDown) {
+				this.spaceJuice.start(false, 1000);
+			} else {
+				this.spaceJuice.on = false;
+			}
 		}
 	}, {
 		key: 'playerShoot',
@@ -6009,7 +6082,7 @@ var Player = function (_Phaser$Sprite) {
 			this.game.camera.target = null;
 			this.emitter.x = this.x;
 			this.emitter.y = this.y;
-			this.emitter.start(true, 2000, null, 20);
+			this.emitter.start(true, 2000 - this.stats.speed * 10, null, 20);
 			this.alpha = 0;
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
@@ -6161,8 +6234,6 @@ var UI = function () {
 		var _this = this;
 
 		_classCallCheck(this, UI);
-
-		//super();
 
 		this.game = game;
 		this.stats = stats;
@@ -6433,14 +6504,12 @@ var Main = function (_Phaser$State) {
 			this.game.stage.disableVisibilityChange = true;
 			this.game.world.setBounds(0, 0, 1920, 1920);
 			this.game.onMobile = !this.game.device.desktop;
+			this.game.time.advancedTiming = true;
+
 			//Background
-			this.starfield2 = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
-			this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
-			this.planet_blue = this.game.add.image(0, 0, 'planet_blue');
+			this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
 			this.starfield.fixedToCamera = true;
-			this.starfield2.fixedToCamera = true;
-			this.planet_blue.fixedToCamera = true;
-			this.starfield2.alpha = 0.5;
+			this.starfield.alpha = 0.5;
 
 			//Pools and network
 			this.game.room = this.game.colyseus.join('game');
@@ -6468,9 +6537,7 @@ var Main = function (_Phaser$State) {
 		key: 'update',
 		value: function update() {
 			this.updateBullets();
-			this.starfield.tilePosition.set(-(this.game.camera.x * 0.07), -(this.game.camera.y * 0.07));
-			this.starfield2.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
-			this.planet_blue.cameraOffset.set(-(this.game.camera.x * 0.2), -(this.game.camera.y * 0.2));
+			this.starfield.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
 		}
 	}, {
 		key: 'netListener',
@@ -6509,7 +6576,9 @@ var Main = function (_Phaser$State) {
 					bullet.id = message.bullet.id;
 					bullet.angle = message.bullet.angle;
 					bullet.speed = message.bullet.speed;
-					bullet.timer = Date.now() + 1000;
+					bullet.timer = Date.now() + 400;
+					bullet.setDest(message.bullet.x, message.bullet.y);
+					bullet.setTint(_this2.clients[message.bullet.id].tint);
 					bullet.reset(message.bullet.x, message.bullet.y);
 				}
 
@@ -6561,7 +6630,6 @@ var Main = function (_Phaser$State) {
 			this.game.room.listen("players/:id/:variable", function (change) {
 				if (change.operation === 'replace') {
 					var player = _this2.clients[change.path.id];
-
 					if (player) {
 						switch (change.path.variable) {
 							case 'maxHealth':
@@ -6689,15 +6757,17 @@ var Main = function (_Phaser$State) {
 			this.bulletPool.forEachAlive(function (bullet) {
 				for (var id in _this3.clients) {
 					if (bullet.id !== id) {
-						var dx = _this3.clients[id].x - bullet.x;
-						var dy = _this3.clients[id].y - bullet.y;
-						var dist = Math.sqrt(dx * dx + dy * dy);
+						if (_this3.clients[id].alive) {
+							var dx = _this3.clients[id].x - bullet.x;
+							var dy = _this3.clients[id].y - bullet.y;
+							var dist = Math.sqrt(dx * dx + dy * dy);
 
-						if (dist < 30) {
-							bullet.kill();
-							_this3.emBulletHit.x = bullet.x;
-							_this3.emBulletHit.y = bullet.y;
-							_this3.emBulletHit.start(true, 500, null, 5);
+							if (dist < 30) {
+								bullet.kill();
+								_this3.emBulletHit.x = bullet.x;
+								_this3.emBulletHit.y = bullet.y;
+								_this3.emBulletHit.start(true, 500, null, 5);
+							}
 						}
 					}
 				}
@@ -6764,7 +6834,9 @@ var Preload = function (_Phaser$State) {
 			this.game.load.image('bullet', 'assets/bullet.png');
 			this.game.load.image('comet', 'assets/comet.png');
 			this.game.load.image('deathParticle', 'assets/deathParticle.png');
+			this.game.load.image('spaceJuiceParticle', 'assets/spaceJuiceParticle.png');
 			this.game.load.image('starfield', 'assets/starfield.png');
+			this.game.load.image('grid_neon', 'assets/grid_neon.png');
 			this.game.load.image('starfield2', 'assets/starfield2.png');
 			this.game.load.image('planet_blue', 'assets/planet_blue.png');
 

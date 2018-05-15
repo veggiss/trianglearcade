@@ -3,7 +3,7 @@ import HealthBar from './HealthBar';
 import UI from './UI';
 
 class Player extends Phaser.Sprite {
-	constructor(game, x, y, health, angle) {
+	constructor(game, x, y, health, angle, color) {
 		super(game, x, y, 'spaceship_white');
 
 		this.pad = this.game.plugins.add(Phaser.VirtualJoystick);
@@ -16,6 +16,7 @@ class Player extends Phaser.Sprite {
 		this.expAmount = 0;
 		this.angleRate = 100;
 		this.lastUpdate = Date.now() + this.angleRate;
+		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.dest = {x: x, y: y, angle: this.angle};
 
 		this.stats = {
@@ -29,10 +30,23 @@ class Player extends Phaser.Sprite {
 			angulation: 1
 		}
 
-		//Emitter
-	    this.emitter = this.game.add.emitter(0, 0, 100);
-	    this.emitter.makeParticles('deathParticle');
-	    this.emitter.gravity = 0;
+		//Emitters
+		this.emitter = this.game.add.emitter(0, 0, 100);
+		this.emitter.makeParticles('deathParticle');
+		this.emitter.setAlpha(1, 0, 2000);
+		this.emitter.gravity = 0;
+
+		this.spaceJuice = this.game.add.emitter(0, 0, 20);
+		this.spaceJuice.makeParticles('spaceJuiceParticle');
+		this.spaceJuice.setAlpha(1, 0, 2000);
+		this.spaceJuice.setRotation(50, 400);
+		this.spaceJuice.setScale(0, 10, 0, 10, 2000);
+		this.spaceJuice.setXSpeed(0, 0);
+		this.spaceJuice.setYSpeed(0, 0);
+		this.spaceJuice.gravity = 0;
+		this.spaceJuice.children.forEach(child => {
+			child.tint = this.tint;
+		});
 
 		//Sprite
 		this.anchor.setTo(0.5, 0.5);
@@ -76,6 +90,7 @@ class Player extends Phaser.Sprite {
 	update() {
 		this.updateAngle();
 		this.updatePlayerPos();
+		this.updateSpaceJuice();
 	}
 
 	setHealth(value) {
@@ -140,8 +155,19 @@ class Player extends Phaser.Sprite {
 		}
 	}
 
+	updateSpaceJuice() {
+		this.spaceJuice.x = this.x;
+		this.spaceJuice.y = this.y;
+	}
+
 	playerControls(obj) {
 		this.game.room.send({moveUp: obj.isDown});
+
+		if (obj.isDown) {
+			this.spaceJuice.start(false, 1000);
+		} else {
+			this.spaceJuice.on = false
+		}
 	}
 
 	playerShoot(obj) {
@@ -162,7 +188,7 @@ class Player extends Phaser.Sprite {
 		this.game.camera.target = null;
 		this.emitter.x = this.x;
 		this.emitter.y = this.y;
-		this.emitter.start(true, 2000, null, 20);
+		this.emitter.start(true, 2000 - (this.stats.speed * 10), null, 20);
 		this.alpha = 0;
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;

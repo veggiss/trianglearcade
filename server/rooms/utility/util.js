@@ -109,6 +109,10 @@ function getProximityList(player, list, within, range) {
     return exclutionList;
 }
 
+function lerp(a, b, n) {
+    return (1 - n) * a + n * b;
+}
+
 module.exports = {
     ranWorldPos: ranWorldPos,
     ranPlayerAngle: ranPlayerAngle,
@@ -118,5 +122,6 @@ module.exports = {
     ranNumBetween: ranNumBetween,
     wrapAngle: wrapAngle,
     getShortestAngle: getShortestAngle,
-    getProximityList: getProximityList
+    getProximityList: getProximityList,
+    lerp: lerp
 }

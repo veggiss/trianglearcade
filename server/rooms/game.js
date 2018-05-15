@@ -5,12 +5,9 @@ const util = require('./utility/util');
 
 module.exports = class StateHandlerRoom extends Room {
     onInit (options) {
-        this.setPatchRate(100);
+        this.setPatchRate(500);
         this.setState(new State(this));
         this.maxClients = 6;
-        /*this.state.timeline = createTimeline();
-        this.state.timeline.maxSnapshots = 1;
-        this.state.timeline.takeSnapshot(this.state.players);*/
         this.state.populateBits();
         this.state.populateComets();
         this.setSimulationInterval(() => this.update(), 1000 / 20);

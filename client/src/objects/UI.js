@@ -3,8 +3,6 @@ import HealthBar from './HealthBar';
 
 class UI {
 	constructor(game, stats) {
-		//super();
-
 		this.game = game;
 		this.stats = stats;
 
