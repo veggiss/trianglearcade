@@ -5,7 +5,7 @@ const util = require('./utility/util');
 
 module.exports = class StateHandlerRoom extends Room {
     onInit (options) {
-        this.setPatchRate(100);
+        this.setPatchRate(500);
         this.setState(new State(this));
         this.maxClients = 6;
         this.state.populateBits();
@@ -15,6 +15,7 @@ module.exports = class StateHandlerRoom extends Room {
     }
 
     requestJoin(options) {
+
         return this.clients.filter(c => c.id === options.clientId).length === 0;
     }
 
