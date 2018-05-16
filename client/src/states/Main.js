@@ -8,7 +8,7 @@ import Comet from 'objects/Comet';
 class Main extends Phaser.State {
 
 	create() {
-		this.game.stage.backgroundColor = '#000022';
+		this.game.stage.backgroundColor = '#021421';
 		this.game.stage.disableVisibilityChange = true;
 		this.game.world.setBounds(0, 0, 1920, 1920);
 		this.game.onMobile = !this.game.device.desktop;
@@ -264,11 +264,9 @@ class Main extends Phaser.State {
 			for (let id in this.clients) {
 				if (bullet.id !== id) {
 					if (this.clients[id].alive) {
-						let dx = this.clients[id].x - bullet.x; 
-						let dy = this.clients[id].y - bullet.y;
-						let dist = Math.sqrt(dx * dx + dy * dy);
+						let player = this.clients[id];
 
-						if (dist < 30) {
+						if (this.distranceBetween(player, bullet) < 30) {
 							bullet.kill();
 							this.emBulletHit.x = bullet.x;
 							this.emBulletHit.y = bullet.y;
@@ -277,7 +275,22 @@ class Main extends Phaser.State {
 					}
 				}
 			}
+
+			this.cometPool.forEachAlive(comet => {
+				if (this.distranceBetween(comet, bullet) < 25) {
+					bullet.kill();
+					this.emBulletHit.x = bullet.x;
+					this.emBulletHit.y = bullet.y;
+					this.emBulletHit.start(true, 500, null, 5);
+				}
+			})
 		}, this);
+	}
+
+	distranceBetween(point1, point2) {
+		let dx = point1.x - point2.x; 
+		let dy = point1.y - point2.y;
+		return Math.sqrt(dx * dx + dy * dy);
 	}
 }
 

@@ -5113,6 +5113,10 @@ var _Preload = require('states/Preload');
 
 var _Preload2 = _interopRequireDefault(_Preload);
 
+var _Menu = require('states/Menu');
+
+var _Menu2 = _interopRequireDefault(_Menu);
+
 var _Main = require('states/Main');
 
 var _Main2 = _interopRequireDefault(_Main);
@@ -5159,6 +5163,7 @@ var Game = function (_Phaser$Game) {
 		_this.colyseus = new _colyseus.Client(endpoint);
 		_this.state.add('Boot', _Boot2.default, false);
 		_this.state.add('Preload', _Preload2.default, false);
+		_this.state.add('Menu', _Menu2.default, false);
 		_this.state.add('Main', _Main2.default, false);
 		_this.state.start('Boot');
 		return _this;
@@ -5169,7 +5174,7 @@ var Game = function (_Phaser$Game) {
 
 new Game();
 
-},{"colyseus.js":13,"states/Boot":46,"states/Main":47,"states/Preload":48}],37:[function(require,module,exports){
+},{"colyseus.js":13,"states/Boot":46,"states/Main":47,"states/Menu":48,"states/Preload":49}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5216,6 +5221,10 @@ var Bit = function (_Phaser$Sprite) {
 		_this.target;
 		_this.game = game;
 		_this.anchor.setTo(0.5, 0.5);
+		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
+		_this.scale.setTo(Math.random() * 0.2 + 0.5);
+		_this.rotSpeed = Math.random() * 0.05 - 0.2;
+		_this.autoCull = true;
 		_this.kill();
 
 		_this.game.add.existing(_this);
@@ -5225,6 +5234,8 @@ var Bit = function (_Phaser$Sprite) {
 	_createClass(Bit, [{
 		key: 'update',
 		value: function update() {
+			this.rotation += this.rotSpeed;
+
 			if (this.activated) {
 				this.moveToTarget();
 			}
@@ -5426,6 +5437,7 @@ var Client = function (_Phaser$Sprite) {
 		_this.level = level;
 		_this.angle = 0;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
+		_this.autoCull = true;
 		_this.dest = { x: 0, y: 0, angle: _this.angle };
 
 		/*//Emitter
@@ -5559,6 +5571,9 @@ var Comet = function (_Phaser$Sprite) {
 		_this.id;
 		_this.game = game;
 		_this.anchor.setTo(0.5, 0.5);
+		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
+		_this.autoCull = true;
+		_this.angle = Math.random() * 180;
 		_this.kill();
 
 		_this.game.add.existing(_this);
@@ -5568,7 +5583,7 @@ var Comet = function (_Phaser$Sprite) {
 	_createClass(Comet, [{
 		key: 'update',
 		value: function update() {
-			//this.rotation = 0.005;
+			this.rotation += 0.05;
 		}
 	}]);
 
@@ -6498,7 +6513,7 @@ var Main = function (_Phaser$State) {
 	_createClass(Main, [{
 		key: 'create',
 		value: function create() {
-			this.game.stage.backgroundColor = '#000022';
+			this.game.stage.backgroundColor = '#021421';
 			this.game.stage.disableVisibilityChange = true;
 			this.game.world.setBounds(0, 0, 1920, 1920);
 			this.game.onMobile = !this.game.device.desktop;
@@ -6766,11 +6781,9 @@ var Main = function (_Phaser$State) {
 				for (var id in _this3.clients) {
 					if (bullet.id !== id) {
 						if (_this3.clients[id].alive) {
-							var dx = _this3.clients[id].x - bullet.x;
-							var dy = _this3.clients[id].y - bullet.y;
-							var dist = Math.sqrt(dx * dx + dy * dy);
+							var player = _this3.clients[id];
 
-							if (dist < 30) {
+							if (_this3.distranceBetween(player, bullet) < 30) {
 								bullet.kill();
 								_this3.emBulletHit.x = bullet.x;
 								_this3.emBulletHit.y = bullet.y;
@@ -6779,7 +6792,23 @@ var Main = function (_Phaser$State) {
 						}
 					}
 				}
+
+				_this3.cometPool.forEachAlive(function (comet) {
+					if (_this3.distranceBetween(comet, bullet) < 25) {
+						bullet.kill();
+						_this3.emBulletHit.x = bullet.x;
+						_this3.emBulletHit.y = bullet.y;
+						_this3.emBulletHit.start(true, 500, null, 5);
+					}
+				});
 			}, this);
+		}
+	}, {
+		key: 'distranceBetween',
+		value: function distranceBetween(point1, point2) {
+			var dx = point1.x - point2.x;
+			var dy = point1.y - point2.y;
+			return Math.sqrt(dx * dx + dy * dy);
 		}
 	}]);
 
@@ -6789,6 +6818,101 @@ var Main = function (_Phaser$State) {
 exports.default = Main;
 
 },{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Comet":40,"objects/Player":43,"objects/PowerUp":44}],48:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+function _possibleConstructorReturn(self, call) {
+	if (!self) {
+		throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	}return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+	if (typeof superClass !== "function" && superClass !== null) {
+		throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+	}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var Menu = function (_Phaser$State) {
+	_inherits(Menu, _Phaser$State);
+
+	function Menu() {
+		_classCallCheck(this, Menu);
+
+		return _possibleConstructorReturn(this, (Menu.__proto__ || Object.getPrototypeOf(Menu)).apply(this, arguments));
+	}
+
+	_createClass(Menu, [{
+		key: 'create',
+		value: function create() {
+			var _this2 = this;
+
+			this.game.stage.backgroundColor = '#021421';
+			this.game.stage.disableVisibilityChange = true;
+			this.game.world.setBounds(0, 0, this.game.width, this.game.heigth);
+
+			//Background
+			this.starfield = this.add.tileSprite(0, 0, window.outerWidth, window.outerHeight, 'starfield2');
+			this.starfield.fixedToCamera = true;
+			this.starfield.alpha = 0.5;
+
+			this.text = this.game.add.bitmapText(window.outerWidth / 2, window.outerHeight / 4, 'font', 'Who are you?', 22);
+			this.text.anchor.setTo(0.5, 0.5);
+			this.uiDiv = document.createElement("DIV");
+			this.input = document.createElement("INPUT");
+			this.button = document.createElement("BUTTON");
+			this.input.setAttribute("type", "text");
+			this.button.innerHTML = 'Enter';
+			this.gameDiv = document.getElementById("content");
+			this.setUiPos();
+			this.game.scale.setResizeCallback(function () {
+				this.setUiPos();
+			}, this);
+			this.uiDiv.appendChild(this.input);
+			this.uiDiv.appendChild(this.button);
+			this.gameDiv.appendChild(this.uiDiv);
+
+			this.button.addEventListener('click', function () {
+				_this2.game.myName = _this2.input.value == '' ? 'guest' : _this2.input.value;
+				_this2.uiDiv.remove();
+				_this2.game.state.start("Main");
+			}, false);
+		}
+	}, {
+		key: 'setUiPos',
+		value: function setUiPos() {
+			this.text.x = window.outerWidth / 2;
+			this.text.y = window.outerHeight / 4;
+			this.input.setAttribute("style", "position:absolute;width:" + 128 + "px;left:" + (this.text.x - this.text.width / 2) + "px;top:" + (this.text.y + 25) + "px;");
+			this.button.setAttribute("style", "position:absolute;width:" + 132 + "px;left:" + (this.text.x - this.text.width / 2) + "px;top:" + (this.text.y + 45) + "px;");
+		}
+	}]);
+
+	return Menu;
+}(Phaser.State);
+
+exports.default = Menu;
+
+},{}],49:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6857,7 +6981,7 @@ var Preload = function (_Phaser$State) {
 	}, {
 		key: 'create',
 		value: function create() {
-			this.game.state.start("Main");
+			this.game.state.start("Menu");
 		}
 	}]);
 

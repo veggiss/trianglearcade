@@ -11,6 +11,7 @@ class Client extends Phaser.Sprite {
 		this.level = level;
 		this.angle = 0;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
+		this.autoCull = true;
 		this.dest = {x: 0, y: 0, angle: this.angle};
 
 		/*//Emitter
