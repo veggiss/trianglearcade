@@ -15,20 +15,14 @@ module.exports = class StateHandlerRoom extends Room {
     }
 
     requestJoin(options) {
-
-        return this.clients.filter(c => c.id === options.clientId).length === 0;
+        return 1;
+        //return this.clients.filter(c => c.id === options.clientId).length === 0;
     }
 
-    onJoin (client) {
-        this.state.createPlayer(client.sessionId, this, client);
+    onJoin (client, opt) {
+        this.state.createPlayer(client.sessionId, this, opt.name);
         let player = this.state.players[client.sessionId];
-        this.send(client, {me: {
-            id: client.sessionId,
-            x: player.pos.x,
-            y: player.pos.y,
-            health: player.pos.health,
-            angle: player.pos.angle
-        }});
+        this.send(client, {me: {id: client.sessionId}});
     }
 
     onLeave (client) {

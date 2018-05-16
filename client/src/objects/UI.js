@@ -7,6 +7,7 @@ class UI {
 		this.stats = stats;
 
 		this.statTextGroup = this.game.add.group();
+		this.lbTextGroup = this.game.add.group();
 		this.statButtonGroup = this.game.add.group();
 
 		//Experience bar
@@ -19,7 +20,7 @@ class UI {
 		});
 		this.expBar.setPercent(0);
 
-		// Text
+		// Stat UI
 		this.levelText = this.game.add.bitmapText(156, 100, 'font', 'Level: ' + 1, 32);
 		this.pointsText = this.game.add.bitmapText(156, 225, 'font', 'Points: ' + 0, 23);
 		this.firerateText = this.game.add.bitmapText(156, 250, 'font', 'Firerate: ' + 1, 23);
@@ -52,14 +53,46 @@ class UI {
 			}
 		});
 
+		// Leaderboard UI
+		this.lbHeader = this.game.add.bitmapText(window.innerWidth - 100, 25, 'font', 'Leaderboard', 32);
+		this.lbHeader.anchor.setTo(0.5);
+		this.lbText = [];
+		let spacing = 0;
+
+		for (let i = 0; i < 10; i++) {
+			spacing += 22;
+			let text = this.game.add.bitmapText(this.lbHeader.x, this.lbHeader.y + spacing, 'font', '', 23);
+			text.anchor.setTo(0.5);
+			text.alpha = 0.5;
+			this.lbText.push(text);
+			this.lbTextGroup.add(text);
+		}
+
+		this.lbTextGroup.add(this.lbHeader);
+
+		/*this.game.scale.setResizeCallback(() => { //--- This event has to be removed before changing state
+		    this.lbHeader.x = window.innerWidth - 100;
+		}, this);*/
+
 		this.expBar.barSprite.fixedToCamera = true;
 		this.expBar.bgSprite.fixedToCamera = true;
 		this.statTextGroup.fixedToCamera = true;
+		this.lbTextGroup.fixedToCamera = true;
 		this.statButtonGroup.fixedToCamera = true;
 
 		this.game.add.existing(this.statTextGroup);
 
 		return this;
+	}
+
+	updateLeaderboard(leaderboard) {
+		this.lbText.forEach(item => {
+			item.text = '';
+		})
+
+		leaderboard.forEach((item, index, obj) => {
+			this.lbText[index].text = `${item.name}: ${item.score}`;
+		});
 	}
 
 	updateText(type, text) {

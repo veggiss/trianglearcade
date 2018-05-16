@@ -18,9 +18,9 @@ class Menu extends Phaser.State {
 		this.button.innerHTML = 'Enter';
 		this.gameDiv = document.getElementById("content");
 		this.setUiPos();
-		this.game.scale.setResizeCallback(function () {
+		/*this.game.scale.setResizeCallback(() => { --- This event has to be removed before changing state
 		    this.setUiPos();
-		}, this);
+		}, this);*/
 		this.uiDiv.appendChild(this.input);
 		this.uiDiv.appendChild(this.button);
 		this.gameDiv.appendChild(this.uiDiv);

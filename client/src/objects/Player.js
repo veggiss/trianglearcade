@@ -18,6 +18,7 @@ class Player extends Phaser.Sprite {
 		this.lastUpdate = Date.now() + this.angleRate;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.dest = {x: x, y: y, angle: this.angle};
+		this.kill();
 
 		this.stats = {
 			level: 1,
@@ -60,6 +61,8 @@ class Player extends Phaser.Sprite {
 			height: 8,
 			animationDuration: 10
 		});
+		this.playerHealthBar.barSprite.alpha = 0;
+		this.playerHealthBar.bgSprite.alpha = 0;
 
 		//Inputs
 		if (this.game.onMobile) {
@@ -174,11 +177,15 @@ class Player extends Phaser.Sprite {
 		this.game.room.send({shoot: obj.isDown});
 	}
 
-	respawn() {
+	respawn(x, y) {
 		this.game.camera.target = this;
 		this.health = this.maxHealth;
 		this.playerHealthBar.setPercent(100);
-		this.alpha = 1;
+		this.dest.x = x;
+		this.dest.y = y;
+		this.x = x;
+		this.y = y;
+		this.reset(x, y);
 		this.playerHealthBar.barSprite.alpha = 1;
 		this.playerHealthBar.bgSprite.alpha = 1;
 	}
@@ -186,17 +193,12 @@ class Player extends Phaser.Sprite {
 	die() {
 		this.game.camera.shake(0.01, 250);
 		this.game.camera.target = null;
+		this.kill();
 		/*this.emitter.x = this.x;
 		this.emitter.y = this.y;
 		this.emitter.start(true, 2000 - (this.stats.speed * 10), null, 20);*/
-		this.alpha = 0;
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
-	}
-
-	leave() {
-		this.playerHealthBar.barSprite.destroy();
-		this.playerHealthBar.bgSprite.destroy();
 	}
 
 	lerp(a, b, n) {

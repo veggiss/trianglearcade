@@ -20,11 +20,12 @@ class Main extends Phaser.State {
 		this.starfield.alpha = 0.5;
 
 		//Pools and network
-		this.game.room = this.game.colyseus.join('game');
+		this.game.room = this.game.colyseus.join('game', {name: this.game.myName.toString()});
 		this.bulletPool = this.game.add.group();
 		this.bitsPool = this.game.add.group();
 		this.powerUpPool = this.game.add.group();
 		this.cometPool = this.game.add.group();
+		this.visiblePlayers = [];
 		this.clients = {};
 		this.id;
 
@@ -43,7 +44,6 @@ class Main extends Phaser.State {
 		this.bulletTrailer.lifespan = 400;
 		this.bulletTrailer.gravity = 0;
 
-	    //Create bullets
 	    this.createBulletPool();
 	    this.createBitsPool();
 	    this.createPowerUpPool();
@@ -53,8 +53,11 @@ class Main extends Phaser.State {
 	}
 
 	update() {
-		this.updateBullets();
-		this.starfield.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
+		if (this.id) {
+			this.updateBullets();
+			this.updateVisiblePlayers();
+			this.starfield.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
+		}
 	}
 
 	netListener() {
@@ -62,7 +65,7 @@ class Main extends Phaser.State {
 			if (message.me) {
 				let me = message.me;
 				this.id = me.id;
-				this.clients[this.id] = new Player(this.game, me.x, me.y, me.health, me.angle);
+				this.clients[this.id] = new Player(this.game, 0, 0, 100, 0);
 				this.game.camera.follow(this.clients[this.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 			}
 
@@ -114,7 +117,12 @@ class Main extends Phaser.State {
 			if (message.updateClient) {
 				let m = message.updateClient;
 				let client = this.clients[m.id];
+
 				if (client) {
+					if (!client.alive) {
+						client.reset(m.x, m.y);
+					}
+
 					client.dest.x = m.x;
 					client.dest.y = m.y;
 					client.dest.angle = m.angle - 90;
@@ -122,22 +130,29 @@ class Main extends Phaser.State {
 				}
 			}
 
-			if (message.clientDeath) {
-				let m = message.clientDeath;
-				let client = this.clients[m.id];
-
-				if (client) {
-					client.die();
+			if (message.leaderboard) {
+				let player = this.clients[this.id];
+				if (player) {
+					player.ui.updateLeaderboard(message.leaderboard);
 				}
 			}
 
-			if (message.clientRespawn) {
-				let m = message.clientRespawn;
-				let client = this.clients[m.id];
-
-				if (client) {
-					client.respawn();
+			if (message.respawn) {
+				let m = message.respawn;
+				let player = this.clients[m.id];
+				if (player) {
+					console.log('player: ', player.x, player.y);
+					console.log('new cord: ', m.x, m.y);
+					player.respawn(m.x, m.y);
+					let index = this.visiblePlayers.indexOf(m.id);
+					if (index > -1) this.visiblePlayers.splice(index, 1);
 				}
+			}
+
+			if (message.death) {
+				let m = message.death;
+				let player = this.clients[m.id];
+				if (player) player.die();
 			}
 		});
 
@@ -150,16 +165,9 @@ class Main extends Phaser.State {
 							player.maxHealth = change.value;
 							player.setHealth(player.health);
 						break;
-						case 'alive':
-							if (change.value) {
-								player.respawn();
-							} else {
-								player.die();
-							}
-						break;
 						case 'level':
 							if (change.path.id !== this.id) {
-								console.log("Player: " + change.path.id + " dinged to level " + change.value);
+								// Message on ding?
 							} else {
 								player.levelUp(change.value);
 							}
@@ -185,7 +193,9 @@ class Main extends Phaser.State {
 			if (change.operation === 'add') {
 				let bit = this.bitsPool.getFirstDead();
 				bit.id = change.path.id;
+				bit.scale.setTo(0);
 				bit.reset(change.value.x, change.value.y);
+				bit.scaleTween.start();
 			} else if (change.operation === 'remove') {
 				setTimeout(() => {
 					let bit = this.findInGroup(change.path.id, this.bitsPool);
@@ -214,7 +224,9 @@ class Main extends Phaser.State {
 			if (change.operation === 'add') {
 				let comet = this.cometPool.getFirstDead();
 				comet.id = change.path.id;
+				comet.scale.setTo(0);				
 				comet.reset(change.value.x, change.value.y);
+				comet.scaleTween.start();
 			} else if (change.operation === 'remove') {
 				let comet = this.findInGroup(change.path.id, this.cometPool);
 				if (comet) comet.kill();
@@ -257,6 +269,38 @@ class Main extends Phaser.State {
 		});
 
 		return foundItem;
+	}
+
+	updateVisiblePlayers() {
+		for (let id in this.clients) {
+			if (id !== this.id) {
+				let target = this.clients[id];
+				let dist = this.distranceBetween(this.clients[this.id], target);
+
+				if (dist < 950) {
+					if (!this.visiblePlayers.includes(id)) {
+						console.log('Visible: ', this.visiblePlayers);
+						this.visiblePlayers.push(id);
+						
+						target.reset(target.dest.x, target.dest.y);
+						target.playerHealthBar.barSprite.alpha = 1;
+						target.playerHealthBar.bgSprite.alpha = 1;
+					}
+				} else {
+					if (this.visiblePlayers.includes(id)) {
+						console.log('Invisible: ', this.visiblePlayers);
+						let index = this.visiblePlayers.indexOf(id);
+						if (index > -1) {
+							this.visiblePlayers.splice(index, 1);
+
+							target.playerHealthBar.barSprite.alpha = 0;
+							target.playerHealthBar.bgSprite.alpha = 0;
+							target.kill();
+						}
+					}
+				}
+			}
+		}
 	}
 
 	updateBullets() {

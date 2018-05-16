@@ -5222,11 +5222,12 @@ var Bit = function (_Phaser$Sprite) {
 		_this.game = game;
 		_this.anchor.setTo(0.5, 0.5);
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
-		_this.scale.setTo(Math.random() * 0.2 + 0.5);
+		_this.scale.setTo(0);
 		_this.rotSpeed = Math.random() * 0.05 - 0.2;
 		_this.autoCull = true;
+		var rs = Math.random() * 0.2 + 0.5;
+		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 500, Phaser.Easing.Linear.None, true);
 		_this.kill();
-
 		_this.game.add.existing(_this);
 		return _this;
 	}
@@ -5354,7 +5355,7 @@ var Bullet = function (_Phaser$Sprite) {
 	}, {
 		key: 'setTint',
 		value: function setTint(tint) {
-			//this.bulletTrailer.setAllChildren('tint', tint);
+			this.tint = tint;
 		}
 	}, {
 		key: 'setDest',
@@ -5484,10 +5485,13 @@ var Client = function (_Phaser$Sprite) {
 		}
 	}, {
 		key: 'respawn',
-		value: function respawn() {
-			this.health = 100;
+		value: function respawn(x, y) {
 			this.playerHealthBar.setPercent(100);
-			this.alpha = 1;
+			this.dest.x = x;
+			this.dest.y = y;
+			this.x = x;
+			this.y = y;
+			this.reset(x, y);
 			this.playerHealthBar.barSprite.alpha = 1;
 			this.playerHealthBar.bgSprite.alpha = 1;
 		}
@@ -5497,7 +5501,7 @@ var Client = function (_Phaser$Sprite) {
 			/*this.emitter.x = this.x;
    this.emitter.y = this.y;
    this.emitter.start(true, 2000, null, 20);*/
-			this.alpha = 0;
+			this.kill();
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
 		}
@@ -5574,6 +5578,8 @@ var Comet = function (_Phaser$Sprite) {
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.autoCull = true;
 		_this.angle = Math.random() * 180;
+		_this.scale.setTo(0);
+		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: 1, y: 1 }, 500, Phaser.Easing.Linear.None, true);
 		_this.kill();
 
 		_this.game.add.existing(_this);
@@ -5914,6 +5920,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.lastUpdate = Date.now() + _this.angleRate;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.dest = { x: x, y: y, angle: _this.angle };
+		_this.kill();
 
 		_this.stats = {
 			level: 1,
@@ -5954,6 +5961,8 @@ var Player = function (_Phaser$Sprite) {
 			height: 8,
 			animationDuration: 10
 		});
+		_this.playerHealthBar.barSprite.alpha = 0;
+		_this.playerHealthBar.bgSprite.alpha = 0;
 
 		//Inputs
 		if (_this.game.onMobile) {
@@ -6080,11 +6089,15 @@ var Player = function (_Phaser$Sprite) {
 		}
 	}, {
 		key: 'respawn',
-		value: function respawn() {
+		value: function respawn(x, y) {
 			this.game.camera.target = this;
 			this.health = this.maxHealth;
 			this.playerHealthBar.setPercent(100);
-			this.alpha = 1;
+			this.dest.x = x;
+			this.dest.y = y;
+			this.x = x;
+			this.y = y;
+			this.reset(x, y);
 			this.playerHealthBar.barSprite.alpha = 1;
 			this.playerHealthBar.bgSprite.alpha = 1;
 		}
@@ -6093,18 +6106,12 @@ var Player = function (_Phaser$Sprite) {
 		value: function die() {
 			this.game.camera.shake(0.01, 250);
 			this.game.camera.target = null;
+			this.kill();
 			/*this.emitter.x = this.x;
    this.emitter.y = this.y;
    this.emitter.start(true, 2000 - (this.stats.speed * 10), null, 20);*/
-			this.alpha = 0;
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
-		}
-	}, {
-		key: 'leave',
-		value: function leave() {
-			this.playerHealthBar.barSprite.destroy();
-			this.playerHealthBar.bgSprite.destroy();
 		}
 	}, {
 		key: 'lerp',
@@ -6252,6 +6259,7 @@ var UI = function () {
 		this.stats = stats;
 
 		this.statTextGroup = this.game.add.group();
+		this.lbTextGroup = this.game.add.group();
 		this.statButtonGroup = this.game.add.group();
 
 		//Experience bar
@@ -6264,7 +6272,7 @@ var UI = function () {
 		});
 		this.expBar.setPercent(0);
 
-		// Text
+		// Stat UI
 		this.levelText = this.game.add.bitmapText(156, 100, 'font', 'Level: ' + 1, 32);
 		this.pointsText = this.game.add.bitmapText(156, 225, 'font', 'Points: ' + 0, 23);
 		this.firerateText = this.game.add.bitmapText(156, 250, 'font', 'Firerate: ' + 1, 23);
@@ -6297,9 +6305,31 @@ var UI = function () {
 			}
 		});
 
+		// Leaderboard UI
+		this.lbHeader = this.game.add.bitmapText(window.innerWidth - 100, 25, 'font', 'Leaderboard', 32);
+		this.lbHeader.anchor.setTo(0.5);
+		this.lbText = [];
+		var spacing = 0;
+
+		for (var i = 0; i < 10; i++) {
+			spacing += 22;
+			var text = this.game.add.bitmapText(this.lbHeader.x, this.lbHeader.y + spacing, 'font', '', 23);
+			text.anchor.setTo(0.5);
+			text.alpha = 0.5;
+			this.lbText.push(text);
+			this.lbTextGroup.add(text);
+		}
+
+		this.lbTextGroup.add(this.lbHeader);
+
+		/*this.game.scale.setResizeCallback(() => { //--- This event has to be removed before changing state
+      this.lbHeader.x = window.innerWidth - 100;
+  }, this);*/
+
 		this.expBar.barSprite.fixedToCamera = true;
 		this.expBar.bgSprite.fixedToCamera = true;
 		this.statTextGroup.fixedToCamera = true;
+		this.lbTextGroup.fixedToCamera = true;
 		this.statButtonGroup.fixedToCamera = true;
 
 		this.game.add.existing(this.statTextGroup);
@@ -6308,6 +6338,19 @@ var UI = function () {
 	}
 
 	_createClass(UI, [{
+		key: 'updateLeaderboard',
+		value: function updateLeaderboard(leaderboard) {
+			var _this2 = this;
+
+			this.lbText.forEach(function (item) {
+				item.text = '';
+			});
+
+			leaderboard.forEach(function (item, index, obj) {
+				_this2.lbText[index].text = item.name + ': ' + item.score;
+			});
+		}
+	}, {
 		key: 'updateText',
 		value: function updateText(type, text) {
 			switch (type) {
@@ -6525,11 +6568,12 @@ var Main = function (_Phaser$State) {
 			this.starfield.alpha = 0.5;
 
 			//Pools and network
-			this.game.room = this.game.colyseus.join('game');
+			this.game.room = this.game.colyseus.join('game', { name: this.game.myName.toString() });
 			this.bulletPool = this.game.add.group();
 			this.bitsPool = this.game.add.group();
 			this.powerUpPool = this.game.add.group();
 			this.cometPool = this.game.add.group();
+			this.visiblePlayers = [];
 			this.clients = {};
 			this.id;
 
@@ -6548,7 +6592,6 @@ var Main = function (_Phaser$State) {
 			this.bulletTrailer.lifespan = 400;
 			this.bulletTrailer.gravity = 0;
 
-			//Create bullets
 			this.createBulletPool();
 			this.createBitsPool();
 			this.createPowerUpPool();
@@ -6559,8 +6602,11 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'update',
 		value: function update() {
-			this.updateBullets();
-			this.starfield.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
+			if (this.id) {
+				this.updateBullets();
+				this.updateVisiblePlayers();
+				this.starfield.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
+			}
 		}
 	}, {
 		key: 'netListener',
@@ -6571,7 +6617,7 @@ var Main = function (_Phaser$State) {
 				if (message.me) {
 					var me = message.me;
 					_this2.id = me.id;
-					_this2.clients[_this2.id] = new _Player2.default(_this2.game, me.x, me.y, me.health, me.angle);
+					_this2.clients[_this2.id] = new _Player2.default(_this2.game, 0, 0, 100, 0);
 					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 				}
 
@@ -6623,7 +6669,12 @@ var Main = function (_Phaser$State) {
 				if (message.updateClient) {
 					var m = message.updateClient;
 					var client = _this2.clients[m.id];
+
 					if (client) {
+						if (!client.alive) {
+							client.reset(m.x, m.y);
+						}
+
 						client.dest.x = m.x;
 						client.dest.y = m.y;
 						client.dest.angle = m.angle - 90;
@@ -6631,22 +6682,29 @@ var Main = function (_Phaser$State) {
 					}
 				}
 
-				if (message.clientDeath) {
-					var _m = message.clientDeath;
-					var _client = _this2.clients[_m.id];
-
-					if (_client) {
-						_client.die();
+				if (message.leaderboard) {
+					var _player3 = _this2.clients[_this2.id];
+					if (_player3) {
+						_player3.ui.updateLeaderboard(message.leaderboard);
 					}
 				}
 
-				if (message.clientRespawn) {
-					var _m2 = message.clientRespawn;
-					var _client2 = _this2.clients[_m2.id];
-
-					if (_client2) {
-						_client2.respawn();
+				if (message.respawn) {
+					var _m = message.respawn;
+					var _player4 = _this2.clients[_m.id];
+					if (_player4) {
+						console.log('player: ', _player4.x, _player4.y);
+						console.log('new cord: ', _m.x, _m.y);
+						_player4.respawn(_m.x, _m.y);
+						var index = _this2.visiblePlayers.indexOf(_m.id);
+						if (index > -1) _this2.visiblePlayers.splice(index, 1);
 					}
+				}
+
+				if (message.death) {
+					var _m2 = message.death;
+					var _player5 = _this2.clients[_m2.id];
+					if (_player5) _player5.die();
 				}
 			});
 
@@ -6659,16 +6717,9 @@ var Main = function (_Phaser$State) {
 								player.maxHealth = change.value;
 								player.setHealth(player.health);
 								break;
-							case 'alive':
-								if (change.value) {
-									player.respawn();
-								} else {
-									player.die();
-								}
-								break;
 							case 'level':
 								if (change.path.id !== _this2.id) {
-									console.log("Player: " + change.path.id + " dinged to level " + change.value);
+									// Message on ding?
 								} else {
 									player.levelUp(change.value);
 								}
@@ -6694,7 +6745,9 @@ var Main = function (_Phaser$State) {
 				if (change.operation === 'add') {
 					var bit = _this2.bitsPool.getFirstDead();
 					bit.id = change.path.id;
+					bit.scale.setTo(0);
 					bit.reset(change.value.x, change.value.y);
+					bit.scaleTween.start();
 				} else if (change.operation === 'remove') {
 					setTimeout(function () {
 						var bit = _this2.findInGroup(change.path.id, _this2.bitsPool);
@@ -6723,7 +6776,9 @@ var Main = function (_Phaser$State) {
 				if (change.operation === 'add') {
 					var comet = _this2.cometPool.getFirstDead();
 					comet.id = change.path.id;
+					comet.scale.setTo(0);
 					comet.reset(change.value.x, change.value.y);
+					comet.scaleTween.start();
 				} else if (change.operation === 'remove') {
 					var _comet = _this2.findInGroup(change.path.id, _this2.cometPool);
 					if (_comet) _comet.kill();
@@ -6771,6 +6826,39 @@ var Main = function (_Phaser$State) {
 			});
 
 			return foundItem;
+		}
+	}, {
+		key: 'updateVisiblePlayers',
+		value: function updateVisiblePlayers() {
+			for (var id in this.clients) {
+				if (id !== this.id) {
+					var target = this.clients[id];
+					var dist = this.distranceBetween(this.clients[this.id], target);
+
+					if (dist < 950) {
+						if (!this.visiblePlayers.includes(id)) {
+							console.log('Visible: ', this.visiblePlayers);
+							this.visiblePlayers.push(id);
+
+							target.reset(target.dest.x, target.dest.y);
+							target.playerHealthBar.barSprite.alpha = 1;
+							target.playerHealthBar.bgSprite.alpha = 1;
+						}
+					} else {
+						if (this.visiblePlayers.includes(id)) {
+							console.log('Invisible: ', this.visiblePlayers);
+							var index = this.visiblePlayers.indexOf(id);
+							if (index > -1) {
+								this.visiblePlayers.splice(index, 1);
+
+								target.playerHealthBar.barSprite.alpha = 0;
+								target.playerHealthBar.bgSprite.alpha = 0;
+								target.kill();
+							}
+						}
+					}
+				}
+			}
 		}
 	}, {
 		key: 'updateBullets',
@@ -6884,9 +6972,9 @@ var Menu = function (_Phaser$State) {
 			this.button.innerHTML = 'Enter';
 			this.gameDiv = document.getElementById("content");
 			this.setUiPos();
-			this.game.scale.setResizeCallback(function () {
-				this.setUiPos();
-			}, this);
+			/*this.game.scale.setResizeCallback(() => { --- This event has to be removed before changing state
+       this.setUiPos();
+   }, this);*/
 			this.uiDiv.appendChild(this.input);
 			this.uiDiv.appendChild(this.button);
 			this.gameDiv.appendChild(this.uiDiv);

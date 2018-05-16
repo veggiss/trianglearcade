@@ -15,6 +15,8 @@ module.exports = class State {
 
         this.private = util.setEnumerable({
             network: network,
+            leaderBoard: [],
+            leaderBoardTimer: Date.now(),
             bitsTimer: Date.now(),
             powerUpTimer: Date.now(),
             bitExpAmount: 1000,
@@ -25,24 +27,33 @@ module.exports = class State {
     }
 
     //Connections
-    createPlayer (id, client) {
+    createPlayer (id, client, name) {
         let pos = util.ranWorldPos();
-        this.players[id] = new Player(id, pos.x, pos.y, util.ranPlayerAngle(), this.private.network, client);
+        this.players[id] = new Player(id, pos.x, pos.y, util.ranPlayerAngle(), this.private.network, name);
+        this.private.leaderBoard.push({
+            id: id,
+            name: name,
+            score: 0
+        });
+
+        this.players[id].respawn();
     }
 
     removePlayer (id) {
+        let index = this.private.leaderBoard.findIndex(item => {
+            return item.id === id;
+        });
+
+        if (index > -1) {
+            this.private.leaderBoard.splice(index, 1);
+        }
+
         delete this.players[id];
     }
 
     //General gameplay
     killPlayer(player) {
         player.die();
-        //Dies and respawns after 3 seconds with these positions
-        let pos = util.ranWorldPos();
-        let angle = util.ranPlayerAngle();
-        player.pos.x = pos.x;
-        player.pos.y = pos.y;
-        player.pos.angle = angle;
     }
 
     populateBits() {
@@ -121,20 +132,24 @@ module.exports = class State {
     updatePlayers() {
         for (let id in this.players) {
             let currentPlayer = this.players[id];
-            currentPlayer.update();
-            this.playerWorldCollision(currentPlayer);
-            this.playerBulletCollision(currentPlayer);
-            this.playerBitsCollision(currentPlayer);
-            this.playerPowerUpCollision(currentPlayer);
-            this.cometBulletCollision(currentPlayer);
+            if (currentPlayer.private.alive) {
+                currentPlayer.update();
+                this.playerWorldCollision(currentPlayer);
+                this.playerBulletCollision(currentPlayer);
+                this.playerBitsCollision(currentPlayer);
+                this.playerPowerUpCollision(currentPlayer);
+                this.cometBulletCollision(currentPlayer);
+            }
         }
+
+        this.updateLeaderBoard();
     }
 
     sendProximity() {
         for (let id in this.players) {
             let currentPlayer = this.players[id];
 
-            if (currentPlayer && currentPlayer.alive) {
+            if (currentPlayer && currentPlayer.private.alive) {
                 this.private.network.sendToClient(id, {updateClient: {
                     id: id,
                     x: currentPlayer.pos.x,
@@ -145,17 +160,38 @@ module.exports = class State {
 
                 let list = util.getProximityList(currentPlayer, this.players, true, 1000);
                 list.forEach(targetId => {
-                    if (this.players[targetId].alive) {
-                        this.private.network.sendToClient(targetId, {updateClient: {
-                            id: id,
-                            x: currentPlayer.pos.x,
-                            y: currentPlayer.pos.y,
-                            angle: currentPlayer.pos.angle,
-                            health: currentPlayer.pos.health
-                        }});
-                    }
+                    this.private.network.sendToClient(targetId, {updateClient: {
+                        id: id,
+                        x: currentPlayer.pos.x,
+                        y: currentPlayer.pos.y,
+                        angle: currentPlayer.pos.angle,
+                        health: currentPlayer.pos.health
+                    }});
                 });
             }
+        }
+    }
+
+    updateLeaderBoard() {
+        if ((Date.now() - this.private.leaderBoardTimer) > 3000) {
+            for (let id in this.players) {
+                let player = this.players[id];
+                let index = this.private.leaderBoard.findIndex(item => {
+                    return item.id === player.id;
+                });
+
+                if (index > -1) {
+                    this.private.leaderBoard[index].score = player.private.score;
+                }
+
+                this.private.leaderBoard.sort((a, b) => {
+                    return a.score < b.score;
+                });
+
+                this.private.leaderBoardTimer = Date.now();
+            }
+
+            this.private.network.sendToAll({leaderboard: this.private.leaderBoard});
         }
     }
 
@@ -165,14 +201,16 @@ module.exports = class State {
     }
 
     playerBulletCollision(player) {
-        if (player.alive) {
+        if (player.private.alive) {
             for (let id in this.players) {
                 if (id !== player.id) {
                     if (player) {
                         this.players[id].private.bullets.forEach((bullet, i, obj) => {
                             if(util.distanceFrom(bullet, player.getBody()) < 30) {
                                 if (player.bulletHit(this.players[id].private.damage)) {
-                                    this.players[id].addXp(15 * player.level);
+                                    let target = this.players[id];
+                                    target.addXp(15 * player.level);
+                                    target.private.score++;
                                 }
                                 
                                 obj.splice(i, 1);

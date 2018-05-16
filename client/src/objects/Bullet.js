@@ -40,7 +40,7 @@ class Bullet extends Phaser.Sprite {
 	}
 
 	setTint(tint) {
-		//this.bulletTrailer.setAllChildren('tint', tint);
+		this.tint = tint;
 	}
 
 	setDest(x, y) {

@@ -7,11 +7,12 @@ class Bit extends Phaser.Sprite {
 		this.game = game;
 		this.anchor.setTo(0.5, 0.5);
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
-		this.scale.setTo((Math.random() * 0.2) + 0.5);
+		this.scale.setTo(0);
 		this.rotSpeed = (Math.random() * 0.05) - 0.2;
 		this.autoCull = true;
+		let rs = (Math.random() * 0.2) + 0.5;
+		this.scaleTween = this.game.add.tween(this.scale).to({x: rs, y: rs}, 500, Phaser.Easing.Linear.None, true);
 		this.kill();
-
 		this.game.add.existing(this);
 	}
 

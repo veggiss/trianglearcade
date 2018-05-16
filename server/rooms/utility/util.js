@@ -113,6 +113,18 @@ function lerp(a, b, n) {
     return (1 - n) * a + n * b;
 }
 
+function idExistInArr(id, arr) {
+    let exist = false;
+
+    arr.forEach(item => {
+        if (item.id == id) {
+            exist = true;
+        }
+    })
+
+    return exist;
+}
+
 module.exports = {
     ranWorldPos: ranWorldPos,
     ranPlayerAngle: ranPlayerAngle,
@@ -123,5 +135,6 @@ module.exports = {
     wrapAngle: wrapAngle,
     getShortestAngle: getShortestAngle,
     getProximityList: getProximityList,
-    lerp: lerp
+    lerp: lerp,
+    idExistInArr: idExistInArr
 }

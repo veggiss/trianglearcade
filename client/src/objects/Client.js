@@ -55,10 +55,13 @@ class Client extends Phaser.Sprite {
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
 	}
 
-	respawn() {
-		this.health = 100;
+	respawn(x, y) {
 		this.playerHealthBar.setPercent(100);
-		this.alpha = 1;
+		this.dest.x = x;
+		this.dest.y = y;
+		this.x = x;
+		this.y = y;
+		this.reset(x, y);
 		this.playerHealthBar.barSprite.alpha = 1;
 		this.playerHealthBar.bgSprite.alpha = 1;
 	}
@@ -67,7 +70,7 @@ class Client extends Phaser.Sprite {
 		/*this.emitter.x = this.x;
 		this.emitter.y = this.y;
 		this.emitter.start(true, 2000, null, 20);*/
-		this.alpha = 0;
+		this.kill();
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
 	}

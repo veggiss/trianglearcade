@@ -3,11 +3,11 @@ const Bullet = require('./Bullet');
 const util = require('./../utility/util');
 
 module.exports = class Player {
-    constructor(id, x, y, angle, network) {
+    constructor(id, x, y, angle, network, name) {
         this.id = id;
         this.maxHealth = 100;
         this.level = 1;
-        this.alive = false;
+        this.name = name;
 
         this.pos = util.setEnumerable({
             x: x,
@@ -19,18 +19,19 @@ module.exports = class Player {
         this.private = util.setEnumerable({
             network: network,
             destAngle: this.pos.angle,
+            alive: false,
             acceleration: 0.02,
             fireRate: 500,
             lastShot: Date.now(),
             bodyPos: {x: this.pos.x, y: this.pos.y},
             moveUp: false,
             shooting: false,
-            lastDeath: Date.now(),
             respawnTime: 2000,
             expRate: 1.1,
             bullets: [],
             exp: 0,
             expNeeded: 200,
+            score: 0,
             points: 0,
             speed: 0,
             maxSpeed: 8,
@@ -64,17 +65,13 @@ module.exports = class Player {
     }
 
     move() {
-        if (Date.now() > this.private.lastDeath) {
-            if (!this.alive) this.respawn();
-            
-            if (this.private.moveUp) {
-                this.accelerate();
-            } else {
-                this.decelerate();
-            }
-
-            this.updateBody();
+        if (this.private.moveUp) {
+            this.accelerate();
+        } else {
+            this.decelerate();
         }
+
+        this.updateBody();
     }
 
     accelerate() {
@@ -111,11 +108,15 @@ module.exports = class Player {
     }
 
     setMoveup(data) {
-        this.private.moveUp = data;
+        if (this.private.alive) {
+            this.private.moveUp = data;
+        }
     }
 
     setShooting(data) {
-        this.private.shooting = data;
+        if (this.private.alive) {
+            this.private.shooting = data;
+        }
     }
 
     getBody() {
@@ -202,18 +203,38 @@ module.exports = class Player {
     }
 
     die() {
-        this.alive = false;
-        this.private.lastDeath = Date.now() + this.private.respawnTime;
-        let pos = util.ranWorldPos();
-        let angle = util.ranPlayerAngle();
-        this.pos.x = pos.x;
-        this.pos.y = pos.y;
-        this.pos.angle = angle;
+        console.log('Die: ', this.pos.x, this.pos.y);
+        this.private.alive = false;
+        this.private.shooting = false;
+        this.private.speed = 0;
+        this.private.network.sendToAllWithinProxy({death: {
+            id: this.id,
+            x: this.pos.x,
+            y: this.pos.y
+        }}, {x: this.pos.x, y: this.pos.y, id: this.id}, 1000);
+
+        this.respawn();
     }
 
     respawn() {
-        this.alive = true;
-        this.pos.health = this.maxHealth;
+        setTimeout(() => {
+            console.log('Respawn: ', this.pos.x, this.pos.y);
+            let pos = util.ranWorldPos();
+            let angle = util.ranPlayerAngle();
+            this.pos.x = pos.x;
+            this.pos.y = pos.y;
+            this.pos.health = this.maxHealth;
+            this.pos.angle = angle;
+            this.private.speed = 0;
+            this.private.bodyPos.x = pos.x;
+            this.private.bodyPos.y = pos.y;
+            this.private.network.sendToAllWithinProxy({respawn: {
+                id: this.id,
+                x: this.pos.x, 
+                y: this.pos.y
+            }}, {x: this.pos.x, y: this.pos.y, id: this.id}, 1000);
+            this.private.alive = true;
+        }, 3000);
     }
 
     updateBullets() {
