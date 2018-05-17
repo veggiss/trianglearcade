@@ -5459,7 +5459,7 @@ var Client = function (_Phaser$Sprite) {
 
 		//Sprite
 		_this.scale.setTo(0.75, 0.75);
-		_this.anchor.setTo(0.5, 0.5);
+		_this.anchor.setTo(0.6, 0.5);
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
 			x: _this.x,
 			y: _this.y + 64,
@@ -5950,8 +5950,8 @@ var Player = function (_Phaser$Sprite) {
    });*/
 
 			//Sprite
-		};_this.anchor.setTo(0.5, 0.5);
-		_this.scale.setTo(0.75, 0.75);
+		};_this.scale.setTo(0.75, 0.75);
+		_this.anchor.setTo(0.5);
 
 		//Healthbar
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {

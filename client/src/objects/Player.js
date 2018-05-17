@@ -50,8 +50,8 @@ class Player extends Phaser.Sprite {
 		});*/
 
 		//Sprite
-		this.anchor.setTo(0.5, 0.5);
 		this.scale.setTo(0.75, 0.75);
+		this.anchor.setTo(0.5);
 		
 		//Healthbar
 		this.playerHealthBar = new HealthBar(this.game, {

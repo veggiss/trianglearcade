@@ -33,7 +33,7 @@ class Client extends Phaser.Sprite {
 
 	    //Sprite
 	    this.scale.setTo(0.75, 0.75);
-		this.anchor.setTo(0.5, 0.5);
+		this.anchor.setTo(0.6, 0.5);
 		this.playerHealthBar = new HealthBar(this.game, {
 			x: this.x, 
 			y: this.y + 64,
