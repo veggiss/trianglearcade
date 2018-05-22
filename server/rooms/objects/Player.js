@@ -177,10 +177,6 @@ module.exports = class Player {
                     this.pos.health += 50;
                     this.sendUpgrade(type, this.maxHealth);
                 break;
-                default:
-                    passed = false;
-                    console.log(`Error: Could not upgrade stats on player: ${this.id}, stat type "${type}" does not exist`);
-                break;
                 case 'acceleration':
                     this.private.acceleration += 0.01;
                     this.sendUpgrade(type, this.private.acceleration);
@@ -188,6 +184,10 @@ module.exports = class Player {
                 case 'angulation':
                     this.private.angVel += 0.01;
                     this.sendUpgrade(type, this.private.angVel);
+                break;
+                default:
+                    passed = false;
+                    console.log(`Error: Could not upgrade stats on player: ${this.id}, stat type "${type}" does not exist`);
                 break;
             }
 

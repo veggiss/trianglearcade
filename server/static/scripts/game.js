@@ -5223,7 +5223,7 @@ var Bit = function (_Phaser$Sprite) {
 		_this.anchor.setTo(0.5, 0.5);
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.scale.setTo(0);
-		_this.rotSpeed = Math.random() * 0.05 - 0.2;
+		_this.rotation = Math.random() - 180;
 		_this.autoCull = true;
 		var rs = Math.random() * 0.2 + 0.5;
 		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 500, Phaser.Easing.Linear.None, true);
@@ -5235,8 +5235,6 @@ var Bit = function (_Phaser$Sprite) {
 	_createClass(Bit, [{
 		key: 'update',
 		value: function update() {
-			this.rotation += this.rotSpeed;
-
 			if (this.activated) {
 				this.moveToTarget();
 			}
@@ -5320,18 +5318,9 @@ var Bullet = function (_Phaser$Sprite) {
 		_this.game = game;
 		_this.timer = Date.now();
 		_this.anchor.setTo(0.5, 0.5);
+		_this.particles;
 		_this.kill();
 
-		//Emitter
-		/*this.bulletTrailer = this.game.add.emitter(0, 0, 40);
-  this.bulletTrailer.makeParticles('deathParticle');
-  this.bulletTrailer.setAlpha(1, 0, 600);
-  this.bulletTrailer.setXSpeed(0, 0);
-  this.bulletTrailer.setYSpeed(0, 0);
-  this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
-  this.bulletTrailer.frequency = 10;
-  this.bulletTrailer.lifespan = 400;
-  this.bulletTrailer.gravity = 0;*/
 		_this.game.add.existing(_this);
 		return _this;
 	}
@@ -5340,14 +5329,14 @@ var Bullet = function (_Phaser$Sprite) {
 		key: 'update',
 		value: function update() {
 			if (this.alive && this.dest) {
-				//this.bulletTrailer.on = true;
 				this.x = this.lerp(this.x, this.dest.x, 0.03);
 				this.y = this.lerp(this.y, this.dest.y, 0.03);
-				// this.bulletTrailer.x = this.x;
-				//this.bulletTrailer.y = this.y;
+
+				if (this.particles) {
+					this.particles.bulletTrail(this.x, this.y);
+				}
 
 				if (Date.now() > this.timer) {
-					//this.bulletTrailer.on = false;
 					this.kill();
 				}
 			}
@@ -5364,6 +5353,11 @@ var Bullet = function (_Phaser$Sprite) {
 				x: x + Math.sin(this.angle / 180.0 * Math.PI) * 750,
 				y: y - Math.cos(this.angle / 180.0 * Math.PI) * 750
 			};
+		}
+	}, {
+		key: 'setTrail',
+		value: function setTrail(particles) {
+			this.particles = particles;
 		}
 	}, {
 		key: 'lerp',
@@ -5394,9 +5388,9 @@ var _createClass = function () {
 	};
 }();
 
-var _DebugBody = require('./DebugBody');
+var _Particles = require('./Particles');
 
-var _DebugBody2 = _interopRequireDefault(_DebugBody);
+var _Particles2 = _interopRequireDefault(_Particles);
 
 var _HealthBar = require('./HealthBar');
 
@@ -5439,23 +5433,9 @@ var Client = function (_Phaser$Sprite) {
 		_this.angle = 0;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.autoCull = true;
+		_this.alpha = 0;
 		_this.dest = { x: 0, y: 0, angle: _this.angle };
-
-		/*//Emitter
-     this.emitter = this.game.add.emitter(0, 0, 100);
-     this.emitter.makeParticles('deathParticle');
-     this.emitter.gravity = 0;
-  		this.spaceJuice = this.game.add.emitter(0, 0, 20);
-  this.spaceJuice.makeParticles('spaceJuiceParticle');
-  this.spaceJuice.setAlpha(1, 0, 2000);
-  this.spaceJuice.setRotation(50, 400);
-  this.spaceJuice.setScale(0, 10, 0, 10, 2000);
-  this.spaceJuice.setXSpeed(0, 0);
-  this.spaceJuice.setYSpeed(0, 0);
-  this.spaceJuice.gravity = 0;
-  this.spaceJuice.children.forEach(child => {
-  	child.tint = this.tint;
-  });*/
+		_this.particles = new _Particles2.default(_this.game, _this.tint);
 
 		//Sprite
 		_this.scale.setTo(0.75, 0.75);
@@ -5467,6 +5447,8 @@ var Client = function (_Phaser$Sprite) {
 			height: 8,
 			animationDuration: 10
 		});
+		_this.playerHealthBar.barSprite.alpha = 0;
+		_this.playerHealthBar.bgSprite.alpha = 0;
 
 		_this.game.add.existing(_this);
 		return _this;
@@ -5482,6 +5464,9 @@ var Client = function (_Phaser$Sprite) {
 			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
+			if (this.alive && this.alpha === 1) {
+				this.particles.playerMove(this.x, this.y);
+			}
 		}
 	}, {
 		key: 'respawn',
@@ -5498,9 +5483,6 @@ var Client = function (_Phaser$Sprite) {
 	}, {
 		key: 'die',
 		value: function die() {
-			/*this.emitter.x = this.x;
-   this.emitter.y = this.y;
-   this.emitter.start(true, 2000, null, 20);*/
 			this.kill();
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
@@ -5515,7 +5497,11 @@ var Client = function (_Phaser$Sprite) {
 		value: function leave() {
 			this.playerHealthBar.barSprite.destroy();
 			this.playerHealthBar.bgSprite.destroy();
-			//this.spaceJuice.destroy();
+		}
+	}, {
+		key: 'bulletHit',
+		value: function bulletHit() {
+			this.particles.start(true, 500, 3);
 		}
 	}, {
 		key: 'lerp',
@@ -5529,7 +5515,7 @@ var Client = function (_Phaser$Sprite) {
 
 exports.default = Client;
 
-},{"./DebugBody":41,"./HealthBar":42}],40:[function(require,module,exports){
+},{"./HealthBar":41,"./Particles":42}],40:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5599,80 +5585,6 @@ var Comet = function (_Phaser$Sprite) {
 exports.default = Comet;
 
 },{}],41:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = function () {
-	function defineProperties(target, props) {
-		for (var i = 0; i < props.length; i++) {
-			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
-		}
-	}return function (Constructor, protoProps, staticProps) {
-		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
-	};
-}();
-
-function _classCallCheck(instance, Constructor) {
-	if (!(instance instanceof Constructor)) {
-		throw new TypeError("Cannot call a class as a function");
-	}
-}
-
-function _possibleConstructorReturn(self, call) {
-	if (!self) {
-		throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-	}return call && (typeof call === "object" || typeof call === "function") ? call : self;
-}
-
-function _inherits(subClass, superClass) {
-	if (typeof superClass !== "function" && superClass !== null) {
-		throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-	}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
-var DebugBody = function (_Phaser$Sprite) {
-	_inherits(DebugBody, _Phaser$Sprite);
-
-	function DebugBody(game, x, y, type, data) {
-		_classCallCheck(this, DebugBody);
-
-		var _this = _possibleConstructorReturn(this, (DebugBody.__proto__ || Object.getPrototypeOf(DebugBody)).call(this, game, x, y, null));
-
-		_this.game = game;
-		_this.host = data.host;
-		_this.anchor.setTo(0.5, 0.5);
-
-		var graphics = _this.game.add.graphics(0, 0);
-
-		if (type == 'circle') {
-			graphics.lineStyle(0);
-			graphics.beginFill(0x00FF00, 1);
-			graphics.drawCircle(0, 0, data.radius);
-			graphics.endFill();
-			_this.addChild(graphics);
-		}
-
-		_this.game.add.existing(_this);
-		return _this;
-	}
-
-	_createClass(DebugBody, [{
-		key: 'update',
-		value: function update() {
-			this.x = this.host.dest.x;
-			this.y = this.host.dest.y;
-		}
-	}]);
-
-	return DebugBody;
-}(Phaser.Sprite);
-
-exports.default = DebugBody;
-
-},{}],42:[function(require,module,exports){
 'use strict';
 
 /**
@@ -5849,6 +5761,118 @@ function hexToRgb(hex) {
     } : null;
 }
 
+},{}],42:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+var Particles = function () {
+	function Particles(game, tint) {
+		_classCallCheck(this, Particles);
+
+		this.tint = tint;
+		this.playerMoveGroup = game.add.group();
+		this.playerMoveTime = Date.now();
+		this.playerMoveDelay = 300;
+
+		this.bulletTrailGroup = game.add.group();
+		this.bulletTrailTime = Date.now();
+		this.bulletTrailDelay = 25;
+
+		// Moving player particles
+		for (var i = 0; i < 5; i++) {
+			var particle = game.add.sprite(0, 0, 'deathParticle');
+			particle.tween = game.add.tween(particle.scale).to({ x: 0, y: 0 }, 1000, Phaser.Easing.Linear.None, false);
+			particle.scale.setTo(5);
+			particle.anchor.setTo(0.5);
+			particle.kill();
+			this.playerMoveGroup.add(particle);
+		}
+
+		// Moving player particles
+		for (var _i = 0; _i < 15; _i++) {
+			var _particle = game.add.sprite(0, 0, 'bullet');
+			_particle.tween = game.add.tween(_particle.scale).to({ x: 0, y: 0 }, 200, Phaser.Easing.Linear.None, false);
+			_particle.scale.setTo(1);
+			_particle.anchor.setTo(0.5);
+			_particle.kill();
+			this.bulletTrailGroup.add(_particle);
+		}
+
+		//Bullet hit emitter
+		this.bulletHit = game.add.emitter(0, 0, 12);
+		this.bulletHit.makeParticles('deathParticle');
+		this.bulletHit.setAlpha(1, 0, 500);
+		this.bulletHit.setScale(1, 0, 1, 0, 500);
+		this.bulletHit.lifespan = 500;
+		this.bulletHit.gravity = 0;
+		this.bulletHit.setAllChildren('tint', this.tint);
+	}
+
+	_createClass(Particles, [{
+		key: 'playerMove',
+		value: function playerMove(x, y) {
+			var particle = this.playerMoveGroup.getFirstDead();
+
+			if (particle && this.playerMoveTime < Date.now()) {
+				particle.tint = this.tint;
+				particle.scale.setTo(1);
+				particle.reset(x, y);
+				particle.tween.start();
+				this.playerMoveTime = Date.now() + this.playerMoveDelay;
+				particle.tween.onComplete.add(function () {
+					particle.kill();
+				});
+			}
+		}
+	}, {
+		key: 'bulletTrail',
+		value: function bulletTrail(x, y) {
+			var particle = this.bulletTrailGroup.getFirstDead();
+
+			if (particle && this.bulletTrailTime < Date.now()) {
+				particle.tint = this.tint;
+				particle.scale.setTo(1);
+				particle.reset(x, y);
+				particle.tween.start();
+				this.bulletTrailTime = Date.now() + this.bulletTrailDelay;
+				particle.tween.onComplete.add(function () {
+					particle.kill();
+				});
+			}
+		}
+	}, {
+		key: 'emitHit',
+		value: function emitHit(x, y) {
+			this.bulletHit.x = x;
+			this.bulletHit.y = y;
+			this.bulletHit.start(true, 500, null, 3);
+		}
+	}]);
+
+	return Particles;
+}();
+
+exports.default = Particles;
+
 },{}],43:[function(require,module,exports){
 'use strict';
 
@@ -5866,9 +5890,9 @@ var _createClass = function () {
 	};
 }();
 
-var _DebugBody = require('./DebugBody');
+var _Particles = require('./Particles');
 
-var _DebugBody2 = _interopRequireDefault(_DebugBody);
+var _Particles2 = _interopRequireDefault(_Particles);
 
 var _HealthBar = require('./HealthBar');
 
@@ -5920,7 +5944,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.lastUpdate = Date.now() + _this.angleRate;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.dest = { x: x, y: y, angle: _this.angle };
-		_this.kill();
+		_this.particles = new _Particles2.default(_this.game, _this.tint);
 
 		_this.stats = {
 			level: 1,
@@ -5931,23 +5955,6 @@ var Player = function (_Phaser$Sprite) {
 			health: 1,
 			acceleration: 1,
 			angulation: 1
-
-			//Emitters
-			/*this.emitter = this.game.add.emitter(0, 0, 100);
-   this.emitter.makeParticles('deathParticle');
-   this.emitter.setAlpha(1, 0, 2000);
-   this.emitter.gravity = 0;
-   		this.spaceJuice = this.game.add.emitter(0, 0, 20);
-   this.spaceJuice.makeParticles('spaceJuiceParticle');
-   this.spaceJuice.setAlpha(1, 0, 2000);
-   this.spaceJuice.setRotation(50, 400);
-   this.spaceJuice.setScale(0, 10, 0, 10, 2000);
-   this.spaceJuice.setXSpeed(0, 0);
-   this.spaceJuice.setYSpeed(0, 0);
-   this.spaceJuice.gravity = 0;
-   this.spaceJuice.children.forEach(child => {
-   	child.tint = this.tint;
-   });*/
 
 			//Sprite
 		};_this.scale.setTo(0.75, 0.75);
@@ -5961,6 +5968,8 @@ var Player = function (_Phaser$Sprite) {
 			height: 8,
 			animationDuration: 10
 		});
+
+		_this.kill();
 		_this.playerHealthBar.barSprite.alpha = 0;
 		_this.playerHealthBar.bgSprite.alpha = 0;
 
@@ -5996,7 +6005,6 @@ var Player = function (_Phaser$Sprite) {
 		value: function update() {
 			this.updateAngle();
 			this.updatePlayerPos();
-			//this.updateSpaceJuice();
 		}
 	}, {
 		key: 'setHealth',
@@ -6063,24 +6071,15 @@ var Player = function (_Phaser$Sprite) {
 				var destAngle = deg < 0 ? deg + 360 : deg;
 				this.game.room.send({ updateAngle: Math.round(destAngle) });
 				this.lastUpdate = Date.now() + this.angleRate;
+				if (this.alive) {
+					this.particles.playerMove(this.x, this.y);
+				}
 			}
-		}
-	}, {
-		key: 'updateSpaceJuice',
-		value: function updateSpaceJuice() {
-			this.spaceJuice.x = this.x;
-			this.spaceJuice.y = this.y;
 		}
 	}, {
 		key: 'playerControls',
 		value: function playerControls(obj) {
 			this.game.room.send({ moveUp: obj.isDown });
-
-			/*if (obj.isDown) {
-   	this.spaceJuice.start(false, 1000);
-   } else {
-   	this.spaceJuice.on = false
-   }*/
 		}
 	}, {
 		key: 'playerShoot',
@@ -6106,12 +6105,9 @@ var Player = function (_Phaser$Sprite) {
 		value: function die() {
 			this.game.camera.shake(0.01, 250);
 			this.game.camera.target = null;
-			this.kill();
-			/*this.emitter.x = this.x;
-   this.emitter.y = this.y;
-   this.emitter.start(true, 2000 - (this.stats.speed * 10), null, 20);*/
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
+			this.kill();
 		}
 	}, {
 		key: 'lerp',
@@ -6125,7 +6121,7 @@ var Player = function (_Phaser$Sprite) {
 
 exports.default = Player;
 
-},{"./DebugBody":41,"./HealthBar":42,"./UI":45}],44:[function(require,module,exports){
+},{"./HealthBar":41,"./Particles":42,"./UI":45}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6412,7 +6408,7 @@ var UI = function () {
 
 exports.default = UI;
 
-},{"./HealthBar":42}],46:[function(require,module,exports){
+},{"./HealthBar":41}],46:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6577,21 +6573,6 @@ var Main = function (_Phaser$State) {
 			this.clients = {};
 			this.id;
 
-			//Emitters
-			this.emBulletHit = this.game.add.emitter(0, 0, 100);
-			this.emBulletHit.makeParticles('deathParticle');
-			this.emBulletHit.gravity = 0;
-
-			this.bulletTrailer = this.game.add.emitter(0, 0, 100);
-			this.bulletTrailer.makeParticles('deathParticle');
-			this.bulletTrailer.setAlpha(1, 0, 600);
-			this.bulletTrailer.setXSpeed(0, 0);
-			this.bulletTrailer.setYSpeed(0, 0);
-			this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
-			this.bulletTrailer.frequency = 10;
-			this.bulletTrailer.lifespan = 400;
-			this.bulletTrailer.gravity = 0;
-
 			this.createBulletPool();
 			this.createBitsPool();
 			this.createPowerUpPool();
@@ -6640,22 +6621,26 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.bullet) {
-					var bullet = _this2.bulletPool.getFirstDead();
-					bullet.owner = message.bullet.owner;
-					bullet.id = message.bullet.id;
-					bullet.angle = message.bullet.angle;
-					bullet.speed = message.bullet.speed;
-					bullet.timer = Date.now() + 400;
-					bullet.setDest(message.bullet.x, message.bullet.y);
-					bullet.setTint(_this2.clients[message.bullet.id].tint);
-					bullet.reset(message.bullet.x, message.bullet.y);
+					var _player2 = _this2.clients[message.bullet.id];
+					if (_player2) {
+						var bullet = _this2.bulletPool.getFirstDead();
+						bullet.owner = message.bullet.owner;
+						bullet.id = message.bullet.id;
+						bullet.angle = message.bullet.angle;
+						bullet.speed = message.bullet.speed;
+						bullet.timer = Date.now() + 400;
+						bullet.setTint(_player2.tint);
+						bullet.setTrail(_player2.particles);
+						bullet.setDest(message.bullet.x, message.bullet.y);
+						bullet.reset(message.bullet.x, message.bullet.y);
+					}
 				}
 
 				if (message.expGain) {
-					var _player2 = _this2.clients[_this2.id];
-					_player2.exp = message.expGain.exp;
-					_player2.expAmount = message.expGain.expAmount;
-					_player2.ui.expBar.setPercent(_player2.exp / _player2.expAmount * 100);
+					var _player3 = _this2.clients[_this2.id];
+					_player3.exp = message.expGain.exp;
+					_player3.expAmount = message.expGain.expAmount;
+					_player3.ui.expBar.setPercent(_player3.exp / _player3.expAmount * 100);
 				}
 
 				if (message.levelUp) {
@@ -6671,10 +6656,6 @@ var Main = function (_Phaser$State) {
 					var client = _this2.clients[m.id];
 
 					if (client) {
-						if (!client.alive) {
-							client.reset(m.x, m.y);
-						}
-
 						client.dest.x = m.x;
 						client.dest.y = m.y;
 						client.dest.angle = m.angle - 90;
@@ -6683,19 +6664,17 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.leaderboard) {
-					var _player3 = _this2.clients[_this2.id];
-					if (_player3) {
-						_player3.ui.updateLeaderboard(message.leaderboard);
+					var _player4 = _this2.clients[_this2.id];
+					if (_player4) {
+						_player4.ui.updateLeaderboard(message.leaderboard);
 					}
 				}
 
 				if (message.respawn) {
 					var _m = message.respawn;
-					var _player4 = _this2.clients[_m.id];
-					if (_player4) {
-						console.log('player: ', _player4.x, _player4.y);
-						console.log('new cord: ', _m.x, _m.y);
-						_player4.respawn(_m.x, _m.y);
+					var _player5 = _this2.clients[_m.id];
+					if (_player5) {
+						_player5.respawn(_m.x, _m.y);
 						var index = _this2.visiblePlayers.indexOf(_m.id);
 						if (index > -1) _this2.visiblePlayers.splice(index, 1);
 					}
@@ -6703,8 +6682,8 @@ var Main = function (_Phaser$State) {
 
 				if (message.death) {
 					var _m2 = message.death;
-					var _player5 = _this2.clients[_m2.id];
-					if (_player5) _player5.die();
+					var _player6 = _this2.clients[_m2.id];
+					if (_player6) _player6.die();
 				}
 			});
 
@@ -6836,25 +6815,18 @@ var Main = function (_Phaser$State) {
 					var dist = this.distranceBetween(this.clients[this.id], target);
 
 					if (dist < 950) {
-						if (!this.visiblePlayers.includes(id)) {
-							console.log('Visible: ', this.visiblePlayers);
-							this.visiblePlayers.push(id);
-
-							target.reset(target.dest.x, target.dest.y);
+						if (target.alpha === 0) {
+							target.x = target.dest.x;
+							target.y = target.dest.y;
+							this.game.add.tween(target).to({ alpha: 1 }, 500, Phaser.Easing.Linear.None, true);
 							target.playerHealthBar.barSprite.alpha = 1;
 							target.playerHealthBar.bgSprite.alpha = 1;
 						}
 					} else {
-						if (this.visiblePlayers.includes(id)) {
-							console.log('Invisible: ', this.visiblePlayers);
-							var index = this.visiblePlayers.indexOf(id);
-							if (index > -1) {
-								this.visiblePlayers.splice(index, 1);
-
-								target.playerHealthBar.barSprite.alpha = 0;
-								target.playerHealthBar.bgSprite.alpha = 0;
-								target.kill();
-							}
+						if (target.alpha === 1) {
+							target.playerHealthBar.barSprite.alpha = 0;
+							target.playerHealthBar.bgSprite.alpha = 0;
+							this.game.add.tween(target).to({ alpha: 0 }, 500, Phaser.Easing.Linear.None, true);
 						}
 					}
 				}
@@ -6872,10 +6844,9 @@ var Main = function (_Phaser$State) {
 							var player = _this3.clients[id];
 
 							if (_this3.distranceBetween(player, bullet) < 30) {
+								var shooter = _this3.clients[bullet.id];
+								if (shooter) shooter.particles.emitHit(bullet.x, bullet.y);
 								bullet.kill();
-								_this3.emBulletHit.x = bullet.x;
-								_this3.emBulletHit.y = bullet.y;
-								_this3.emBulletHit.start(true, 500, null, 5);
 							}
 						}
 					}
@@ -6883,10 +6854,9 @@ var Main = function (_Phaser$State) {
 
 				_this3.cometPool.forEachAlive(function (comet) {
 					if (_this3.distranceBetween(comet, bullet) < 25) {
+						var _player7 = _this3.clients[bullet.id];
+						if (_player7) _player7.particles.emitHit(bullet.x, bullet.y);
 						bullet.kill();
-						_this3.emBulletHit.x = bullet.x;
-						_this3.emBulletHit.y = bullet.y;
-						_this3.emBulletHit.start(true, 500, null, 5);
 					}
 				});
 			}, this);
@@ -7047,18 +7017,13 @@ var Preload = function (_Phaser$State) {
 	_createClass(Preload, [{
 		key: 'preload',
 		value: function preload() {
-			this.game.load.image('player', 'assets/player.png');
 			this.game.load.image('spaceship_white', 'assets/spaceship_white.png');
 			this.game.load.image('bit', 'assets/bit.png');
 			this.game.load.image('powerUp', 'assets/powerUp.png');
 			this.game.load.image('bullet', 'assets/bullet.png');
 			this.game.load.image('comet', 'assets/comet.png');
-			this.game.load.image('deathParticle', 'assets/deathParticle.png');
-			this.game.load.image('spaceJuiceParticle', 'assets/spaceJuiceParticle.png');
-			this.game.load.image('starfield', 'assets/starfield.png');
-			this.game.load.image('grid_neon', 'assets/grid_neon.png');
+			this.game.load.image('deathParticle', 'assets/particle.png');
 			this.game.load.image('starfield2', 'assets/starfield2.png');
-			this.game.load.image('planet_blue', 'assets/planet_blue.png');
 
 			this.load.atlas('arcade', 'assets/joystick/arcade-joystick.png', 'assets/joystick/arcade-joystick.json');
 

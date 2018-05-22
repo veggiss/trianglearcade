@@ -1,4 +1,4 @@
-import DebugBody from './DebugBody';
+import Particles from './Particles';
 import HealthBar from './HealthBar';
 import UI from './UI';
 
@@ -18,7 +18,7 @@ class Player extends Phaser.Sprite {
 		this.lastUpdate = Date.now() + this.angleRate;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.dest = {x: x, y: y, angle: this.angle};
-		this.kill();
+		this.particles = new Particles(this.game, this.tint);
 
 		this.stats = {
 			level: 1,
@@ -30,24 +30,6 @@ class Player extends Phaser.Sprite {
 			acceleration: 1,
 			angulation: 1
 		}
-
-		//Emitters
-		/*this.emitter = this.game.add.emitter(0, 0, 100);
-		this.emitter.makeParticles('deathParticle');
-		this.emitter.setAlpha(1, 0, 2000);
-		this.emitter.gravity = 0;
-
-		this.spaceJuice = this.game.add.emitter(0, 0, 20);
-		this.spaceJuice.makeParticles('spaceJuiceParticle');
-		this.spaceJuice.setAlpha(1, 0, 2000);
-		this.spaceJuice.setRotation(50, 400);
-		this.spaceJuice.setScale(0, 10, 0, 10, 2000);
-		this.spaceJuice.setXSpeed(0, 0);
-		this.spaceJuice.setYSpeed(0, 0);
-		this.spaceJuice.gravity = 0;
-		this.spaceJuice.children.forEach(child => {
-			child.tint = this.tint;
-		});*/
 
 		//Sprite
 		this.scale.setTo(0.75, 0.75);
@@ -61,6 +43,8 @@ class Player extends Phaser.Sprite {
 			height: 8,
 			animationDuration: 10
 		});
+
+		this.kill();
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
 
@@ -93,7 +77,6 @@ class Player extends Phaser.Sprite {
 	update() {
 		this.updateAngle();
 		this.updatePlayerPos();
-		//this.updateSpaceJuice();
 	}
 
 	setHealth(value) {
@@ -155,22 +138,14 @@ class Player extends Phaser.Sprite {
 			let destAngle = deg < 0 ? deg + 360 : deg;
 			this.game.room.send({updateAngle: Math.round(destAngle)});
 			this.lastUpdate = Date.now() + this.angleRate;
+			if (this.alive) {
+				this.particles.playerMove(this.x, this.y);
+			}
 		}
-	}
-
-	updateSpaceJuice() {
-		this.spaceJuice.x = this.x;
-		this.spaceJuice.y = this.y;
 	}
 
 	playerControls(obj) {
 		this.game.room.send({moveUp: obj.isDown});
-
-		/*if (obj.isDown) {
-			this.spaceJuice.start(false, 1000);
-		} else {
-			this.spaceJuice.on = false
-		}*/
 	}
 
 	playerShoot(obj) {
@@ -193,12 +168,9 @@ class Player extends Phaser.Sprite {
 	die() {
 		this.game.camera.shake(0.01, 250);
 		this.game.camera.target = null;
-		this.kill();
-		/*this.emitter.x = this.x;
-		this.emitter.y = this.y;
-		this.emitter.start(true, 2000 - (this.stats.speed * 10), null, 20);*/
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
+		this.kill();
 	}
 
 	lerp(a, b, n) {

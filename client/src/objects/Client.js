@@ -1,4 +1,4 @@
-import DebugBody from './DebugBody';
+import Particles from './Particles';
 import HealthBar from './HealthBar';
 
 class Client extends Phaser.Sprite {
@@ -12,24 +12,9 @@ class Client extends Phaser.Sprite {
 		this.angle = 0;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.autoCull = true;
+		this.alpha = 0;
 		this.dest = {x: 0, y: 0, angle: this.angle};
-
-		/*//Emitter
-	    this.emitter = this.game.add.emitter(0, 0, 100);
-	    this.emitter.makeParticles('deathParticle');
-	    this.emitter.gravity = 0;
-
-		this.spaceJuice = this.game.add.emitter(0, 0, 20);
-		this.spaceJuice.makeParticles('spaceJuiceParticle');
-		this.spaceJuice.setAlpha(1, 0, 2000);
-		this.spaceJuice.setRotation(50, 400);
-		this.spaceJuice.setScale(0, 10, 0, 10, 2000);
-		this.spaceJuice.setXSpeed(0, 0);
-		this.spaceJuice.setYSpeed(0, 0);
-		this.spaceJuice.gravity = 0;
-		this.spaceJuice.children.forEach(child => {
-			child.tint = this.tint;
-		});*/
+		this.particles = new Particles(this.game, this.tint);
 
 	    //Sprite
 	    this.scale.setTo(0.75, 0.75);
@@ -41,6 +26,8 @@ class Client extends Phaser.Sprite {
 			height: 8,
 			animationDuration: 10
 		});
+		this.playerHealthBar.barSprite.alpha = 0;
+		this.playerHealthBar.bgSprite.alpha = 0;
 
 		this.game.add.existing(this);
 	}
@@ -53,6 +40,9 @@ class Client extends Phaser.Sprite {
 		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.075);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
+		if (this.alive && this.alpha === 1) {
+			this.particles.playerMove(this.x, this.y);
+		}
 	}
 
 	respawn(x, y) {
@@ -67,9 +57,6 @@ class Client extends Phaser.Sprite {
 	}
 
 	die() {
-		/*this.emitter.x = this.x;
-		this.emitter.y = this.y;
-		this.emitter.start(true, 2000, null, 20);*/
 		this.kill();
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
@@ -82,7 +69,10 @@ class Client extends Phaser.Sprite {
 	leave() {
 		this.playerHealthBar.barSprite.destroy();
 		this.playerHealthBar.bgSprite.destroy();
-		//this.spaceJuice.destroy();
+	}
+
+	bulletHit() {
+		this.particles.start(true, 500, 3);
 	}
 
 	lerp(a, b, n) {

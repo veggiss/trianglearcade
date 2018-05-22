@@ -29,21 +29,6 @@ class Main extends Phaser.State {
 		this.clients = {};
 		this.id;
 
-		//Emitters
-	    this.emBulletHit = this.game.add.emitter(0, 0, 100);
-	    this.emBulletHit.makeParticles('deathParticle');
-	    this.emBulletHit.gravity = 0;
-
-		this.bulletTrailer = this.game.add.emitter(0, 0, 100);
-		this.bulletTrailer.makeParticles('deathParticle');
-		this.bulletTrailer.setAlpha(1, 0, 600);
-		this.bulletTrailer.setXSpeed(0, 0);
-		this.bulletTrailer.setYSpeed(0, 0);
-		this.bulletTrailer.setScale(0, 0.5, 0, 0.5, 400);
-		this.bulletTrailer.frequency = 10;
-		this.bulletTrailer.lifespan = 400;
-		this.bulletTrailer.gravity = 0;
-
 	    this.createBulletPool();
 	    this.createBitsPool();
 	    this.createPowerUpPool();
@@ -88,15 +73,19 @@ class Main extends Phaser.State {
 			}
 
 			if (message.bullet) {
-				let bullet = this.bulletPool.getFirstDead();
-				bullet.owner = message.bullet.owner;
-				bullet.id = message.bullet.id;
-				bullet.angle = message.bullet.angle;
-				bullet.speed = message.bullet.speed;
-				bullet.timer = Date.now() + 400;
-				bullet.setDest(message.bullet.x, message.bullet.y);
-				bullet.setTint(this.clients[message.bullet.id].tint);
-				bullet.reset(message.bullet.x, message.bullet.y);
+				let player = this.clients[message.bullet.id];
+				if (player) {
+					let bullet = this.bulletPool.getFirstDead();
+					bullet.owner = message.bullet.owner;
+					bullet.id = message.bullet.id;
+					bullet.angle = message.bullet.angle;
+					bullet.speed = message.bullet.speed;
+					bullet.timer = Date.now() + 400;
+					bullet.setTint(player.tint);
+					bullet.setTrail(player.particles);
+					bullet.setDest(message.bullet.x, message.bullet.y);
+					bullet.reset(message.bullet.x, message.bullet.y);
+				}
 			}
 
 			if (message.expGain) {
@@ -119,10 +108,6 @@ class Main extends Phaser.State {
 				let client = this.clients[m.id];
 
 				if (client) {
-					if (!client.alive) {
-						client.reset(m.x, m.y);
-					}
-
 					client.dest.x = m.x;
 					client.dest.y = m.y;
 					client.dest.angle = m.angle - 90;
@@ -141,8 +126,6 @@ class Main extends Phaser.State {
 				let m = message.respawn;
 				let player = this.clients[m.id];
 				if (player) {
-					console.log('player: ', player.x, player.y);
-					console.log('new cord: ', m.x, m.y);
 					player.respawn(m.x, m.y);
 					let index = this.visiblePlayers.indexOf(m.id);
 					if (index > -1) this.visiblePlayers.splice(index, 1);
@@ -278,25 +261,18 @@ class Main extends Phaser.State {
 				let dist = this.distranceBetween(this.clients[this.id], target);
 
 				if (dist < 950) {
-					if (!this.visiblePlayers.includes(id)) {
-						console.log('Visible: ', this.visiblePlayers);
-						this.visiblePlayers.push(id);
-						
-						target.reset(target.dest.x, target.dest.y);
+					if (target.alpha === 0) {
+						target.x = target.dest.x;
+						target.y = target.dest.y;
+						this.game.add.tween(target).to({alpha: 1}, 500, Phaser.Easing.Linear.None, true);
 						target.playerHealthBar.barSprite.alpha = 1;
 						target.playerHealthBar.bgSprite.alpha = 1;
 					}
 				} else {
-					if (this.visiblePlayers.includes(id)) {
-						console.log('Invisible: ', this.visiblePlayers);
-						let index = this.visiblePlayers.indexOf(id);
-						if (index > -1) {
-							this.visiblePlayers.splice(index, 1);
-
-							target.playerHealthBar.barSprite.alpha = 0;
-							target.playerHealthBar.bgSprite.alpha = 0;
-							target.kill();
-						}
+					if (target.alpha === 1) {
+						target.playerHealthBar.barSprite.alpha = 0;
+						target.playerHealthBar.bgSprite.alpha = 0;
+						this.game.add.tween(target).to({alpha: 0}, 500, Phaser.Easing.Linear.None, true);
 					}
 				}
 			}
@@ -311,10 +287,9 @@ class Main extends Phaser.State {
 						let player = this.clients[id];
 
 						if (this.distranceBetween(player, bullet) < 30) {
+							let shooter = this.clients[bullet.id];
+							if (shooter) shooter.particles.emitHit(bullet.x, bullet.y);
 							bullet.kill();
-							this.emBulletHit.x = bullet.x;
-							this.emBulletHit.y = bullet.y;
-							this.emBulletHit.start(true, 500, null, 5);
 						}
 					}
 				}
@@ -322,10 +297,9 @@ class Main extends Phaser.State {
 
 			this.cometPool.forEachAlive(comet => {
 				if (this.distranceBetween(comet, bullet) < 25) {
+					let player = this.clients[bullet.id];
+					if (player) player.particles.emitHit(bullet.x, bullet.y);
 					bullet.kill();
-					this.emBulletHit.x = bullet.x;
-					this.emBulletHit.y = bullet.y;
-					this.emBulletHit.start(true, 500, null, 5);
 				}
 			})
 		}, this);
