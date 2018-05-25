@@ -38,7 +38,7 @@ module.exports = class Player {
             maxSpeed: 8,
             speedBoost: 0,
             damage: 10,
-            angVel: 0.1,
+            angVel: 1.0,
             powers: {},
             powerList: ['', '', '', '']
         });
