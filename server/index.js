@@ -12,10 +12,11 @@ app.use(express.static('./static'));
 
 const server = http.createServer(app);
 const gameServer = new colyseus.Server({
-    server: server,
-    pingInterval: 15000,
-    pingTimeout: 30000
+	timout: 35000,
+    server: server
 });
+
+gameServer.server.options.server.timeout = 35000;
 
 gameServer.register("game", game);
 
