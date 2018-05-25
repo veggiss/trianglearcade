@@ -4,19 +4,22 @@ const express = require('express');
 const http = require('http');
 const colyseus = require("colyseus");
 const game = require("./rooms/game");
+const uws = require('uws');
 const app = express();
 
-app.enable('trust proxy');
+//app.enable('trust proxy');
 app.set('port', (port));
 app.use(express.static('./static'));
 
 const server = http.createServer(app);
 const gameServer = new colyseus.Server({
-	timout: 35000,
-    server: server
+	engine: uws.Server,
+	server: server,
+    pingInterval: 15000,
+    pingTimeout: 30000
 });
 
-gameServer.server.options.server.timeout = 35000;
+console.log(gameServer);
 
 gameServer.register("game", game);
 
