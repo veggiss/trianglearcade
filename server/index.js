@@ -1,6 +1,7 @@
 const port = process.env.PORT || 3000;
 const path = require('path');
 const express = require('express');
+const timeout = require('connect-timeout');
 const http = require('http');
 const colyseus = require("colyseus");
 const game = require("./rooms/game");
@@ -9,6 +10,7 @@ const app = express();
 
 //app.enable('trust proxy');
 app.set('port', (port));
+app.use(timeout(30000));
 app.use(express.static('./static'));
 
 const server = http.createServer(app);
@@ -18,8 +20,6 @@ const gameServer = new colyseus.Server({
     pingInterval: 15000,
     pingTimeout: 30000
 });
-
-console.log(gameServer);
 
 gameServer.register("game", game);
 
