@@ -4,11 +4,9 @@ class Boot extends Phaser.State {
 	}
 
 	create() {
-		//PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
-		//Phaser.Canvas.setImageRenderingCrisp(this.game.canvas);
-		//Phaser.Canvas.setSmoothingEnabled(this.game.canvas, false);
-		//this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-		this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+        this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+        this.game.scale.pageAlignVertically = false;
+        this.game.scale.pageAlignHorizontally = false;
 		this.game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 		this.game.state.start("Preload");
 	}

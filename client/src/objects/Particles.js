@@ -20,7 +20,7 @@ class Particles {
 		}
 
 		// Moving player particles
-		for (let i = 0; i < 15; i++) {
+		for (let i = 0; i < 5; i++) {
 			let particle = game.add.sprite(0, 0, 'bullet');
 			particle.tween = game.add.tween(particle.scale).to({x: 0, y: 0}, 200, Phaser.Easing.Linear.None, false);
 			particle.scale.setTo(1);

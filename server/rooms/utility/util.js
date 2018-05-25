@@ -11,7 +11,7 @@ function distanceFrom(source, target) {
 
     if (source.pos) {
         sx = source.pos.x;
-        sy = source.pos.y
+        sy = source.pos.y;
     } else {
         sx = source.x;
         sy = source.y;
@@ -89,6 +89,26 @@ function wrap(value, min, max) {
     return result + min;
 }
 
+function getNearestTarget(player, list) {
+    let closest = 100000;
+    let closestTarget;
+
+    for (let id in list) {
+        if (id !== player.id) {
+            let target = list[id];
+            let dist = distanceFrom(player, target);
+            if (dist < 500) {
+                if (dist < closest) {
+                    closest = dist;
+                    closestTarget = target;
+                }
+            }
+        }
+    }
+
+    return closestTarget;
+}
+
 function getProximityList(player, list, within, range) {
     let exclutionList = [];
     let proxyRange = range ? 1280 : range;
@@ -136,5 +156,6 @@ module.exports = {
     getShortestAngle: getShortestAngle,
     getProximityList: getProximityList,
     lerp: lerp,
-    idExistInArr: idExistInArr
+    idExistInArr: idExistInArr,
+    getNearestTarget: getNearestTarget
 }

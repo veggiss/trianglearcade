@@ -1,11 +1,13 @@
-class Bullet extends Phaser.Sprite {
+class Seeker extends Phaser.Sprite {
 	constructor(game, x, y) {
 		super(game, x, y, 'bullet');
 
 		this.id;
+		this.target;
 		this.game = game;
 		this.timer = Date.now();
 		this.anchor.setTo(0.5, 0.5);
+		this.scale.setTo(2);
 		this.particles;
 		this.kill();
 
@@ -13,9 +15,15 @@ class Bullet extends Phaser.Sprite {
 	}
 
 	update() {
-		if (this.alive && this.dest) {
-	        this.x = this.lerp(this.x, this.dest.x, 0.03);
-	        this.y = this.lerp(this.y, this.dest.y, 0.03);
+		if (this.alive && this.target) {
+	        if (this.target.alive) {
+	            let dx = this.target.x - this.x;
+	            let dy = this.target.y - this.y;
+	            this.rotation = Math.atan2(dy, dx);
+	        }
+
+	        this.x += (Math.cos(this.rotation) * 16) / 3;
+	        this.y += (Math.sin(this.rotation) * 16) / 3;
 
 	        if (this.particles) {
 	        	this.particles.bulletTrail(this.x, this.y);
@@ -31,13 +39,6 @@ class Bullet extends Phaser.Sprite {
 		this.tint = tint;
 	}
 
-	setDest(x, y) {
-        this.dest = {
-            x: x + Math.sin((this.angle) / 180.0 * Math.PI) * 750,
-            y: y - Math.cos((this.angle) / 180.0 * Math.PI) * 750
-        }
-	}
-
 	setTrail(particles) {
 		this.particles = particles;
 	}
@@ -47,4 +48,4 @@ class Bullet extends Phaser.Sprite {
 	}
 }
 
-export default Bullet;
+export default Seeker;

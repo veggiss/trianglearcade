@@ -5,7 +5,7 @@ class Menu extends Phaser.State {
 		this.game.world.setBounds(0, 0, this.game.width, this.game.heigth);
 		
 		//Background
-		this.starfield = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'starfield2');
+		this.starfield = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'starfield');
 		this.starfield.fixedToCamera = true;
 		this.starfield.alpha = 0.5;
 
@@ -18,8 +18,9 @@ class Menu extends Phaser.State {
 		this.button.innerHTML = 'Enter';
 		this.gameDiv = document.getElementById("content");
 		this.setUiPos();
-		/*this.game.scale.setResizeCallback(() => { --- This event has to be removed before changing state
-		    this.setUiPos();
+		/*this.game.scale.setResizeCallback(() => {
+		    this.scale.refresh();
+		    console.log("lol");
 		}, this);*/
 		this.uiDiv.appendChild(this.input);
 		this.uiDiv.appendChild(this.button);

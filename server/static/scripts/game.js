@@ -5174,7 +5174,7 @@ var Game = function (_Phaser$Game) {
 
 new Game();
 
-},{"colyseus.js":13,"states/Boot":46,"states/Main":47,"states/Menu":48,"states/Preload":49}],37:[function(require,module,exports){
+},{"colyseus.js":13,"states/Boot":48,"states/Main":49,"states/Menu":50,"states/Preload":51}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5226,7 +5226,7 @@ var Bit = function (_Phaser$Sprite) {
 		_this.rotation = Math.random() - 180;
 		_this.autoCull = true;
 		var rs = Math.random() * 0.2 + 0.5;
-		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 500, Phaser.Easing.Linear.None, true);
+		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 1000, Phaser.Easing.Elastic.Out, true);
 		_this.kill();
 		_this.game.add.existing(_this);
 		return _this;
@@ -5311,10 +5311,7 @@ var Bullet = function (_Phaser$Sprite) {
 
 		var _this = _possibleConstructorReturn(this, (Bullet.__proto__ || Object.getPrototypeOf(Bullet)).call(this, game, x, y, 'bullet'));
 
-		_this.owner;
 		_this.id;
-		_this.angle;
-		_this.speed = 0;
 		_this.game = game;
 		_this.timer = Date.now();
 		_this.anchor.setTo(0.5, 0.5);
@@ -5396,6 +5393,10 @@ var _HealthBar = require('./HealthBar');
 
 var _HealthBar2 = _interopRequireDefault(_HealthBar);
 
+var _Powers = require('./Powers');
+
+var _Powers2 = _interopRequireDefault(_Powers);
+
 function _interopRequireDefault(obj) {
 	return obj && obj.__esModule ? obj : { default: obj };
 }
@@ -5432,14 +5433,20 @@ var Client = function (_Phaser$Sprite) {
 		_this.level = level;
 		_this.angle = 0;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
+		_this.originalTint = _this.tint;
 		_this.autoCull = true;
 		_this.alpha = 0;
+		_this.dead = false;
 		_this.dest = { x: 0, y: 0, angle: _this.angle };
-		_this.particles = new _Particles2.default(_this.game, _this.tint);
 
 		//Sprite
 		_this.scale.setTo(0.75, 0.75);
-		_this.anchor.setTo(0.6, 0.5);
+		_this.anchor.setTo(0.5, 0.5);
+		//Particles and emitters
+		_this.particles = new _Particles2.default(_this.game, _this.tint);
+		//Powers container
+		_this.powers = new _Powers2.default(_this.game, _this);
+
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
 			x: _this.x,
 			y: _this.y + 64,
@@ -5457,33 +5464,33 @@ var Client = function (_Phaser$Sprite) {
 	_createClass(Client, [{
 		key: 'update',
 		value: function update() {
-			var x = this.x + Math.sin(this.angle * Math.PI / 180);
-			var y = this.y + Math.cos(this.angle * Math.PI / 180);
-			this.x = this.lerp(x, this.dest.x, 0.1);
-			this.y = this.lerp(y, this.dest.y, 0.1);
-			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
-			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
-			this.playerHealthBar.setPosition(this.x, this.y + 55);
-			if (this.alive && this.alpha === 1) {
-				this.particles.playerMove(this.x, this.y);
+			if (this.alive) {
+				var x = this.x + Math.sin(this.angle * Math.PI / 180);
+				var y = this.y + Math.cos(this.angle * Math.PI / 180);
+				this.x = this.lerp(x, this.dest.x, 0.1);
+				this.y = this.lerp(y, this.dest.y, 0.1);
+				var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
+				this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
+				this.playerHealthBar.setPosition(this.x, this.y + 55);
+				if (this.alive && this.alpha === 1) {
+					this.particles.playerMove(this.x, this.y);
+				}
 			}
 		}
 	}, {
 		key: 'respawn',
 		value: function respawn(x, y) {
-			this.playerHealthBar.setPercent(100);
 			this.dest.x = x;
 			this.dest.y = y;
 			this.x = x;
 			this.y = y;
 			this.reset(x, y);
-			this.playerHealthBar.barSprite.alpha = 1;
-			this.playerHealthBar.bgSprite.alpha = 1;
 		}
 	}, {
 		key: 'die',
 		value: function die() {
 			this.kill();
+			this.alpha = 0;
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
 		}
@@ -5499,11 +5506,6 @@ var Client = function (_Phaser$Sprite) {
 			this.playerHealthBar.bgSprite.destroy();
 		}
 	}, {
-		key: 'bulletHit',
-		value: function bulletHit() {
-			this.particles.start(true, 500, 3);
-		}
-	}, {
 		key: 'lerp',
 		value: function lerp(a, b, n) {
 			return (1 - n) * a + n * b;
@@ -5515,7 +5517,7 @@ var Client = function (_Phaser$Sprite) {
 
 exports.default = Client;
 
-},{"./HealthBar":41,"./Particles":42}],40:[function(require,module,exports){
+},{"./HealthBar":41,"./Particles":42,"./Powers":45}],40:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5562,10 +5564,11 @@ var Comet = function (_Phaser$Sprite) {
 		_this.game = game;
 		_this.anchor.setTo(0.5, 0.5);
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
+		_this.originalTint = _this.tint;
 		_this.autoCull = true;
 		_this.angle = Math.random() * 180;
 		_this.scale.setTo(0);
-		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: 1, y: 1 }, 500, Phaser.Easing.Linear.None, true);
+		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out, true);
 		_this.kill();
 
 		_this.game.add.existing(_this);
@@ -5808,7 +5811,7 @@ var Particles = function () {
 		}
 
 		// Moving player particles
-		for (var _i = 0; _i < 15; _i++) {
+		for (var _i = 0; _i < 5; _i++) {
 			var _particle = game.add.sprite(0, 0, 'bullet');
 			_particle.tween = game.add.tween(_particle.scale).to({ x: 0, y: 0 }, 200, Phaser.Easing.Linear.None, false);
 			_particle.scale.setTo(1);
@@ -5898,6 +5901,10 @@ var _HealthBar = require('./HealthBar');
 
 var _HealthBar2 = _interopRequireDefault(_HealthBar);
 
+var _Powers = require('./Powers');
+
+var _Powers2 = _interopRequireDefault(_Powers);
+
 var _UI = require('./UI');
 
 var _UI2 = _interopRequireDefault(_UI);
@@ -5943,8 +5950,8 @@ var Player = function (_Phaser$Sprite) {
 		_this.angleRate = 100;
 		_this.lastUpdate = Date.now() + _this.angleRate;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
+		_this.originalTint = _this.tint;
 		_this.dest = { x: x, y: y, angle: _this.angle };
-		_this.particles = new _Particles2.default(_this.game, _this.tint);
 
 		_this.stats = {
 			level: 1,
@@ -5959,6 +5966,10 @@ var Player = function (_Phaser$Sprite) {
 			//Sprite
 		};_this.scale.setTo(0.75, 0.75);
 		_this.anchor.setTo(0.5);
+		//Emitters and particles
+		_this.particles = new _Particles2.default(_this.game, _this.tint);
+		//Powers container
+		_this.powers = new _Powers2.default(_this.game, _this);
 
 		//Healthbar
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
@@ -6121,7 +6132,7 @@ var Player = function (_Phaser$Sprite) {
 
 exports.default = Player;
 
-},{"./HealthBar":41,"./Particles":42,"./UI":45}],44:[function(require,module,exports){
+},{"./HealthBar":41,"./Particles":42,"./Powers":45,"./UI":47}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6229,6 +6240,217 @@ var _createClass = function () {
 	};
 }();
 
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+var Powers = function () {
+	function Powers(game, player) {
+		var _this = this;
+
+		_classCallCheck(this, Powers);
+
+		this.game = game;
+		this.player = player;
+		this.powersGroup = this.game.add.group();
+		this.active = [];
+
+		//Power assets
+		this.powerShield = this.game.add.sprite(0, 0, 'power_shield');
+		this.powerShield.scale.setTo(0);
+		this.powerShield.tweenIn = this.game.add.tween(this.powerShield.scale).to({ x: 1, y: 1 }, 500, Phaser.Easing.Elastic.Out);
+		this.powerShield.tweenOut = this.game.add.tween(this.powerShield).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none);
+		this.powerShield.tweenIn.onStart.add(function () {
+			_this.powerShield.revive();_this.powerShield.alpha = 1;
+		});
+		this.powerShield.tweenOut.onComplete.add(function () {
+			_this.powerShield.kill();_this.powerShield.scale.setTo(0);
+		});
+
+		this.powerMagnet = this.game.add.sprite(0, 0, 'power_magnet');
+		this.powerMagnet.scale.setTo(0);
+		this.powerMagnet.tweenIn = this.game.add.tween(this.powerMagnet.scale).to({ x: 1, y: 1 }, 500, Phaser.Easing.Elastic.Out);
+		this.powerMagnet.tweenOut = this.game.add.tween(this.powerMagnet).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none);
+		this.powerMagnet.tweenIn.onStart.add(function () {
+			_this.powerMagnet.revive();_this.powerMagnet.alpha = 1;
+		});
+		this.powerMagnet.tweenOut.onComplete.add(function () {
+			_this.powerMagnet.kill();_this.powerMagnet.scale.setTo(0);
+		});
+		this.game.add.tween(this.powerMagnet).to({ angle: 359 }, 1000, null, true, 0, Infinity);
+
+		this.powersGroup.add(this.powerShield);
+		this.powersGroup.add(this.powerMagnet);
+
+		this.powersGroup.forEach(function (power) {
+			power.tint = player.tint;
+			power.kill();
+			power.anchor.setTo(0.5);
+		});
+
+		this.player.addChild(this.powersGroup);
+	}
+
+	_createClass(Powers, [{
+		key: 'update',
+		value: function update(list) {
+			var _this2 = this;
+
+			list.forEach(function (power) {
+				if (!_this2.active.includes(power)) {
+					switch (power) {
+						case 'shield':
+							_this2.powerShield.tweenIn.start();
+							setTimeout(function () {
+								_this2.powerShield.tweenOut.start();
+								var index = _this2.active.findIndex(function (item) {
+									return item === 'shield';
+								});
+								_this2.active.splice(index, 1);
+							}, 6000);
+							break;
+						case 'magnet':
+							_this2.powerMagnet.tweenIn.start();
+							setTimeout(function () {
+								_this2.powerMagnet.tweenOut.start();
+								var index = _this2.active.findIndex(function (item) {
+									return item === 'magnet';
+								});
+								_this2.active.splice(index, 1);
+							}, 10000);
+							break;
+					}
+
+					_this2.active.push(power);
+				}
+			});
+		}
+	}]);
+
+	return Powers;
+}();
+
+exports.default = Powers;
+
+},{}],46:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+function _possibleConstructorReturn(self, call) {
+	if (!self) {
+		throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	}return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+	if (typeof superClass !== "function" && superClass !== null) {
+		throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+	}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var Seeker = function (_Phaser$Sprite) {
+	_inherits(Seeker, _Phaser$Sprite);
+
+	function Seeker(game, x, y) {
+		_classCallCheck(this, Seeker);
+
+		var _this = _possibleConstructorReturn(this, (Seeker.__proto__ || Object.getPrototypeOf(Seeker)).call(this, game, x, y, 'bullet'));
+
+		_this.id;
+		_this.target;
+		_this.game = game;
+		_this.timer = Date.now();
+		_this.anchor.setTo(0.5, 0.5);
+		_this.scale.setTo(2);
+		_this.particles;
+		_this.kill();
+
+		_this.game.add.existing(_this);
+		return _this;
+	}
+
+	_createClass(Seeker, [{
+		key: 'update',
+		value: function update() {
+			if (this.alive && this.target) {
+				if (this.target.alive) {
+					var dx = this.target.x - this.x;
+					var dy = this.target.y - this.y;
+					this.rotation = Math.atan2(dy, dx);
+				}
+
+				this.x += Math.cos(this.rotation) * 16 / 3;
+				this.y += Math.sin(this.rotation) * 16 / 3;
+
+				if (this.particles) {
+					this.particles.bulletTrail(this.x, this.y);
+				}
+
+				if (Date.now() > this.timer) {
+					this.kill();
+				}
+			}
+		}
+	}, {
+		key: 'setTint',
+		value: function setTint(tint) {
+			this.tint = tint;
+		}
+	}, {
+		key: 'setTrail',
+		value: function setTrail(particles) {
+			this.particles = particles;
+		}
+	}, {
+		key: 'lerp',
+		value: function lerp(a, b, n) {
+			return (1 - n) * a + n * b;
+		}
+	}]);
+
+	return Seeker;
+}(Phaser.Sprite);
+
+exports.default = Seeker;
+
+},{}],47:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
 var _HealthBar = require('./HealthBar');
 
 var _HealthBar2 = _interopRequireDefault(_HealthBar);
@@ -6247,7 +6469,7 @@ function _classCallCheck(instance, Constructor) {
 
 var UI = function () {
 	function UI(game, stats) {
-		var _this = this;
+		var _this2 = this;
 
 		_classCallCheck(this, UI);
 
@@ -6256,7 +6478,21 @@ var UI = function () {
 
 		this.statTextGroup = this.game.add.group();
 		this.lbTextGroup = this.game.add.group();
-		this.statButtonGroup = this.game.add.group();
+		this.actionbarGroup = this.game.add.group();
+		this.heroPowerBtnGroup = this.game.add.group();
+		this.hotkeyList = [];
+		var hotkeys = ['Q', 'W', 'E', 'R'];
+
+		if (!this.game.onMobile) {
+			var key_q = game.input.keyboard.addKey(Phaser.Keyboard.Q);
+			var key_w = game.input.keyboard.addKey(Phaser.Keyboard.W);
+			var key_e = game.input.keyboard.addKey(Phaser.Keyboard.E);
+			var key_r = game.input.keyboard.addKey(Phaser.Keyboard.R);
+			this.hotkeyList.push(key_q);
+			this.hotkeyList.push(key_w);
+			this.hotkeyList.push(key_e);
+			this.hotkeyList.push(key_r);
+		}
 
 		//Experience bar
 		this.expBar = new _HealthBar2.default(this.game, {
@@ -6295,9 +6531,9 @@ var UI = function () {
 			if (['firerate', 'speed', 'damage', 'health', 'acceleration', 'angulation'].toString().includes(name)) {
 				item.alpha = 0.5;
 				item.name = name;
-				item.events.onInputDown.add(_this.addStat, _this);
-				item.events.onInputOver.add(_this.textOver, _this);
-				item.events.onInputOut.add(_this.textOut, _this);
+				item.events.onInputDown.add(_this2.addStat, _this2);
+				item.events.onInputOver.add(_this2.textOver, _this2);
+				item.events.onInputOut.add(_this2.textOut, _this2);
 			}
 		});
 
@@ -6318,6 +6554,104 @@ var UI = function () {
 
 		this.lbTextGroup.add(this.lbHeader);
 
+		//Actionbar UI
+		var spaceX = window.innerWidth / 2 - 134;
+
+		var _loop = function _loop(_i) {
+			var actionbar = _this2.game.add.sprite(spaceX, window.innerHeight - 60, 'actionbar');
+			var newPowerIcon = _this2.game.add.sprite(0, 0, 'icon_generic');
+			var cooldownText = _this2.game.add.bitmapText(0, 0, 'font', '', 30);
+			var hotkeyIcon = void 0;
+			if (!_this2.game.onMobile) {
+				hotkeyIcon = _this2.game.add.bitmapText(-32, 32, 'font', '[' + hotkeys[_i] + ']', 20);
+				hotkeyIcon.anchor.setTo(0, 1);
+			}
+
+			newPowerIcon.scale.setTo(0);
+			newPowerIcon.anchor.setTo(0.5);
+			newPowerIcon.kill();
+
+			cooldownText.anchor.setTo(0.5);
+			cooldownText.kill();
+
+			actionbar.anchor.setTo(0.5);
+			actionbar.alpha = 0.75;
+			actionbar.inputEnabled = true;
+			actionbar.powerNumber = _i;
+			actionbar.cooldown = Date.now();
+			actionbar.timer = _this2.game.time.create();
+			actionbar.cooldownText = cooldownText;
+
+			actionbar.events.onInputOver.add(_this2.buttonOver, _this2);
+			actionbar.events.onInputOut.add(_this2.buttonOut, _this2);
+
+			actionbar.cooldownTween = _this2.game.add.tween(cooldownText.scale).to({ x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out);
+			actionbar.show = _this2.game.add.tween(newPowerIcon.scale).to({ x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out);
+
+			actionbar.cooldownTween.onStart.add(function () {
+				return _this2.countCooldown(actionbar);
+			});
+			actionbar.show.onStart.add(function () {
+				return newPowerIcon.revive();
+			});
+			actionbar.hide = function () {
+				return newPowerIcon.kill();
+			};
+
+			actionbar.addChild(newPowerIcon);
+			actionbar.addChild(cooldownText);
+
+			if (!_this2.game.onMobile) {
+				actionbar.addChild(hotkeyIcon);
+			}
+			_this2.actionbarGroup.add(actionbar);
+
+			spaceX += actionbar.width + 10;
+		};
+
+		for (var _i = 0; _i < 4; _i++) {
+			_loop(_i);
+		}
+
+		//Choose heropower UI
+		this.choosetext = this.game.add.bitmapText(window.innerWidth / 2, window.innerHeight - window.innerHeight * 0.32, 'font', 'Choose hero power:', 26);
+		this.choosetext.anchor.setTo(0.5);
+
+		this.opt1Button = this.game.add.sprite(-50, 50, 'icon_generic');
+		this.opt1Text = this.game.add.bitmapText(0, 20, 'font', '', 20);
+		this.opt2Button = this.game.add.sprite(50, 50, 'icon_generic');
+		this.opt2Text = this.game.add.bitmapText(0, 20, 'font', '', 20);
+
+		this.opt1Button.opt = 0;
+		this.opt2Button.opt = 1;
+		this.opt1Text.anchor.setTo(0.5);
+		this.opt2Text.anchor.setTo(0.5);
+		this.opt1Button.anchor.setTo(0.5);
+		this.opt2Button.anchor.setTo(0.5);
+		this.opt1Button.inputEnabled = true;
+		this.opt2Button.inputEnabled = true;
+		this.opt1Button.addChild(this.opt1Text);
+		this.opt2Button.addChild(this.opt2Text);
+		this.opt1Button.events.onInputDown.add(this.sendPowerUpgrade, this);
+		this.opt1Button.events.onInputOver.add(this.buttonOver, this);
+		this.opt1Button.events.onInputOut.add(this.buttonOut, this);
+		this.opt2Button.events.onInputDown.add(this.sendPowerUpgrade, this);
+		this.opt2Button.events.onInputOver.add(this.buttonOver, this);
+		this.opt2Button.events.onInputOut.add(this.buttonOut, this);
+
+		this.choosetext.addChild(this.opt1Button);
+		this.choosetext.addChild(this.opt2Button);
+
+		this.choosetext.alpha = 0;
+		this.showHeroBtns = this.game.add.tween(this.choosetext).to({ alpha: 1 }, 250, Phaser.Easing.Linear.None);
+		this.hideHeroBtns = this.game.add.tween(this.choosetext).to({ alpha: 0 }, 250, Phaser.Easing.Linear.None);
+		this.showHeroBtns.onStart.add(function (btn) {
+			return btn.revive();
+		}, this);
+		this.hideHeroBtns.onComplete.add(function (btn) {
+			return btn.kill();
+		}, this);
+
 		/*this.game.scale.setResizeCallback(() => { //--- This event has to be removed before changing state
       this.lbHeader.x = window.innerWidth - 100;
   }, this);*/
@@ -6326,24 +6660,45 @@ var UI = function () {
 		this.expBar.bgSprite.fixedToCamera = true;
 		this.statTextGroup.fixedToCamera = true;
 		this.lbTextGroup.fixedToCamera = true;
-		this.statButtonGroup.fixedToCamera = true;
+		this.actionbarGroup.fixedToCamera = true;
+		this.choosetext.fixedToCamera = true;
 
-		this.game.add.existing(this.statTextGroup);
+		for (var _i2 = 0; _i2 < 4; _i2++) {
+			this.newPowerAvailable(_i2);
+		}
 
 		return this;
 	}
 
 	_createClass(UI, [{
+		key: 'countCooldown',
+		value: function countCooldown(bar) {
+			var _this3 = this;
+
+			var delay = 30;
+			var loop = this.game.time.events.loop(Phaser.Timer.SECOND, function () {
+				delay--;
+				bar.cooldownText.text = delay;
+				if (delay <= 0) {
+					_this3.game.time.events.remove(loop);
+					bar.cooldownText.kill();
+				}
+			}, this);
+
+			bar.cooldownText.text = delay;
+			bar.cooldownText.revive();
+		}
+	}, {
 		key: 'updateLeaderboard',
 		value: function updateLeaderboard(leaderboard) {
-			var _this2 = this;
+			var _this4 = this;
 
 			this.lbText.forEach(function (item) {
 				item.text = '';
 			});
 
 			leaderboard.forEach(function (item, index, obj) {
-				_this2.lbText[index].text = item.name + ': ' + item.score;
+				_this4.lbText[index].text = item.name + ': ' + item.score;
 			});
 		}
 	}, {
@@ -6377,6 +6732,95 @@ var UI = function () {
 			}
 		}
 	}, {
+		key: 'newPowerAvailable',
+		value: function newPowerAvailable(index) {
+			var actionbar = this.actionbarGroup.getAt(index);
+			actionbar.show.start();
+			actionbar.events.onInputDown.add(this.showPowerOption, { text: this.getPowerTexts(index), _this: this });
+
+			if (!this.game.onMobile) {
+				var key = this.hotkeyList[index];
+				key.onDown.add(this.showPowerOption, { text: this.getPowerTexts(index), _this: this });
+			}
+		}
+	}, {
+		key: 'showPowerOption',
+		value: function showPowerOption() {
+			var _this = this._this;
+			var text = this.text;
+
+			_this.opt1Text.text = text.opt1Text;
+			_this.opt2Text.text = text.opt2Text;
+			_this.opt1Button.loadTexture(text.btn1Texture);
+			_this.opt2Button.loadTexture(text.btn2Texture);
+			_this.opt1Button.actionbarIndex = text.index;
+			_this.opt2Button.actionbarIndex = text.index;
+
+			_this.showHeroBtns.start();
+		}
+	}, {
+		key: 'getPowerTexts',
+		value: function getPowerTexts(index) {
+			var texts = { index: index };
+			switch (index) {
+				case 0:
+					texts.opt1Text = 'Shield';
+					texts.opt2Text = 'Heal';
+					texts.btn1Texture = 'icon_shield';
+					texts.btn2Texture = 'icon_heal';
+					break;
+				case 1:
+					texts.opt1Text = 'Seeker';
+					texts.opt2Text = 'Multishot';
+					texts.btn1Texture = 'icon_seeker';
+					texts.btn2Texture = 'icon_multishot';
+					break;
+				case 2:
+					texts.opt1Text = 'Magnet';
+					texts.opt2Text = 'Warpspeed';
+					texts.btn1Texture = 'icon_magnet';
+					texts.btn2Texture = 'icon_warpspeed';
+					break;
+				case 3:
+					texts.opt1Text = 'Trap';
+					texts.opt2Text = 'Bomb';
+					texts.btn1Texture = 'icon_magnet';
+					texts.btn2Texture = 'icon_warpspeed';
+					break;
+			}
+
+			return texts;
+		}
+	}, {
+		key: 'sendPowerUpgrade',
+		value: function sendPowerUpgrade(button) {
+			this.hideHeroBtns.start();
+
+			var chosenPower = this.game.add.sprite(0, 0, button.key);
+			chosenPower.anchor.setTo(0.5);
+			var actionbar = this.actionbarGroup.getAt(button.actionbarIndex);
+			actionbar.hide();
+			actionbar.addChild(chosenPower);
+			actionbar.events.onInputDown.removeAll();
+			actionbar.events.onInputDown.add(this.activateHeroPower, this, 0, actionbar);
+			if (!this.game.onMobile) {
+				var key = this.hotkeyList[button.actionbarIndex];
+				key.onDown.removeAll();
+				key.onDown.add(this.activateHeroPower, this, 0, actionbar);
+			}
+
+			this.game.room.send({ powerChosen: { option: button.opt, index: actionbar.powerNumber } });
+		}
+	}, {
+		key: 'activateHeroPower',
+		value: function activateHeroPower(BomfunkMCs, bar) {
+			if (bar.cooldown < Date.now()) {
+				bar.cooldownTween.start();
+				this.game.room.send({ activatePower: bar.powerNumber });
+				bar.cooldown = Date.now() + 30000;
+			}
+		}
+	}, {
 		key: 'addPoints',
 		value: function addPoints() {
 			this.stats.points++;
@@ -6395,11 +6839,23 @@ var UI = function () {
 		key: 'textOver',
 		value: function textOver(button, mouse) {
 			button.alpha = 1;
+			button.scale.setTo(1.3);
 		}
 	}, {
 		key: 'textOut',
 		value: function textOut(button, mouse) {
 			button.alpha = 0.5;
+			button.scale.setTo(1);
+		}
+	}, {
+		key: 'buttonOver',
+		value: function buttonOver(button) {
+			button.alpha = 1;
+		}
+	}, {
+		key: 'buttonOut',
+		value: function buttonOut(button) {
+			button.alpha = 0.75;
 		}
 	}]);
 
@@ -6408,7 +6864,7 @@ var UI = function () {
 
 exports.default = UI;
 
-},{"./HealthBar":41}],46:[function(require,module,exports){
+},{"./HealthBar":41}],48:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6460,11 +6916,9 @@ var Boot = function (_Phaser$State) {
 	}, {
 		key: "create",
 		value: function create() {
-			//PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
-			//Phaser.Canvas.setImageRenderingCrisp(this.game.canvas);
-			//Phaser.Canvas.setSmoothingEnabled(this.game.canvas, false);
-			//this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 			this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+			this.game.scale.pageAlignVertically = false;
+			this.game.scale.pageAlignHorizontally = false;
 			this.game.canvas.oncontextmenu = function (e) {
 				e.preventDefault();
 			};
@@ -6477,7 +6931,7 @@ var Boot = function (_Phaser$State) {
 
 exports.default = Boot;
 
-},{}],47:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6505,6 +6959,10 @@ var _Client2 = _interopRequireDefault(_Client);
 var _Bullet = require('objects/Bullet');
 
 var _Bullet2 = _interopRequireDefault(_Bullet);
+
+var _Seeker = require('objects/Seeker');
+
+var _Seeker2 = _interopRequireDefault(_Seeker);
 
 var _Bit = require('objects/Bit');
 
@@ -6559,7 +7017,7 @@ var Main = function (_Phaser$State) {
 			this.game.time.advancedTiming = true;
 
 			//Background
-			this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield2');
+			this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
 			this.starfield.fixedToCamera = true;
 			this.starfield.alpha = 0.5;
 
@@ -6569,14 +7027,23 @@ var Main = function (_Phaser$State) {
 			this.bitsPool = this.game.add.group();
 			this.powerUpPool = this.game.add.group();
 			this.cometPool = this.game.add.group();
-			this.visiblePlayers = [];
+			this.seekerPool = this.game.add.group();
 			this.clients = {};
 			this.id;
+
+			//Death particles
+			this.deathEmitter = this.game.add.emitter(0, 0, 20);
+			this.deathEmitter.makeParticles('deathParticle');
+			this.deathEmitter.setAlpha(1, 0, 2000);
+			this.deathEmitter.setScale(3, 0, 3, 0, 2000);
+			this.deathEmitter.lifespan = 2000;
+			this.deathEmitter.gravity = 0;
 
 			this.createBulletPool();
 			this.createBitsPool();
 			this.createPowerUpPool();
 			this.createCometPool();
+			this.createSeekerPool();
 
 			this.netListener();
 		}
@@ -6598,7 +7065,7 @@ var Main = function (_Phaser$State) {
 				if (message.me) {
 					var me = message.me;
 					_this2.id = me.id;
-					_this2.clients[_this2.id] = new _Player2.default(_this2.game, 0, 0, 100, 0);
+					_this2.clients[_this2.id] = new _Player2.default(_this2.game, _this2.game.world.centerX, _this2.game.world.centerY, 0, 100, 0);
 					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 				}
 
@@ -6624,11 +7091,9 @@ var Main = function (_Phaser$State) {
 					var _player2 = _this2.clients[message.bullet.id];
 					if (_player2) {
 						var bullet = _this2.bulletPool.getFirstDead();
-						bullet.owner = message.bullet.owner;
 						bullet.id = message.bullet.id;
 						bullet.angle = message.bullet.angle;
-						bullet.speed = message.bullet.speed;
-						bullet.timer = Date.now() + 400;
+						bullet.timer = Date.now() + 600;
 						bullet.setTint(_player2.tint);
 						bullet.setTrail(_player2.particles);
 						bullet.setDest(message.bullet.x, message.bullet.y);
@@ -6636,11 +7101,26 @@ var Main = function (_Phaser$State) {
 					}
 				}
 
+				if (message.seeker) {
+					var _player3 = _this2.clients[message.seeker.owner];
+					var target = _this2.clients[message.seeker.target];
+					if (_player3 && target) {
+						var m = message.seeker;
+						var seeker = _this2.seekerPool.getFirstDead();
+						seeker.id = m.owner;
+						seeker.target = target;
+						seeker.timer = Date.now() + 2000;
+						seeker.setTint(_player3.tint);
+						seeker.setTrail(_player3.particles);
+						seeker.reset(_player3.x, _player3.y);
+					}
+				}
+
 				if (message.expGain) {
-					var _player3 = _this2.clients[_this2.id];
-					_player3.exp = message.expGain.exp;
-					_player3.expAmount = message.expGain.expAmount;
-					_player3.ui.expBar.setPercent(_player3.exp / _player3.expAmount * 100);
+					var _player4 = _this2.clients[_this2.id];
+					_player4.exp = message.expGain.exp;
+					_player4.expAmount = message.expGain.expAmount;
+					_player4.ui.expBar.setPercent(_player4.exp / _player4.expAmount * 100);
 				}
 
 				if (message.levelUp) {
@@ -6652,38 +7132,46 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.updateClient) {
-					var m = message.updateClient;
-					var client = _this2.clients[m.id];
+					var _m = message.updateClient;
+					var client = _this2.clients[_m.id];
 
 					if (client) {
-						client.dest.x = m.x;
-						client.dest.y = m.y;
-						client.dest.angle = m.angle - 90;
-						client.setHealth(m.health);
+						if (!client.alive) {
+							client.reset(_m.x, _m.y);
+							client.alpha = 0;
+						}
+
+						client.dest.x = _m.x;
+						client.dest.y = _m.y;
+						client.dest.angle = _m.angle - 90;
+						client.setHealth(_m.health);
+
+						if (_m.active.length > 0) {
+							client.powers.update(_m.active);
+						}
 					}
 				}
 
 				if (message.leaderboard) {
-					var _player4 = _this2.clients[_this2.id];
-					if (_player4) {
-						_player4.ui.updateLeaderboard(message.leaderboard);
+					var _player5 = _this2.clients[_this2.id];
+					if (_player5) {
+						_player5.ui.updateLeaderboard(message.leaderboard);
 					}
 				}
 
 				if (message.respawn) {
-					var _m = message.respawn;
-					var _player5 = _this2.clients[_m.id];
-					if (_player5) {
-						_player5.respawn(_m.x, _m.y);
-						var index = _this2.visiblePlayers.indexOf(_m.id);
-						if (index > -1) _this2.visiblePlayers.splice(index, 1);
-					}
+					var _m2 = message.respawn;
+					var _player6 = _this2.clients[_m2.id];
+					if (_player6) _player6.respawn(_m2.x, _m2.y);
 				}
 
 				if (message.death) {
-					var _m2 = message.death;
-					var _player6 = _this2.clients[_m2.id];
-					if (_player6) _player6.die();
+					var _m3 = message.death;
+					var _player7 = _this2.clients[_m3.id];
+					if (_player7) {
+						_this2.emitDeath(_player7);
+						_player7.die();
+					}
 				}
 			});
 
@@ -6727,6 +7215,16 @@ var Main = function (_Phaser$State) {
 					bit.scale.setTo(0);
 					bit.reset(change.value.x, change.value.y);
 					bit.scaleTween.start();
+					if (change.value.trap) {
+						var fakeBit = _this2.game.add.sprite(bit.x, bit.y, 'bit');
+						fakeBit.scale.setTo(0);
+						fakeBit.anchor.setTo(0.5);
+						_this2.game.add.tween(fakeBit.scale).to({ x: 2, y: 2 }, 500, Phaser.Easing.Linear.none, true);
+						var tween = _this2.game.add.tween(fakeBit).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none, true);
+						tween.onComplete.add(function () {
+							return fakeBit.destroy();
+						});
+					}
 				} else if (change.operation === 'remove') {
 					setTimeout(function () {
 						var bit = _this2.findInGroup(change.path.id, _this2.bitsPool);
@@ -6760,21 +7258,24 @@ var Main = function (_Phaser$State) {
 					comet.scaleTween.start();
 				} else if (change.operation === 'remove') {
 					var _comet = _this2.findInGroup(change.path.id, _this2.cometPool);
-					if (_comet) _comet.kill();
+					if (_comet) {
+						_this2.emitDeath(_comet);
+						_comet.kill();
+					}
 				}
 			});
 		}
 	}, {
 		key: 'createBulletPool',
 		value: function createBulletPool() {
-			for (var i = 0; i < 200; i++) {
+			for (var i = 0; i < 50; i++) {
 				this.bulletPool.add(new _Bullet2.default(this.game));
 			}
 		}
 	}, {
 		key: 'createBitsPool',
 		value: function createBitsPool() {
-			for (var i = 0; i < 120; i++) {
+			for (var i = 0; i < 100; i++) {
 				this.bitsPool.add(new _Bit2.default(this.game));
 			}
 		}
@@ -6788,8 +7289,15 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'createCometPool',
 		value: function createCometPool() {
-			for (var i = 0; i < 20; i++) {
+			for (var i = 0; i < 10; i++) {
 				this.cometPool.add(new _Comet2.default(this.game));
+			}
+		}
+	}, {
+		key: 'createSeekerPool',
+		value: function createSeekerPool() {
+			for (var i = 0; i < 10; i++) {
+				this.seekerPool.add(new _Seeker2.default(this.game));
 			}
 		}
 	}, {
@@ -6812,10 +7320,10 @@ var Main = function (_Phaser$State) {
 			for (var id in this.clients) {
 				if (id !== this.id) {
 					var target = this.clients[id];
-					var dist = this.distranceBetween(this.clients[this.id], target);
+					var dist = this.distanceBetween(this.clients[this.id], target);
 
 					if (dist < 950) {
-						if (target.alpha === 0) {
+						if (target.alive && target.alpha === 0) {
 							target.x = target.dest.x;
 							target.y = target.dest.y;
 							this.game.add.tween(target).to({ alpha: 1 }, 500, Phaser.Easing.Linear.None, true);
@@ -6823,7 +7331,7 @@ var Main = function (_Phaser$State) {
 							target.playerHealthBar.bgSprite.alpha = 1;
 						}
 					} else {
-						if (target.alpha === 1) {
+						if (target.alive && target.alpha === 1) {
 							target.playerHealthBar.barSprite.alpha = 0;
 							target.playerHealthBar.bgSprite.alpha = 0;
 							this.game.add.tween(target).to({ alpha: 0 }, 500, Phaser.Easing.Linear.None, true);
@@ -6838,32 +7346,76 @@ var Main = function (_Phaser$State) {
 			var _this3 = this;
 
 			this.bulletPool.forEachAlive(function (bullet) {
-				for (var id in _this3.clients) {
-					if (bullet.id !== id) {
-						if (_this3.clients[id].alive) {
-							var player = _this3.clients[id];
+				_this3.checkCollision(bullet);
+			}, this);
+			this.seekerPool.forEachAlive(function (seeker) {
+				_this3.checkCollision(seeker);
+			}, this);
+		}
+	}, {
+		key: 'checkCollision',
+		value: function checkCollision(bullet) {
+			var _this4 = this;
 
-							if (_this3.distranceBetween(player, bullet) < 30) {
-								var shooter = _this3.clients[bullet.id];
-								if (shooter) shooter.particles.emitHit(bullet.x, bullet.y);
+			for (var id in this.clients) {
+				if (bullet.id !== id) {
+					if (this.clients[id].alive) {
+						var player = this.clients[id];
+
+						if (player.powers.active.includes('shield')) {
+							if (this.distanceBetween(player, bullet) < 40) {
+								var shooter = this.clients[bullet.id];
+								if (shooter) {
+									shooter.particles.emitHit(bullet.x, bullet.y);
+								}
+								bullet.kill();
+							}
+						} else {
+							if (this.distanceBetween(player, bullet) < 25) {
+								var _shooter = this.clients[bullet.id];
+								if (_shooter) {
+									_shooter.particles.emitHit(bullet.x, bullet.y);
+									this.tweenTint(player, player.originalTint, 0xffffff, 50);
+								}
+
 								bullet.kill();
 							}
 						}
 					}
 				}
+			}
 
-				_this3.cometPool.forEachAlive(function (comet) {
-					if (_this3.distranceBetween(comet, bullet) < 25) {
-						var _player7 = _this3.clients[bullet.id];
-						if (_player7) _player7.particles.emitHit(bullet.x, bullet.y);
-						bullet.kill();
+			this.cometPool.forEachAlive(function (comet) {
+				if (_this4.distanceBetween(comet, bullet) < 25) {
+					var _player8 = _this4.clients[bullet.id];
+					if (_player8) {
+						_player8.particles.emitHit(bullet.x, bullet.y);
+						_this4.tweenTint(comet, comet.originalTint, 0xffffff, 50);
 					}
-				});
-			}, this);
+					bullet.kill();
+				}
+			});
 		}
 	}, {
-		key: 'distranceBetween',
-		value: function distranceBetween(point1, point2) {
+		key: 'emitDeath',
+		value: function emitDeath(obj) {
+			this.deathEmitter.x = obj.x;
+			this.deathEmitter.y = obj.y;
+			this.deathEmitter.start(true, 2000, null, 5);
+		}
+	}, {
+		key: 'tweenTint',
+		value: function tweenTint(obj, startColor, endColor, time) {
+			var colorBlend = { step: 0 };
+			var colorTween = this.game.add.tween(colorBlend).to({ step: 100 }, time, Phaser.Easing.Circular.InOut, true, 0, 0, true);
+
+			colorTween.onUpdateCallback(function () {
+				obj.tint = Phaser.Color.interpolateColor(startColor, endColor, 100, colorBlend.step);
+			});
+		}
+	}, {
+		key: 'distanceBetween',
+		value: function distanceBetween(point1, point2) {
 			var dx = point1.x - point2.x;
 			var dy = point1.y - point2.y;
 			return Math.sqrt(dx * dx + dy * dy);
@@ -6875,7 +7427,7 @@ var Main = function (_Phaser$State) {
 
 exports.default = Main;
 
-},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Comet":40,"objects/Player":43,"objects/PowerUp":44}],48:[function(require,module,exports){
+},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Comet":40,"objects/Player":43,"objects/PowerUp":44,"objects/Seeker":46}],50:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6929,7 +7481,7 @@ var Menu = function (_Phaser$State) {
 			this.game.world.setBounds(0, 0, this.game.width, this.game.heigth);
 
 			//Background
-			this.starfield = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'starfield2');
+			this.starfield = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'starfield');
 			this.starfield.fixedToCamera = true;
 			this.starfield.alpha = 0.5;
 
@@ -6942,8 +7494,9 @@ var Menu = function (_Phaser$State) {
 			this.button.innerHTML = 'Enter';
 			this.gameDiv = document.getElementById("content");
 			this.setUiPos();
-			/*this.game.scale.setResizeCallback(() => { --- This event has to be removed before changing state
-       this.setUiPos();
+			/*this.game.scale.setResizeCallback(() => {
+       this.scale.refresh();
+       console.log("lol");
    }, this);*/
 			this.uiDiv.appendChild(this.input);
 			this.uiDiv.appendChild(this.button);
@@ -6970,7 +7523,7 @@ var Menu = function (_Phaser$State) {
 
 exports.default = Menu;
 
-},{}],49:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7021,9 +7574,21 @@ var Preload = function (_Phaser$State) {
 			this.game.load.image('bit', 'assets/bit.png');
 			this.game.load.image('powerUp', 'assets/powerUp.png');
 			this.game.load.image('bullet', 'assets/bullet.png');
+			this.game.load.image('seeker', 'assets/seeker.png');
 			this.game.load.image('comet', 'assets/comet.png');
 			this.game.load.image('deathParticle', 'assets/particle.png');
-			this.game.load.image('starfield2', 'assets/starfield2.png');
+			this.game.load.image('button', 'assets/button.png');
+			this.game.load.image('starfield', 'assets/starfield.png');
+			this.game.load.image('actionbar', 'assets/actionbar.png');
+			this.game.load.image('power_shield', 'assets/power_shield.png');
+			this.game.load.image('power_magnet', 'assets/power_magnet.png');
+			this.game.load.image('icon_generic', 'assets/icon_generic.png');
+			this.game.load.image('icon_shield', 'assets/icon_shield.png');
+			this.game.load.image('icon_heal', 'assets/icon_heal.png');
+			this.game.load.image('icon_multishot', 'assets/icon_multishot.png');
+			this.game.load.image('icon_seeker', 'assets/icon_seeker.png');
+			this.game.load.image('icon_magnet', 'assets/icon_magnet.png');
+			this.game.load.image('icon_warpspeed', 'assets/icon_warpspeed.png');
 
 			this.load.atlas('arcade', 'assets/joystick/arcade-joystick.png', 'assets/joystick/arcade-joystick.json');
 

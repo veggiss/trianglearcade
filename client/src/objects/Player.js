@@ -1,5 +1,6 @@
 import Particles from './Particles';
 import HealthBar from './HealthBar';
+import Powers from './Powers';
 import UI from './UI';
 
 class Player extends Phaser.Sprite {
@@ -17,8 +18,8 @@ class Player extends Phaser.Sprite {
 		this.angleRate = 100;
 		this.lastUpdate = Date.now() + this.angleRate;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
+		this.originalTint = this.tint;
 		this.dest = {x: x, y: y, angle: this.angle};
-		this.particles = new Particles(this.game, this.tint);
 
 		this.stats = {
 			level: 1,
@@ -34,6 +35,10 @@ class Player extends Phaser.Sprite {
 		//Sprite
 		this.scale.setTo(0.75, 0.75);
 		this.anchor.setTo(0.5);
+		//Emitters and particles
+		this.particles = new Particles(this.game, this.tint);
+		//Powers container
+		this.powers = new Powers(this.game, this);
 		
 		//Healthbar
 		this.playerHealthBar = new HealthBar(this.game, {

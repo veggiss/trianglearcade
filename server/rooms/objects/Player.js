@@ -29,6 +29,7 @@ module.exports = class Player {
             respawnTime: 2000,
             expRate: 1.1,
             bullets: [],
+            seekers: [],
             exp: 0,
             expNeeded: 200,
             score: 0,
@@ -37,7 +38,9 @@ module.exports = class Player {
             maxSpeed: 8,
             speedBoost: 0,
             damage: 10,
-            angVel: 0.1
+            angVel: 0.1,
+            powers: {},
+            powerList: ['', '', '', '']
         });
     }
 
@@ -58,14 +61,13 @@ module.exports = class Player {
                 id: bullet.owner,
                 x: bullet.x,
                 y: bullet.y,
-                angle: bullet.angle,
-                speed: bullet.speed
+                angle: bullet.angle
             }}, {x: this.pos.x, y: this.pos.y, id: this.id}, 1000);
         }
     }
 
     move() {
-        if (this.private.moveUp) {
+        if (this.private.moveUp || this.activePower('warpspeed')) {
             this.accelerate();
         } else {
             this.decelerate();
@@ -75,7 +77,9 @@ module.exports = class Player {
     }
 
     accelerate() {
-        if (this.private.speed < (this.private.maxSpeed + this.private.speedBoost)) {
+        if (this.activePower('warpspeed')) {
+            this.private.speed = 20;
+        } else {
             this.private.speed += this.private.maxSpeed * this.private.acceleration;
             if (this.private.speed > this.private.maxSpeed) this.private.speed = this.private.maxSpeed;
         }
@@ -203,10 +207,11 @@ module.exports = class Player {
     }
 
     die() {
-        console.log('Die: ', this.pos.x, this.pos.y);
         this.private.alive = false;
         this.private.shooting = false;
         this.private.speed = 0;
+        this.deactivatePowers();
+        
         this.private.network.sendToAllWithinProxy({death: {
             id: this.id,
             x: this.pos.x,
@@ -218,7 +223,6 @@ module.exports = class Player {
 
     respawn() {
         setTimeout(() => {
-            console.log('Respawn: ', this.pos.x, this.pos.y);
             let pos = util.ranWorldPos();
             let angle = util.ranPlayerAngle();
             this.pos.x = pos.x;
@@ -245,6 +249,33 @@ module.exports = class Player {
                 delete obj.splice(index, 1);
             }
         });
+    }
+
+    deactivatePowers() {
+        for (let type in this.private.powers) {
+            this.private.powers[type].active = false;
+        }
+    }
+
+    activePower(type) {
+        let active = false;
+        let powerObj = this.private.powers[type];
+        if (powerObj) {
+            active = powerObj.active;
+        }
+
+        return active;
+    }
+
+    getActiveList() {
+        let list = [];
+        for (let type in this.private.powers) {
+            if (this.private.powers[type].active) {
+                list.push(type);
+            }
+        }
+
+        return list;
     }
 
     lerp(a, b, n) {

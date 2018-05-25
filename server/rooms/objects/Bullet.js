@@ -11,7 +11,7 @@ module.exports = class Bullet {
             x: x + Math.sin((this.angle) / 180.0 * Math.PI) * 750,
             y: y - Math.cos((this.angle) / 180.0 * Math.PI) * 750
         }
-        this.timer = Date.now() + 400;
+        this.timer = Date.now() + 800;
     }
 
     update() {

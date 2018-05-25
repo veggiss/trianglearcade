@@ -48,6 +48,32 @@ module.exports = class StateHandlerRoom extends Room {
             if (typeof(data.updateAngle) === 'number') {
                 player.updateAngle(data.updateAngle);
             }
+
+            if (typeof(data.activatePower) === 'number') {
+                if (player.private.alive) {
+                    let type = player.private.powerList[data.activatePower];
+                    console.log(type, data.activatePower);
+                    if (type) {
+                        this.state.activateHeroPower(player, type);
+                    }
+                }
+            }
+
+            if (typeof(data.powerChosen) === 'object') {
+                let option = data.powerChosen.option;
+                let index = data.powerChosen.index;
+                if (option === 0 || option === 1) {
+                    let powerLength = Object.keys(player.private.powers).length;
+                    if (index <= 3 && index >= 0 && powerLength < 4) {
+                        let type = this.state.private.powerTypes[index][option];
+                        player.private.powerList[index] = type;
+                        player.private.powers[type] = {
+                            cooldown: false,
+                            active: false
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -71,7 +97,6 @@ module.exports = class StateHandlerRoom extends Room {
     }
 
     sendToClient(id, message) {
-        //Temporary solution
         this.clients.forEach(client => {
             if (client.sessionId === id) this.send(client, message);
         });
