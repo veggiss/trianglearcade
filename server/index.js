@@ -17,5 +17,10 @@ const gameServer = new colyseus.Server({
 });
 
 gameServer.register("game", game);
+setInterval(() => {
+	gameServer.server.clients.forEach((client) => {
+		client.send('ping');
+	});
+}, 1000);
 
 gameServer.listen(port);
