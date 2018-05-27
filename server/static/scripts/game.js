@@ -5980,12 +5980,14 @@ var Player = function (_Phaser$Sprite) {
 		//Inputs
 		if (_this.game.onMobile) {
 			_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
+			_this.stick.scale = 0.5;
 			_this.stick.alignBottomLeft();
 
 			_this.stick.onDown.add(_this.playerControls, _this, 1, true);
 			_this.stick.onUp.add(_this.playerControls, _this, 1, false);
 
 			_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
+			_this.buttonA.scale = 0.5;
 			_this.buttonA.alignBottomRight();
 			_this.buttonA.onDown.add(_this.playerShoot, _this, 1, true);
 			_this.buttonA.onUp.add(_this.playerShoot, _this, 1, false);
@@ -7147,12 +7149,12 @@ var Boot = function (_Phaser$State) {
 			var height = window.innerHeight;
 
 			if (window.innerWidth < 1280 || window.innerHeight < 720) {
-				width = window.innerWidth * 2;
-				height = window.innerHeight * 2;
+				width = window.innerWidth * 1.5;
+				height = window.innerHeight * 1.5;
 			}
 
 			this.game.scale.setGameSize(width, height);
-			this.game.scale.scaleMode = this.game.device.desktop ? Phaser.ScaleManager.RESIZE : Phaser.ScaleManager.SHOW_ALL;
+			this.game.scale.scaleMode = !this.game.device.desktop ? Phaser.ScaleManager.RESIZE : Phaser.ScaleManager.SHOW_ALL;
 			this.game.canvas.oncontextmenu = function (e) {
 				e.preventDefault();
 			};
