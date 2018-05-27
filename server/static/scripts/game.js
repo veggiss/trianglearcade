@@ -5144,7 +5144,7 @@ function _inherits(subClass, superClass) {
 }
 
 var config = {
-	renderer: Phaser.WEBGL,
+	renderer: Phaser.AUTO,
 	parent: 'trianglearcade'
 };
 
@@ -6655,7 +6655,7 @@ var UI = function () {
 		this.nameText = this.game.add.bitmapText(this.game.canvas.width / 2 + 100, this.game.canvas.height - 185, 'font', this.game.myName, 20);
 		this.levelText = this.game.add.bitmapText(this.game.canvas.width / 2 + 100, this.game.canvas.height - 165, 'font', 'Level: 0', 25);
 
-		this.pointsText = this.game.add.bitmapText(83, 140, 'font', 'Points available: 0', 16);
+		this.pointsText = this.game.add.bitmapText(83, 20, 'font', 'Points available: 0', 16);
 
 		this.statTextGroup.add(this.nameText);
 		this.statTextGroup.add(this.scoreText);
@@ -6700,12 +6700,12 @@ var UI = function () {
 			var chosenPower = _this2.game.add.sprite(0, 0, null);
 			var newPowerIcon = _this2.game.add.sprite(0, 0, 'icon_generic');
 			var cooldownText = _this2.game.add.bitmapText(0, 0, 'font', '', 40);
+			var hotkeyIcon = void 0;
 
 			if (!_this2.game.onMobile) {
-				var hotkeyIcon = _this2.game.add.bitmapText(-32, 32, 'font', '[' + hotkeys[_i] + ']', 20);
+				hotkeyIcon = _this2.game.add.bitmapText(-32, 32, 'font', '[' + hotkeys[_i] + ']', 20);
 				hotkeyIcon.anchor.setTo(0, 1);
 				_this2.lbTextGroup.add(hotkeyIcon);
-				actionbar.addChild(hotkeyIcon);
 			}
 
 			chosenPower.anchor.setTo(0.5);
@@ -6744,6 +6744,7 @@ var UI = function () {
 			actionbar.addChild(chosenPower);
 			actionbar.addChild(newPowerIcon);
 			actionbar.addChild(cooldownText);
+			if (!_this2.game.onMobile) actionbar.addChild(hotkeyIcon);
 			_this2.actionbarGroup.add(actionbar);
 
 			spaceX += actionbar.width + 10;
@@ -6754,7 +6755,7 @@ var UI = function () {
 		}
 
 		//Stat actionbar UI
-		var spaceY = 170;
+		var spaceY = 50;
 
 		var _loop2 = function _loop2(_i2) {
 			var actionbar = _this2.game.add.sprite(15, spaceY, 'actionbar_stat');
@@ -6763,10 +6764,10 @@ var UI = function () {
 			var add = _this2.game.add.sprite(155, 0, 'actionbar_add');
 
 			if (!_this2.game.onMobile) {
-				var hotkeyIcon = _this2.game.add.bitmapText(2, 16, 'font', '[' + hotkeys_stat[_i2] + ']', 13);
-				hotkeyIcon.anchor.setTo(0, 1);
-				_this2.lbTextGroup.add(hotkeyIcon);
-				actionbar.addChild(hotkeyIcon);
+				var _hotkeyIcon = _this2.game.add.bitmapText(2, 16, 'font', '[' + hotkeys_stat[_i2] + ']', 13);
+				_hotkeyIcon.anchor.setTo(0, 1);
+				_this2.lbTextGroup.add(_hotkeyIcon);
+				actionbar.addChild(_hotkeyIcon);
 			}
 
 			actionbar.anchor.setTo(0, 0.5);
@@ -7149,8 +7150,8 @@ var Boot = function (_Phaser$State) {
 			var height = window.innerHeight;
 
 			if (window.innerWidth < 1280 || window.innerHeight < 720) {
-				width = window.innerWidth * 1.5;
-				height = window.innerHeight * 1.5;
+				width = window.innerWidth * 1.75;
+				height = window.innerHeight * 1.75;
 			}
 
 			this.game.scale.setGameSize(width, height);
@@ -7253,8 +7254,7 @@ var Main = function (_Phaser$State) {
 			this.game.stage.backgroundColor = '#021421';
 			this.game.stage.disableVisibilityChange = true;
 			this.game.world.setBounds(0, 0, 2880, 2880);
-			this.game.onMobile = true; //!this.game.device.desktop;
-			this.game.time.advancedTiming = true;
+			this.game.onMobile = !this.game.device.desktop;
 
 			//Background
 			this.starfield = this.add.tileSprite(0, 0, 2880, 2880, 'starfield');

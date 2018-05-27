@@ -104,7 +104,7 @@ class UI {
 		this.nameText = this.game.add.bitmapText(this.game.canvas.width/2 + 100, this.game.canvas.height - 185, 'font', this.game.myName, 20);
 		this.levelText = this.game.add.bitmapText(this.game.canvas.width/2 + 100, this.game.canvas.height - 165, 'font', 'Level: 0', 25);
 
-		this.pointsText = this.game.add.bitmapText(83, 140, 'font', 'Points available: 0', 16);
+		this.pointsText = this.game.add.bitmapText(83, 20, 'font', 'Points available: 0', 16);
 
 		this.statTextGroup.add(this.nameText);
 		this.statTextGroup.add(this.scoreText);
@@ -148,12 +148,12 @@ class UI {
 			let chosenPower = this.game.add.sprite(0, 0, null);
 			let newPowerIcon = this.game.add.sprite(0, 0, 'icon_generic');
 			let cooldownText = this.game.add.bitmapText(0, 0, 'font', '', 40);
+			let hotkeyIcon;
 
 			if (!this.game.onMobile) {
-				let hotkeyIcon = this.game.add.bitmapText(-32, 32, 'font', `[${hotkeys[i]}]`, 20);
+				hotkeyIcon = this.game.add.bitmapText(-32, 32, 'font', `[${hotkeys[i]}]`, 20);
 				hotkeyIcon.anchor.setTo(0, 1);
 				this.lbTextGroup.add(hotkeyIcon);
-				actionbar.addChild(hotkeyIcon);
 			}
 
 			chosenPower.anchor.setTo(0.5);
@@ -188,13 +188,14 @@ class UI {
 			actionbar.addChild(chosenPower);
 			actionbar.addChild(newPowerIcon);
 			actionbar.addChild(cooldownText);
+			if (!this.game.onMobile) actionbar.addChild(hotkeyIcon);
 			this.actionbarGroup.add(actionbar);
 
 			spaceX += actionbar.width + 10;
 		}
 
 		//Stat actionbar UI
-		let spaceY = 170;
+		let spaceY = 50;
 		for (let i = 0; i < 4; i++) {
 			let actionbar = this.game.add.sprite(15, spaceY, 'actionbar_stat');
 			let label = this.game.add.bitmapText(20, 0, 'font', `${stat_label[i]}`, 20);
