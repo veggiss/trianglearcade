@@ -5144,8 +5144,8 @@ function _inherits(subClass, superClass) {
 }
 
 var config = {
-	width: window.innerWidth,
-	height: window.innerHeight,
+	width: window.innerWidth * 2,
+	height: window.innerHeight * 2,
 	renderer: Phaser.WEBGL,
 	parent: 'trianglearcade'
 };
