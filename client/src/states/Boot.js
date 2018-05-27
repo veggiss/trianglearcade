@@ -4,7 +4,7 @@ class Boot extends Phaser.State {
 	}
 
 	create() {
-        this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+        this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.game.scale.pageAlignVertically = false;
         this.game.scale.pageAlignHorizontally = false;
 		this.game.canvas.oncontextmenu = function (e) { e.preventDefault(); }

@@ -5144,9 +5144,9 @@ function _inherits(subClass, superClass) {
 }
 
 var config = {
-	width: 0,
-	height: 0,
-	renderer: Phaser.AUTO,
+	width: window.innerWidth,
+	height: window.innerHeight,
+	renderer: Phaser.WEBGL,
 	parent: 'trianglearcade'
 };
 
@@ -7144,7 +7144,7 @@ var Boot = function (_Phaser$State) {
 	}, {
 		key: "create",
 		value: function create() {
-			this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+			this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 			this.game.scale.pageAlignVertically = false;
 			this.game.scale.pageAlignHorizontally = false;
 			this.game.canvas.oncontextmenu = function (e) {
