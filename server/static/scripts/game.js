@@ -7149,9 +7149,9 @@ var Boot = function (_Phaser$State) {
 			var width = window.innerWidth;
 			var height = window.innerHeight;
 
-			if (window.innerWidth < 1280 || window.innerHeight < 720) {
-				width = window.innerWidth * 2;
-				height = window.innerHeight * 2;
+			if (!this.game.device.desktop) {
+				width = window.innerWidth * 1.5;
+				height = window.innerHeight * 1.5;
 			}
 
 			this.game.scale.setGameSize(width, height);
