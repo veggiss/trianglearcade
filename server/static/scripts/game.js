@@ -5144,8 +5144,6 @@ function _inherits(subClass, superClass) {
 }
 
 var config = {
-	width: window.innerWidth * 2,
-	height: window.innerHeight * 2,
 	renderer: Phaser.WEBGL,
 	parent: 'trianglearcade'
 };
@@ -5161,6 +5159,7 @@ var Game = function (_Phaser$Game) {
 		var endpoint = window.location.hostname.indexOf("herokuapp") === -1 ? "ws://localhost:3000" // - Local
 		: window.location.protocol.replace("http", "ws") + '//' + window.location.hostname; // - Heroku/remote
 		_this.colyseus = new _colyseus.Client(endpoint);
+
 		_this.state.add('Boot', _Boot2.default, false);
 		_this.state.add('Preload', _Preload2.default, false);
 		_this.state.add('Menu', _Menu2.default, false);
@@ -5953,14 +5952,12 @@ var Player = function (_Phaser$Sprite) {
 		_this.health = health;
 		_this.maxHealth = 100;
 		_this.angle = angle;
-		_this.deg = 0;
 		_this.exp = 0;
 		_this.expAmount = 0;
 		_this.angleRate = 200;
 		_this.lastUpdate = Date.now() + _this.angleRate;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.originalTint = _this.tint;
-		_this.stickDown = false;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
 		_this.stats = {
@@ -5985,6 +5982,7 @@ var Player = function (_Phaser$Sprite) {
 			_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
 			_this.stick.alignBottomLeft();
 
+			_this.stick.onDown.add(_this.playerControls, _this, 1, true);
 			_this.stick.onUp.add(_this.playerControls, _this, 1, false);
 
 			_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
@@ -6030,9 +6028,14 @@ var Player = function (_Phaser$Sprite) {
 			this.x = this.lerp(this.x, this.dest.x, 0.1);
 			this.y = this.lerp(this.y, this.dest.y, 0.1);
 
-			if (this.game.onMobile) {} else {}
-			var destAngle = this.stick.angle;
-			//let destAngle = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+			var destAngle = void 0;
+
+			if (this.game.onMobile) {
+				destAngle = this.stick.angle;
+			} else {
+				destAngle = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+			}
+
 			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, destAngle);
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
@@ -6070,14 +6073,10 @@ var Player = function (_Phaser$Sprite) {
 			if (this.lastUpdate < Date.now()) {
 				var deg = void 0;
 
-				deg = this.stick.isDown ? Phaser.Math.radToDeg(this.stick.rotation) + 90 : this.deg + 90;
-				if (this.stick.force > 0.4) {
-					this.playerControls({ isDown: true });
+				if (this.game.onMobile) {
+					deg = this.stick.angle + 90;
 				} else {
-					this.playerControls({ isDown: false });
-				}
-				if (this.game.onMobile) {} else {
-					//deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
+					deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
 				}
 
 				var destAngle = deg < 0 ? deg + 360 : deg;
@@ -6596,8 +6595,8 @@ var UI = function () {
 
 		//Experience bar
 		this.expBar = new _HealthBar2.default(this.game, {
-			x: window.innerWidth / 2 - 5,
-			y: window.innerHeight - 20,
+			x: this.game.canvas.width / 2 - 5,
+			y: this.game.canvas.height - 20,
 			width: 324,
 			height: 24,
 			animationDuration: 200,
@@ -6648,11 +6647,11 @@ var UI = function () {
 		this.healthBarGroup.add(this.healthbar_bar);
 
 		// Stat UI
-		this.scoreText = this.game.add.bitmapText(window.innerWidth / 2 - 100, window.innerHeight - 185, 'font', 'Score:', 20);
-		this.posText = this.game.add.bitmapText(window.innerWidth / 2 - 100, window.innerHeight - 165, 'font', 'Position:', 25);
+		this.scoreText = this.game.add.bitmapText(this.game.canvas.width / 2 - 100, this.game.canvas.height - 185, 'font', 'Score:', 20);
+		this.posText = this.game.add.bitmapText(this.game.canvas.width / 2 - 100, this.game.canvas.height - 165, 'font', 'Position:', 25);
 
-		this.nameText = this.game.add.bitmapText(window.innerWidth / 2 + 100, window.innerHeight - 185, 'font', this.game.myName, 20);
-		this.levelText = this.game.add.bitmapText(window.innerWidth / 2 + 100, window.innerHeight - 165, 'font', 'Level: 0', 25);
+		this.nameText = this.game.add.bitmapText(this.game.canvas.width / 2 + 100, this.game.canvas.height - 185, 'font', this.game.myName, 20);
+		this.levelText = this.game.add.bitmapText(this.game.canvas.width / 2 + 100, this.game.canvas.height - 165, 'font', 'Level: 0', 25);
 
 		this.pointsText = this.game.add.bitmapText(83, 140, 'font', 'Points available: 0', 16);
 
@@ -6675,7 +6674,7 @@ var UI = function () {
 		}
 
 		// Leaderboard UI
-		this.lbHeader = this.game.add.bitmapText(window.innerWidth - 100, 25, 'font', 'Leaderboard', 32);
+		this.lbHeader = this.game.add.bitmapText(this.game.canvas.width - 100, 25, 'font', 'Leaderboard', 32);
 		this.lbHeader.anchor.setTo(0.5);
 		this.lbText = [];
 		var spacing = 0;
@@ -6692,10 +6691,10 @@ var UI = function () {
 		this.lbTextGroup.add(this.lbHeader);
 
 		//Power actionbar UI
-		var spaceX = window.innerWidth / 2 - 134;
+		var spaceX = this.game.canvas.width / 2 - 134;
 
 		var _loop = function _loop(_i) {
-			var actionbar = _this2.game.add.sprite(spaceX, window.innerHeight - 110, 'actionbar');
+			var actionbar = _this2.game.add.sprite(spaceX, _this2.game.canvas.height - 110, 'actionbar');
 			var chosenPower = _this2.game.add.sprite(0, 0, null);
 			var newPowerIcon = _this2.game.add.sprite(0, 0, 'icon_generic');
 			var cooldownText = _this2.game.add.bitmapText(0, 0, 'font', '', 40);
@@ -6803,7 +6802,7 @@ var UI = function () {
 		}
 
 		//Choose heropower UI
-		this.choosetext = this.game.add.bitmapText(window.innerWidth / 2, window.innerHeight - 320, 'font', 'Choose hero power:', 26);
+		this.choosetext = this.game.add.bitmapText(this.game.canvas.width / 2, this.game.canvas.height - 320, 'font', 'Choose hero power:', 26);
 		this.choosetext.anchor.setTo(0.5);
 
 		this.opt1Button = this.game.add.sprite(-50, 50, 'icon_generic');
@@ -6842,7 +6841,7 @@ var UI = function () {
 		}, this);
 
 		/*this.game.scale.setResizeCallback(() => { //--- This event has to be removed before changing state
-      this.lbHeader.x = window.innerWidth - 100;
+      this.lbHeader.x = this.game.canvas.width - 100;
   }, this);*/
 
 		this.expBar.setFixedToCamera(true);
@@ -7144,9 +7143,16 @@ var Boot = function (_Phaser$State) {
 	}, {
 		key: "create",
 		value: function create() {
-			this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-			this.game.scale.pageAlignVertically = false;
-			this.game.scale.pageAlignHorizontally = false;
+			var width = window.innerWidth;
+			var height = window.innerHeight;
+
+			if (window.innerWidth < 1280 || window.innerHeight < 720) {
+				width = window.innerWidth * 1.3;
+				height = window.innerHeight * 1.3;
+			}
+
+			this.game.scale.setGameSize(width, height);
+			this.game.scale.scaleMode = !this.game.device.desktop ? Phaser.ScaleManager.RESIZE : Phaser.ScaleManager.SHOW_ALL;
 			this.game.canvas.oncontextmenu = function (e) {
 				e.preventDefault();
 			};

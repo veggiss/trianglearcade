@@ -5,8 +5,6 @@ import Menu from 'states/Menu';
 import Main from 'states/Main';
 
 const config = {
-	width: window.innerWidth*2,
-	height: window.innerHeight*2,
 	renderer: Phaser.WEBGL,
 	parent: 'trianglearcade'
 }
@@ -19,6 +17,7 @@ class Game extends Phaser.Game {
 			? "ws://localhost:3000" // - Local
 			: `${window.location.protocol.replace("http", "ws")}//${window.location.hostname}`; // - Heroku/remote
 		this.colyseus = new Client(endpoint);
+
 		this.state.add('Boot', Boot, false);
 		this.state.add('Preload', Preload, false);
 		this.state.add('Menu', Menu, false);
