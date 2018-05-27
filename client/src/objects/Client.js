@@ -7,9 +7,9 @@ class Client extends Phaser.Sprite {
 		super(game, 0, 0, 'spaceship_white');
 
 		this.game = game;
-		this.health = health;
-		this.maxHealth = maxHealth;
-		this.level = level;
+		this.health = 0;
+		this.maxHealth = 0;
+		this.level = 0;
 		this.angle = 0;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.originalTint = this.tint;
@@ -17,10 +17,12 @@ class Client extends Phaser.Sprite {
 		this.alpha = 0;
 		this.dead = false;
 		this.dest = {x: 0, y: 0, angle: this.angle};
+		this.healthBarGroup = this.game.add.group();
+		this.healthBarGroup.z = 2;
 
 	    //Sprite
-	    this.scale.setTo(0.75, 0.75);
-		this.anchor.setTo(0.5, 0.5);
+	    this.scale.setTo(0.75);
+		this.anchor.setTo(0.5);
 		//Particles and emitters
 		this.particles = new Particles(this.game, this.tint);
 		//Powers container
@@ -35,16 +37,16 @@ class Client extends Phaser.Sprite {
 		});
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
-
-		this.game.add.existing(this);
+		this.healthBarGroup.add(this.playerHealthBar.bgSprite);
+		this.healthBarGroup.add(this.playerHealthBar.barSprite);
+		this.kill();
 	}
 
 	update() {
 		if (this.alive) {
-			let x = this.x + Math.sin(this.angle * Math.PI / 180);
-			let y = this.y + Math.cos(this.angle * Math.PI / 180);
-			this.x = this.lerp(x, this.dest.x, 0.1);
-			this.y = this.lerp(y, this.dest.y, 0.1);
+			this.x = this.lerp(this.x, this.dest.x, 0.1);
+			this.y = this.lerp(this.y, this.dest.y, 0.1);
+
 			let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 			this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.075);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
@@ -71,11 +73,6 @@ class Client extends Phaser.Sprite {
 
 	setHealth(value) {
 		this.playerHealthBar.setPercent((value/this.maxHealth) * 100);
-	}
-
-	leave() {
-		this.playerHealthBar.barSprite.destroy();
-		this.playerHealthBar.bgSprite.destroy();
 	}
 
 	lerp(a, b, n) {

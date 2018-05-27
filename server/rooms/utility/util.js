@@ -1,5 +1,7 @@
+const world = {width: 2880, height: 2880};
+
 function ranWorldPos() {
-    return {x: Math.floor(Math.random() * 1520) + 300, y: Math.floor(Math.random() * 1520) + 300};
+    return {x: Math.floor(Math.random() * (world.width - 400)) + 400, y: Math.floor(Math.random() * (world.height - 400)) + 400};
 }
 
 function ranPlayerAngle() {
@@ -146,6 +148,7 @@ function idExistInArr(id, arr) {
 }
 
 module.exports = {
+    world: world,
     ranWorldPos: ranWorldPos,
     ranPlayerAngle: ranPlayerAngle,
     distanceFrom: distanceFrom,

@@ -7,14 +7,12 @@ class Powers {
 
 		//Power assets
 		this.powerShield = this.game.add.sprite(0, 0, 'power_shield');
-		this.powerShield.scale.setTo(0);
 		this.powerShield.tweenIn = this.game.add.tween(this.powerShield.scale).to({x: 1, y: 1}, 500, Phaser.Easing.Elastic.Out);
 		this.powerShield.tweenOut = this.game.add.tween(this.powerShield).to({alpha: 0}, 500, Phaser.Easing.Linear.none);
 		this.powerShield.tweenIn.onStart.add(() => {this.powerShield.revive(); this.powerShield.alpha = 1;});
 		this.powerShield.tweenOut.onComplete.add(() => {this.powerShield.kill(); this.powerShield.scale.setTo(0)});
 
 		this.powerMagnet = this.game.add.sprite(0, 0, 'power_magnet');
-		this.powerMagnet.scale.setTo(0);
 		this.powerMagnet.tweenIn = this.game.add.tween(this.powerMagnet.scale).to({x: 1, y: 1}, 500, Phaser.Easing.Elastic.Out);
 		this.powerMagnet.tweenOut = this.game.add.tween(this.powerMagnet).to({alpha: 0}, 500, Phaser.Easing.Linear.none);
 		this.powerMagnet.tweenIn.onStart.add(() => {this.powerMagnet.revive(); this.powerMagnet.alpha = 1;});
@@ -26,8 +24,9 @@ class Powers {
 
 		this.powersGroup.forEach(power => {
 			power.tint = player.tint;
-			power.kill();
 			power.anchor.setTo(0.5);
+			power.scale.setTo(0.5);
+			power.kill();
 		});
 
 		this.player.addChild(this.powersGroup);
@@ -42,9 +41,9 @@ class Powers {
 						setTimeout(() => {
 							this.powerShield.tweenOut.start();
 							let index = this.active.findIndex(item => {
-								return item === 'shield'
+								return item === 'shield';
 							});
-							this.active.splice(index, 1);
+							if (index) this.active.splice(index, 1);
 						}, 6000);
 					break;
 					case 'magnet':
@@ -52,9 +51,9 @@ class Powers {
 						setTimeout(() => {
 							this.powerMagnet.tweenOut.start();
 							let index = this.active.findIndex(item => {
-								return item === 'magnet'
+								return item === 'magnet';
 							});
-							this.active.splice(index, 1);
+							if (index) this.active.splice(index, 1);
 						}, 10000);
 					break;
 				}

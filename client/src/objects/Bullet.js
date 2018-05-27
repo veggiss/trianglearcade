@@ -5,20 +5,21 @@ class Bullet extends Phaser.Sprite {
 		this.id;
 		this.game = game;
 		this.timer = Date.now();
+		this.trailTimer = Date.now();
 		this.anchor.setTo(0.5, 0.5);
+		this.z = 1;
 		this.particles;
 		this.kill();
-
-		this.game.add.existing(this);
 	}
 
 	update() {
 		if (this.alive && this.dest) {
-	        this.x = this.lerp(this.x, this.dest.x, 0.03);
-	        this.y = this.lerp(this.y, this.dest.y, 0.03);
+	        this.x = this.lerp(this.x, this.dest.x, 0.02);
+	        this.y = this.lerp(this.y, this.dest.y, 0.02);
 
-	        if (this.particles) {
+	        if (this.particles && this.trailTimer < Date.now()) {
 	        	this.particles.bulletTrail(this.x, this.y);
+	        	this.trailTimer = Date.now() + 50;
 	        }
 
 	        if (Date.now() > this.timer) {

@@ -8,12 +8,11 @@ class Bit extends Phaser.Sprite {
 		this.anchor.setTo(0.5, 0.5);
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.scale.setTo(0);
-		this.rotation = Math.random() - 180;
+		this.angle = Math.floor(Math.random() * 360);
 		this.autoCull = true;
-		let rs = (Math.random() * 0.2) + 0.5;
-		this.scaleTween = this.game.add.tween(this.scale).to({x: rs, y: rs}, 1000, Phaser.Easing.Elastic.Out, true);
+		let rs = (Math.random() * 0.3) + 0.5;
+		this.scaleTween = this.game.add.tween(this.scale).to({x: rs, y: rs}, 1000, Phaser.Easing.Elastic.Out);
 		this.kill();
-		this.game.add.existing(this);
 	}
 
 	update() {
@@ -24,8 +23,8 @@ class Bit extends Phaser.Sprite {
 
 	moveToTarget() {
 		if (this.target) {
-			this.x = this.lerp(this.x, this.target.x, 0.1);
-			this.y = this.lerp(this.y, this.target.y, 0.1);
+			this.x = this.lerp(this.x, this.target.x, 0.16);
+			this.y = this.lerp(this.y, this.target.y, 0.16);
 
 			let dx = this.target.x - this.x; 
 			let dy = this.target.y - this.y;

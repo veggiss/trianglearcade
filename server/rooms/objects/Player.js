@@ -6,7 +6,7 @@ module.exports = class Player {
     constructor(id, x, y, angle, network, name) {
         this.id = id;
         this.maxHealth = 100;
-        this.level = 1;
+        this.level = 0;
         this.name = name;
 
         this.pos = util.setEnumerable({
@@ -18,7 +18,6 @@ module.exports = class Player {
 
         this.private = util.setEnumerable({
             network: network,
-            destAngle: this.pos.angle,
             alive: false,
             acceleration: 0.02,
             fireRate: 500,
@@ -27,20 +26,25 @@ module.exports = class Player {
             moveUp: false,
             shooting: false,
             respawnTime: 2000,
-            expRate: 1.1,
+            expRate: 200,
             bullets: [],
             seekers: [],
             exp: 0,
-            expNeeded: 200,
+            expNeeded: 1000,
             score: 0,
             points: 0,
             speed: 0,
             maxSpeed: 8,
             speedBoost: 0,
-            damage: 10,
-            angVel: 1.0,
+            damage: 15,
             powers: {},
-            powerList: ['', '', '', '']
+            powerList: ['', '', '', ''],
+            stats: {
+                firerate: 0,
+                speed: 0,
+                damage: 0,
+                health: 0
+            }
         });
     }
 
@@ -93,13 +97,8 @@ module.exports = class Player {
         }
     }
 
-    getNewAngle() {
-        let shortestAngle = util.getShortestAngle(util.wrapAngle(this.pos.angle), util.wrapAngle(this.private.destAngle));
-        return this.lerp(this.pos.angle, this.pos.angle + shortestAngle, this.private.angVel);
-    }
-
     updateAngle(angle) {
-        this.private.destAngle = angle;
+        this.pos.angle = angle;
     }
 
     updateBody() {
@@ -108,7 +107,6 @@ module.exports = class Player {
         this.pos.y -= Math.round(Math.cos(rad) * this.private.speed);
         this.private.bodyPos.x = this.lerp(this.private.bodyPos.x, this.pos.x, 0.175);
         this.private.bodyPos.y = this.lerp(this.private.bodyPos.y, this.pos.y, 0.175);
-        this.pos.angle = Math.round(this.getNewAngle());
     }
 
     setMoveup(data) {
@@ -140,21 +138,27 @@ module.exports = class Player {
     }
 
     addXp(amount) {
-        this.private.exp += amount;
-        this.checkExp();
-        
-        this.private.network.sendToClient(this.id, {expGain: {
-            exp: this.private.exp,
-            expAmount: this.private.expNeeded
-        }});
+        if (this.level < 40) {
+            this.private.exp += amount;
+            this.checkExp();
+            
+            this.private.network.sendToClient(this.id, {expGain: {
+                exp: this.private.exp,
+                expAmount: this.private.expNeeded
+            }});
+        }
     }
 
     checkExp() {
         if (this.private.exp >= this.private.expNeeded) {
             this.level++;
             this.private.points++;
-            this.private.exp = this.private.exp - this.private.expNeeded;
-            this.private.expNeeded *= this.private.expRate;
+            if (this.level >= 40) {
+                this.private.exp = 0;
+            } else {
+                this.private.exp = this.private.exp - this.private.expNeeded;
+                this.private.expNeeded += this.private.expRate;
+            }
 
             this.private.network.sendToClient(this.id, {levelUp: true});
         }
@@ -162,40 +166,43 @@ module.exports = class Player {
 
     addPoint(type) {
         if (this.private.points > 0) {
-            let passed = true;
             switch(type) {
                 case 'firerate':
-                    this.private.fireRate -= 25;
-                    this.sendUpgrade(type, this.private.fireRate);
+                    if (this.private.stats.firerate < 10) {
+                        this.private.fireRate -= 20;
+                        this.sendUpgrade(type, this.private.fireRate);
+                        this.private.stats.firerate++;
+                        this.private.points--;
+                    }
                 break;
                 case 'speed':
-                    this.private.maxSpeed += 0.75;
-                    this.sendUpgrade(type, this.private.maxSpeed);
+                    if (this.private.stats.speed < 10) {
+                        this.private.maxSpeed += 0.70;
+                        this.sendUpgrade(type, this.private.maxSpeed);
+                        this.private.stats.speed++;
+                        this.private.points--;
+                    }
                 break;
                 case 'damage':
-                    this.private.damage += 5;
-                    this.sendUpgrade(type, this.private.damage);
+                    if (this.private.stats.damage < 10) {
+                        this.private.damage += 5;
+                        this.sendUpgrade(type, this.private.damage);
+                        this.private.stats.damage++;
+                        this.private.points--;
+                    }
                 break;
                 case 'health':
-                    this.maxHealth += 50;
-                    this.pos.health += 50;
-                    this.sendUpgrade(type, this.maxHealth);
-                break;
-                case 'acceleration':
-                    this.private.acceleration += 0.01;
-                    this.sendUpgrade(type, this.private.acceleration);
-                break;
-                case 'angulation':
-                    this.private.angVel += 0.01;
-                    this.sendUpgrade(type, this.private.angVel);
+                    if (this.private.stats.health < 10) {
+                        this.maxHealth += 20;
+                        this.sendUpgrade(type, this.maxHealth);
+                        this.private.stats.health++;
+                        this.private.points--;
+                    }
                 break;
                 default:
-                    passed = false;
                     console.log(`Error: Could not upgrade stats on player: ${this.id}, stat type "${type}" does not exist`);
                 break;
             }
-
-            if (passed) this.private.points--;
         }
     }
 
@@ -210,6 +217,7 @@ module.exports = class Player {
         this.private.alive = false;
         this.private.shooting = false;
         this.private.speed = 0;
+        this.private.moveUp = false;
         this.deactivatePowers();
         
         this.private.network.sendToAllWithinProxy({death: {

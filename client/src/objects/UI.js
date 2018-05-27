@@ -5,67 +5,124 @@ class UI {
 	constructor(game, stats) {
 		this.game = game;
 		this.stats = stats;
+		this.maxStats = 10;
 
+		this.healthBarGroup = this.game.add.group();
+		this.expBarGroup = this.game.add.group();
 		this.statTextGroup = this.game.add.group();
 		this.lbTextGroup = this.game.add.group();
 		this.actionbarGroup = this.game.add.group();
-		this.heroPowerBtnGroup = this.game.add.group();
+		this.actionbarGroup_stat = this.game.add.group();
 		this.hotkeyList = [];
+		this.hotkey_statList = [];
 		let hotkeys = ['Q', 'W', 'E', 'R'];
+		let hotkeys_stat = ['1', '2', '3', '4'];
+		let stat_label = ['Firerate', 'Speed', 'Damage', 'Health'];
 
 		if (!this.game.onMobile) {
+			//Power keys
 		    let key_q = game.input.keyboard.addKey(Phaser.Keyboard.Q);
 		    let key_w = game.input.keyboard.addKey(Phaser.Keyboard.W);
 		    let key_e = game.input.keyboard.addKey(Phaser.Keyboard.E);
 		    let key_r = game.input.keyboard.addKey(Phaser.Keyboard.R);
+
+		    //Stat keys
+		    let key_1 = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+		    let key_2 = game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+		    let key_3 = game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+		    let key_4 = game.input.keyboard.addKey(Phaser.Keyboard.FOUR);
+
 		    this.hotkeyList.push(key_q);
 		    this.hotkeyList.push(key_w);
 		    this.hotkeyList.push(key_e);
 		    this.hotkeyList.push(key_r);
+
+		    this.hotkey_statList.push(key_1);
+		    this.hotkey_statList.push(key_2);
+		    this.hotkey_statList.push(key_3);
+		    this.hotkey_statList.push(key_4);
 		}
+
 
 		//Experience bar
 		this.expBar = new HealthBar(this.game, {
-			x: 100, 
-			y: 50,
-			width: 128,
-			height: 16,
-			animationDuration: 200
+			x: window.innerWidth/2 - 5, 
+			y: window.innerHeight - 20,
+			width: 324,
+			height: 24,
+			animationDuration: 200,
+			bg: {
+				color: '#021421'
+			},
+			bar: {
+				color: '#15354D'
+			}
 		});
 		this.expBar.setPercent(0);
 
-		// Stat UI
-		this.levelText = this.game.add.bitmapText(156, 100, 'font', 'Level: ' + 1, 32);
-		this.pointsText = this.game.add.bitmapText(156, 225, 'font', 'Points: ' + 0, 23);
-		this.firerateText = this.game.add.bitmapText(156, 250, 'font', 'Firerate: ' + 1, 23);
-		this.speedText = this.game.add.bitmapText(156, 275, 'font', 'Speed: ' + 1, 23);
-		this.damageText = this.game.add.bitmapText(156, 300, 'font', 'Damage: ' + 1, 23);
-		this.healthText = this.game.add.bitmapText(156, 325, 'font', 'Health: ' + 1, 23);
-		this.accelerationText = this.game.add.bitmapText(156, 350, 'font', 'Acceleration: ' + 1, 23);
-		this.angulationText = this.game.add.bitmapText(156, 375, 'font', 'Angulation: ' + 1, 23);
+		this.expBar_bar = this.game.add.sprite(this.expBar.x, this.expBar.y, 'actionbar_bar');
+		this.expBar_bar.anchor.setTo(0.5);
+		this.expBar_text = this.game.add.bitmapText(0, 0, 'font', 'XP', 16);
+		this.expBar_text.anchor.setTo(0.5);
+		this.expBar_text.alpha = 0.5;
+		this.expBar_bar.addChild(this.expBar_text);
+		this.expBarGroup.alpha = 0.75;
+		this.expBarGroup.add(this.expBar.bgSprite);
+		this.expBarGroup.add(this.expBar.barSprite);
+		this.expBarGroup.add(this.expBar_bar);
 
-		this.statTextGroup.add(this.levelText);
-		this.statTextGroup.add(this.pointsText);
-		this.statTextGroup.add(this.firerateText);
-		this.statTextGroup.add(this.speedText);
-		this.statTextGroup.add(this.damageText);
-		this.statTextGroup.add(this.healthText);
-		this.statTextGroup.add(this.accelerationText);
-		this.statTextGroup.add(this.angulationText);
-
-		this.statTextGroup.forEach(item => {
-			item.anchor.setTo(1, 1);
-			item.inputEnabled = true;
-			let name = item.text.substring(0, item.text.indexOf(':')).toLowerCase();
-
-			if (['firerate', 'speed', 'damage', 'health', 'acceleration', 'angulation'].toString().includes(name)) {
-				item.alpha = 0.5;
-				item.name = name;
-				item.events.onInputDown.add(this.addStat, this);
-				item.events.onInputOver.add(this.textOver, this);
-				item.events.﻿﻿﻿onInputOut.add(this.textOut, this);
+		//Health bar
+		this.healthbar = new HealthBar(this.game, {
+			x: this.expBar.x, 
+			y: this.expBar.y - 32,
+			width: 324,
+			height: 24,
+			animationDuration: 100,
+			bg: {
+				color: '#002611'
+			},
+			bar: {
+				color: '#00A549'
 			}
 		});
+
+		this.healthbar_bar = this.game.add.sprite(this.healthbar.x, this.healthbar.y, 'actionbar_bar');
+		this.healthbar_bar.anchor.setTo(0.5);
+		this.healthbar_text = this.game.add.bitmapText(0, 0, 'font', 'HP', 16);
+		this.healthbar_text.anchor.setTo(0.5);
+		this.healthbar_text.alpha = 0.5;
+		this.healthbar_bar.addChild(this.healthbar_text);
+		this.healthBarGroup.alpha = 0.75;
+		this.healthBarGroup.add(this.healthbar.bgSprite);
+		this.healthBarGroup.add(this.healthbar.barSprite);
+		this.healthBarGroup.add(this.healthbar_bar);
+
+		// Stat UI
+		this.scoreText = this.game.add.bitmapText(window.innerWidth/2 - 100, window.innerHeight - 185, 'font', 'Score:', 20);
+		this.posText = this.game.add.bitmapText(window.innerWidth/2 - 100, window.innerHeight - 165, 'font', 'Position:', 25);
+
+		this.nameText = this.game.add.bitmapText(window.innerWidth/2 + 100, window.innerHeight - 185, 'font', this.game.myName, 20);
+		this.levelText = this.game.add.bitmapText(window.innerWidth/2 + 100, window.innerHeight - 165, 'font', 'Level: 0', 25);
+
+		this.pointsText = this.game.add.bitmapText(83, 140, 'font', 'Points available: 0', 16);
+
+		this.statTextGroup.add(this.nameText);
+		this.statTextGroup.add(this.scoreText);
+		this.statTextGroup.add(this.posText);
+		this.statTextGroup.add(this.levelText);
+		this.statTextGroup.add(this.pointsText);
+
+		this.statTextGroup.forEach(item => {
+			item.anchor.setTo(0.5);
+			item.alpha = 0.75;
+		});
+
+		if (!this.game.onMobile) {
+			this.hotkey_statList.forEach((key, i) => {
+				key.name = stat_label[i].toLowerCase();
+				key.onDown.add(this.addStat, this);
+			});
+		}
 
 		// Leaderboard UI
 		this.lbHeader = this.game.add.bitmapText(window.innerWidth - 100, 25, 'font', 'Leaderboard', 32);
@@ -84,24 +141,28 @@ class UI {
 
 		this.lbTextGroup.add(this.lbHeader);
 
-		//Actionbar UI
+		//Power actionbar UI
 		let spaceX = window.innerWidth/2 - 134;
 		for (let i = 0; i < 4; i++) {
-			let actionbar = this.game.add.sprite(spaceX, window.innerHeight - 60, 'actionbar');
+			let actionbar = this.game.add.sprite(spaceX, window.innerHeight - 110, 'actionbar');
+			let chosenPower = this.game.add.sprite(0, 0, null);
 			let newPowerIcon = this.game.add.sprite(0, 0, 'icon_generic');
-			let cooldownText = this.game.add.bitmapText(0, 0, 'font', '', 30);
+			let cooldownText = this.game.add.bitmapText(0, 0, 'font', '', 40);
 			let hotkeyIcon;
 			if (!this.game.onMobile) {
 				hotkeyIcon = this.game.add.bitmapText(-32, 32, 'font', `[${hotkeys[i]}]`, 20);
 				hotkeyIcon.anchor.setTo(0, 1);
+				this.lbTextGroup.add(hotkeyIcon);
 			}
 
+			chosenPower.anchor.setTo(0.5);
 
 			newPowerIcon.scale.setTo(0);
 			newPowerIcon.anchor.setTo(0.5);
 			newPowerIcon.kill();
 
 			cooldownText.anchor.setTo(0.5);
+			cooldownText.tint = 0xFF0000;
 			cooldownText.kill();
 
 			actionbar.anchor.setTo(0.5);
@@ -110,7 +171,9 @@ class UI {
 			actionbar.powerNumber = i;
 			actionbar.cooldown = Date.now();
 			actionbar.timer = this.game.time.create();
+			actionbar.chosenPower = chosenPower;
 			actionbar.cooldownText = cooldownText;
+			actionbar.newPowerIcon = newPowerIcon;
 
 			actionbar.events.onInputOver.add(this.buttonOver, this);
 			actionbar.events.﻿﻿﻿onInputOut.add(this.buttonOut, this);
@@ -120,8 +183,8 @@ class UI {
 
 			actionbar.cooldownTween.onStart.add(() => this.countCooldown(actionbar));
 			actionbar.show.onStart.add(() => newPowerIcon.revive());
-			actionbar.hide = () => newPowerIcon.kill();
 
+			actionbar.addChild(chosenPower);
 			actionbar.addChild(newPowerIcon);
 			actionbar.addChild(cooldownText);
 
@@ -133,8 +196,50 @@ class UI {
 			spaceX += actionbar.width + 10;
 		}
 
+		//Stat actionbar UI
+		let spaceY = 170;
+		for (let i = 0; i < 4; i++) {
+			let actionbar = this.game.add.sprite(15, spaceY, 'actionbar_stat');
+			let label = this.game.add.bitmapText(20, 0, 'font', `${stat_label[i]}`, 20);
+			let stat = this.game.add.bitmapText(118, 0, 'font', '0', 20);
+			let add = this.game.add.sprite(155, 0, 'actionbar_add');
+
+			let hotkeyIcon;
+			if (!this.game.onMobile) {
+				hotkeyIcon = this.game.add.bitmapText(2, 16, 'font', `[${hotkeys_stat[i]}]`, 13);
+				hotkeyIcon.anchor.setTo(0, 1);
+				this.lbTextGroup.add(hotkeyIcon);
+			}
+
+			actionbar.anchor.setTo(0, 0.5);
+			label.anchor.setTo(0, 0.5);
+			stat.anchor.setTo(0.5);
+			add.anchor.setTo(0.5);
+			add.scale.setTo(0);
+			add.inputEnabled = true;
+			add.name = stat_label[i].toLowerCase();
+			add.tweenIn = this.game.add.tween(add.scale).to({x: 1, y: 1}, 1000, Phaser.Easing.Elastic.Out);
+			add.tweenOut = this.game.add.tween(add.scale).to({x: 0, y: 0}, 500, Phaser.Easing.Elastic.Out);
+			add.tweenIn.onStart.add(() => add.revive());
+			add.tweenOut.onComplete.add(() => add.kill());
+			add.events.onInputDown.add(this.addStat, this);
+			add.kill();
+
+			actionbar.stat = stat;
+			actionbar.add = add;
+
+			actionbar.addChild(label);
+			actionbar.addChild(hotkeyIcon);
+			actionbar.addChild(stat);
+			actionbar.addChild(add);
+
+			this.actionbarGroup_stat.add(actionbar);
+
+			spaceY += actionbar.height + 2;
+		}
+
 		//Choose heropower UI
-		this.choosetext = this.game.add.bitmapText(window.innerWidth/2, window.innerHeight - (window.innerHeight * 0.32), 'font', 'Choose hero power:', 26);
+		this.choosetext = this.game.add.bitmapText(window.innerWidth/2, window.innerHeight - 320, 'font', 'Choose hero power:', 26);
 		this.choosetext.anchor.setTo(0.5);
 
 		this.opt1Button = this.game.add.sprite(-50, 50, 'icon_generic');
@@ -172,11 +277,14 @@ class UI {
 		    this.lbHeader.x = window.innerWidth - 100;
 		}, this);*/
 
-		this.expBar.barSprite.fixedToCamera = true;
-		this.expBar.bgSprite.fixedToCamera = true;
+		this.expBar.setFixedToCamera(true);
+		this.healthbar.setFixedToCamera(true);
+		this.expBar_bar.fixedToCamera = true;
+		this.healthbar_bar.fixedToCamera = true;
 		this.statTextGroup.fixedToCamera = true;
 		this.lbTextGroup.fixedToCamera = true;
 		this.actionbarGroup.fixedToCamera = true;
+		this.actionbarGroup_stat.fixedToCamera = true;
 		this.choosetext.fixedToCamera = true;
 
 		for(let i = 0; i < 4; i++) {
@@ -202,12 +310,12 @@ class UI {
 	}
 
 	updateLeaderboard(leaderboard) {
-		this.lbText.forEach(item => {
+		this.lbText.forEach((item, i) => {
 			item.text = '';
-		})
+		});
 
-		leaderboard.forEach((item, index, obj) => {
-			this.lbText[index].text = `${item.name}: ${item.score}`;
+		leaderboard.forEach((item, index) => {
+			this.lbText[index].text = `${index + 1}. ${item.name}: ${item.score}`;
 		});
 	}
 
@@ -217,27 +325,43 @@ class UI {
 				this.levelText.text = 'Level: ' + this.stats.level;
 			break;
 			case 'points':
-				this.pointsText.text = 'Points: ' + this.stats.points;
+				this.pointsText.text = 'Points available: ' + this.stats.points;
 			break;
 			case 'firerate':
-				this.firerateText.text = 'Firerate: ' + this.stats.firerate;
+				if (this.stats.firerate >= this.maxStats) {
+					this.actionbarGroup_stat.getAt(0).stat.scale.setTo(0.75);
+					this.actionbarGroup_stat.getAt(0).stat.text = 'MAX';
+				} else {
+					this.actionbarGroup_stat.getAt(0).stat.text = this.stats.firerate;
+				}
 			break;
 			case 'speed':
-				this.speedText.text = 'Speed: ' + this.stats.speed;
+				if (this.stats.speed >= this.maxStats) {
+					this.actionbarGroup_stat.getAt(1).stat.scale.setTo(0.75);
+					this.actionbarGroup_stat.getAt(1).stat.text = 'MAX';
+				} else {
+					this.actionbarGroup_stat.getAt(1).stat.text = this.stats.speed;
+				}
 			break;
 			case 'damage':
-				this.damageText.text = 'Damage: ' + this.stats.damage;
+				if (this.stats.damage >= this.maxStats) {
+					this.actionbarGroup_stat.getAt(2).stat.scale.setTo(0.75);
+					this.actionbarGroup_stat.getAt(2).stat.text = 'MAX';
+				} else {
+					this.actionbarGroup_stat.getAt(2).stat.text = this.stats.damage;
+				}
 			break;
 			case 'health':
-				this.healthText.text = 'Health: ' + this.stats.health;
-			break;
-			case 'acceleration':
-				this.accelerationText.text = 'Acceleration: ' + this.stats.acceleration;
-			break;
-			case 'angulation':
-				this.angulationText.text = 'Angulation: ' + this.stats.angulation;
+				if (this.stats.health >= this.maxStats) {
+					this.actionbarGroup_stat.getAt(3).stat.scale.setTo(0.75);
+					this.actionbarGroup_stat.getAt(3).stat.text = 'MAX';
+				} else {
+					this.actionbarGroup_stat.getAt(3).stat.text = this.stats.health;
+				}
 			break;
 		}
+
+		this.checkPoints();
 	}
 
 	newPowerAvailable(index) {
@@ -288,9 +412,9 @@ class UI {
 			break;
 			case 3:
 				texts.opt1Text = 'Trap';
-				texts.opt2Text = 'Bomb';
-				texts.btn1Texture = 'icon_magnet';
-				texts.btn2Texture = 'icon_warpspeed';
+				texts.opt2Text = 'Shockwave';
+				texts.btn1Texture = 'icon_trap';
+				texts.btn2Texture = 'icon_shockwave';
 			break;
 		}
 
@@ -300,33 +424,50 @@ class UI {
 	sendPowerUpgrade(button) {
 		this.hideHeroBtns.start();
 
-		let chosenPower = this.game.add.sprite(0, 0, button.key);
-		chosenPower.anchor.setTo(0.5);
 		let actionbar = this.actionbarGroup.getAt(button.actionbarIndex);
-		actionbar.hide();
-		actionbar.addChild(chosenPower);
-		actionbar.events.onInputDown.removeAll();
-		actionbar.events.onInputDown.add(this.activateHeroPower, this, 0, actionbar);
-		if (!this.game.onMobile) {
-			let key = this.hotkeyList[button.actionbarIndex];
-			key.onDown.removeAll();
-			key.onDown.add(this.activateHeroPower, this, 0, actionbar);
-		}
 
-		this.game.room.send({powerChosen: {option: button.opt, index: actionbar.powerNumber}});
+		if (actionbar) {
+			actionbar.chosenPower.loadTexture(button.key);
+			actionbar.newPowerIcon.kill();
+			actionbar.events.onInputDown.removeAll();
+			actionbar.events.onInputDown.add(this.activateHeroPower, {actionbar: actionbar, game: this.game});
+			if (!this.game.onMobile) {
+				let key = this.hotkeyList[button.actionbarIndex];
+				key.onDown.removeAll();
+				key.onDown.add(this.activateHeroPower, {actionbar: actionbar, game: this.game});
+			}
+
+			this.game.room.send({powerChosen: {option: button.opt, index: actionbar.powerNumber}});
+		}
 	}
 
-	activateHeroPower(BomfunkMCs, bar) {
-		if (bar.cooldown < Date.now()) {
-			bar.cooldownTween.start();
-			this.game.room.send({activatePower: bar.powerNumber});
-			bar.cooldown = Date.now() + 30000;
+	activateHeroPower() {
+		if (this.actionbar) {
+			if (this.actionbar.cooldown < Date.now()) {
+				this.actionbar.cooldownTween.start();
+				this.game.room.send({activatePower: this.actionbar.powerNumber});
+				this.actionbar.cooldown = Date.now() + 30000;
+			}
 		}
 	}
 
 	addPoints() {
 		this.stats.points++;
 		this.updateText('points', this.stats.points);
+	}
+
+	checkPoints() {
+		this.actionbarGroup_stat.forEach(item => {
+			if (this.stats.points > 0) {
+				if (item.stat.text == 'MAX') {
+					item.add.tweenOut.start();
+				} else if (item.stat.text <= this.maxStats) {
+					item.add.tweenIn.start();
+				}
+			} else {
+				item.add.tweenOut.start();
+			}
+		});
 	}
 
 	addStat(button, mouse) {

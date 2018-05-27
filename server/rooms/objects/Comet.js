@@ -6,7 +6,7 @@ module.exports = class Comet {
 		this.y = y;
 
         this.private = util.setEnumerable({
-	        health: 100
+	        health: 500
         });
     }
 

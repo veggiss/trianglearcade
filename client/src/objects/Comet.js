@@ -9,10 +9,9 @@ class Comet extends Phaser.Sprite {
 		this.autoCull = true;
 		this.angle = Math.random() * 180;
 		this.scale.setTo(0);
+		this.z = 2;
 		this.scaleTween = this.game.add.tween(this.scale).to({x: 1, y: 1}, 1000, Phaser.Easing.Elastic.Out, true);
 		this.kill();
-
-		this.game.add.existing(this);
 	}
 
 	update() {

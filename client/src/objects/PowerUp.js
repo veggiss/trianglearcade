@@ -1,18 +1,22 @@
 class PowerUp extends Phaser.Sprite {
 	constructor(game, x, y) {
-		super(game, x, y, 'powerUp');
+		super(game, x, y, 'powerup');
 		
 		this.id;
 		this.target;
 		this.type = undefined;
 		this.game = game;
-		this.anchor.setTo(0.5, 0.5);
+		this.anchor.setTo(0.5);
+		this.scale.setTo(0);
+		this.scaleTween = this.game.add.tween(this.scale).to({x: 0.75, y: 0.75}, 6000, Phaser.Easing.Elastic.Out);
 		this.kill();
 
 		this.game.add.existing(this);
 	}
 
 	update() {
+		this.rotation += 0.1;
+
 		if (this.activated) {
 			this.moveToTarget();
 		}
@@ -20,8 +24,8 @@ class PowerUp extends Phaser.Sprite {
 
 	moveToTarget() {
 		if (this.target) {
-			this.x = this.lerp(this.x, this.target.x, 0.1);
-			this.y = this.lerp(this.y, this.target.y, 0.1);
+			this.x = this.lerp(this.x, this.target.x, 0.13);
+			this.y = this.lerp(this.y, this.target.y, 0.13);
 
 			let dx = this.target.x - this.x; 
 			let dy = this.target.y - this.y;

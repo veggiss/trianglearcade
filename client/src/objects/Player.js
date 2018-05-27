@@ -15,43 +15,29 @@ class Player extends Phaser.Sprite {
 		this.deg = 0;
 		this.exp = 0;
 		this.expAmount = 0;
-		this.angleRate = 100;
+		this.angleRate = 200;
 		this.lastUpdate = Date.now() + this.angleRate;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.originalTint = this.tint;
 		this.dest = {x: x, y: y, angle: this.angle};
 
 		this.stats = {
-			level: 1,
+			level: 0,
 			points: 0,
-			firerate: 1,
-			speed: 1,
-			damage: 1,
-			health: 1,
-			acceleration: 1,
-			angulation: 1
+			firerate: 0,
+			speed: 0,
+			damage: 0,
+			health: 0
 		}
 
 		//Sprite
-		this.scale.setTo(0.75, 0.75);
+		this.scale.setTo(0.75);
 		this.anchor.setTo(0.5);
+		
 		//Emitters and particles
 		this.particles = new Particles(this.game, this.tint);
 		//Powers container
 		this.powers = new Powers(this.game, this);
-		
-		//Healthbar
-		this.playerHealthBar = new HealthBar(this.game, {
-			x: this.x, 
-			y: this.y + 64,
-			width: 64,
-			height: 8,
-			animationDuration: 10
-		});
-
-		this.kill();
-		this.playerHealthBar.barSprite.alpha = 0;
-		this.playerHealthBar.bgSprite.alpha = 0;
 
 		//Inputs
 		if (this.game.onMobile) {
@@ -74,8 +60,10 @@ class Player extends Phaser.Sprite {
 
 		//UI
 		this.ui = new UI(this.game, this.stats);
+		this.playerHealthBar = this.ui.healthbar;
 
         //Add player to stage
+        this.kill();
 		this.game.add.existing(this);
 	}
 
@@ -88,14 +76,17 @@ class Player extends Phaser.Sprite {
 		this.playerHealthBar.setPercent((value/this.maxHealth) * 100);
 	}
 
-	updatePlayerPos() {
-		let x = this.x + Math.sin(this.angle * Math.PI / 180);
-		let y = this.y + Math.cos(this.angle * Math.PI / 180);
-		this.x = this.lerp(x, this.dest.x, 0.1);
-		this.y = this.lerp(y, this.dest.y, 0.1);
+	getMagnitude() {
+		return Math.sqrt(this.x * this.x + this.y * this.y)
+	}
 
-		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
-		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.1);
+	updatePlayerPos() {
+		this.x = this.lerp(this.x, this.dest.x, 0.1);
+		this.y = this.lerp(this.y, this.dest.y, 0.1);
+
+		let destAngle = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, destAngle);
+		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.075);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
 	}
 
@@ -118,12 +109,6 @@ class Player extends Phaser.Sprite {
 			case 'health':
 				this.stats.health++;
 				this.maxHealth = value;
-			break;
-			case 'acceleration':
-				this.stats.acceleration++;
-			break;
-			case 'angulation':
-				this.stats.angulation++;
 			break;
 		}
 
@@ -154,7 +139,11 @@ class Player extends Phaser.Sprite {
 	}
 
 	playerShoot(obj) {
-		this.game.room.send({shoot: obj.isDown});
+		if (this.game.onMobile) {
+			this.game.room.send({shoot: obj.isDown});
+		} else {
+			if (obj.parent.targetObject == null) this.game.room.send({shoot: obj.isDown});
+		}
 	}
 
 	respawn(x, y) {

@@ -11,11 +11,11 @@ module.exports = class Bullet {
             x: x + Math.sin((this.angle) / 180.0 * Math.PI) * 750,
             y: y - Math.cos((this.angle) / 180.0 * Math.PI) * 750
         }
-        this.timer = Date.now() + 800;
+        this.timer = Date.now() + 1100;
     }
 
     update() {
-        this.x = util.lerp(this.x, this.dest.x, 0.075);
-        this.y = util.lerp(this.y, this.dest.y, 0.075);
+        this.x = util.lerp(this.x, this.dest.x, 0.06);
+        this.y = util.lerp(this.y, this.dest.y, 0.06);
     }
 }

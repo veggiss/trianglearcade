@@ -6,12 +6,11 @@ class Seeker extends Phaser.Sprite {
 		this.target;
 		this.game = game;
 		this.timer = Date.now();
+		this.trailTimer = Date.now();
 		this.anchor.setTo(0.5, 0.5);
 		this.scale.setTo(2);
 		this.particles;
 		this.kill();
-
-		this.game.add.existing(this);
 	}
 
 	update() {
@@ -25,8 +24,9 @@ class Seeker extends Phaser.Sprite {
 	        this.x += (Math.cos(this.rotation) * 16) / 3;
 	        this.y += (Math.sin(this.rotation) * 16) / 3;
 
-	        if (this.particles) {
+	        if (this.particles && this.trailTimer < Date.now()) {
 	        	this.particles.bulletTrail(this.x, this.y);
+	        	this.trailTimer = Date.now() + 50;
 	        }
 
 	        if (Date.now() > this.timer) {

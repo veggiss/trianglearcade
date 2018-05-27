@@ -4,23 +4,21 @@ const express = require('express');
 const http = require('http');
 const colyseus = require("colyseus");
 const game = require("./rooms/game");
-const uws = require('uws');
 const app = express();
 
-//app.enable('trust proxy');
-app.set('port', (port));
-app.use(express.static('./static'));
-
 const gameServer = new colyseus.Server({
-	engine: uws.Server,
 	server: http.createServer(app)
 });
 
 gameServer.register("game", game);
-setInterval(() => {
-	gameServer.server.clients.forEach((client) => {
-		client.send('ping');
-	});
-}, 1000);
+
+app.use(express.static('./static'));
 
 gameServer.listen(port);
+console.log(`--> Server started on port: ${port} <--`);
+
+setInterval(() => {
+	gameServer.server.clients.forEach((client, i) => {
+		if (i > 0) client.send('');
+	});
+}, 10000);

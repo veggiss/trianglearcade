@@ -7,7 +7,7 @@ module.exports = class StateHandlerRoom extends Room {
     onInit (options) {
         this.setPatchRate(500);
         this.setState(new State(this));
-        this.maxClients = 6;
+        this.maxClients = 10;
         this.state.populateBits();
         this.state.populateComets();
         this.setSimulationInterval(() => this.update(), 1000 / 20);
@@ -15,8 +15,7 @@ module.exports = class StateHandlerRoom extends Room {
     }
 
     requestJoin(options) {
-        return 1;
-        //return this.clients.filter(c => c.id === options.clientId).length === 0;
+        return this.clients.filter(c => c.id === options.clientId).length === 0;
     }
 
     onJoin (client, opt) {
@@ -46,13 +45,12 @@ module.exports = class StateHandlerRoom extends Room {
             }
 
             if (typeof(data.updateAngle) === 'number') {
-                player.updateAngle(data.updateAngle);
+                if (data.updateAngle >= 0 && data.updateAngle <= 360) player.updateAngle(data.updateAngle);
             }
 
             if (typeof(data.activatePower) === 'number') {
                 if (player.private.alive) {
                     let type = player.private.powerList[data.activatePower];
-                    console.log(type, data.activatePower);
                     if (type) {
                         this.state.activateHeroPower(player, type);
                     }

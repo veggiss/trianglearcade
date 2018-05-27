@@ -2,6 +2,7 @@ import Player from 'objects/Player';
 import Client from 'objects/Client';
 import Bullet from 'objects/Bullet';
 import Seeker from 'objects/Seeker';
+import Shockwave from 'objects/Shockwave';
 import Bit from 'objects/Bit';
 import PowerUp from 'objects/PowerUp';
 import Comet from 'objects/Comet';
@@ -11,12 +12,12 @@ class Main extends Phaser.State {
 	create() {
 		this.game.stage.backgroundColor = '#021421';
 		this.game.stage.disableVisibilityChange = true;
-		this.game.world.setBounds(0, 0, 1920, 1920);
+		this.game.world.setBounds(0, 0, 2880, 2880);
 		this.game.onMobile = !this.game.device.desktop;
 		this.game.time.advancedTiming = true;
 		
 		//Background
-		this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
+		this.starfield = this.add.tileSprite(0, 0, 2880, 2880, 'starfield');
 		this.starfield.fixedToCamera = true;
 		this.starfield.alpha = 0.5;
 
@@ -27,8 +28,20 @@ class Main extends Phaser.State {
 		this.powerUpPool = this.game.add.group();
 		this.cometPool = this.game.add.group();
 		this.seekerPool = this.game.add.group();
+		this.shockwavePool = this.game.add.group();
+		this.clientGroupIdle = this.game.add.group();
+		this.clientGroupActive = this.game.add.group();
+		this.playerGroup = this.game.add.group();
 		this.clients = {};
 		this.id;
+
+		this.bulletPool.z = 1;
+		this.bitsPool.z = 1;
+		this.powerUpPool.z = 1;
+		this.cometPool.z = 1;
+		this.seekerPool.z = 1;
+		this.clientGroupActive.z = 2;
+		this.playerGroup.z = 3;
 
 		//Death particles
 		this.deathEmitter = this.game.add.emitter(0, 0, 20);
@@ -42,7 +55,9 @@ class Main extends Phaser.State {
 	    this.createBitsPool();
 	    this.createPowerUpPool();
 	    this.createCometPool();
+	    this.createShockwavePool();
 	    this.createSeekerPool();
+	    this.createClientPool();
 
 		this.netListener();
 	}
@@ -61,7 +76,9 @@ class Main extends Phaser.State {
 				let me = message.me;
 				this.id = me.id;
 				this.clients[this.id] = new Player(this.game, this.game.world.centerX, this.game.world.centerY, 0, 100, 0);
-				this.game.camera.follow(this.clients[this.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+				this.playerGroup.add(this.clients[this.id]);
+				this.game.camera.follow(this.clients[this.id], Phaser.Camera.FOLLOW_LOCKON, 0.05, 0.05);
+				this.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 			}
 
 			if (message.bitHit) {
@@ -70,6 +87,8 @@ class Main extends Phaser.State {
 					let player = this.clients[message.bitHit.player];
 					bit.target = player;
 					bit.activated = true;
+
+					if (message.bitHit.trap && message.bitHit.player === this.id) this.game.camera.shake(0.01, 50);
 				}
 			}
 
@@ -88,7 +107,7 @@ class Main extends Phaser.State {
 					let bullet = this.bulletPool.getFirstDead();
 					bullet.id = message.bullet.id;
 					bullet.angle = message.bullet.angle;
-					bullet.timer = Date.now() + 600;
+					bullet.timer = Date.now() + 1000;
 					bullet.setTint(player.tint);
 					bullet.setTrail(player.particles);
 					bullet.setDest(message.bullet.x, message.bullet.y);
@@ -99,14 +118,20 @@ class Main extends Phaser.State {
 			if (message.seeker) {
 				let player = this.clients[message.seeker.owner];
 				let target = this.clients[message.seeker.target];
-				if (player && target) {
+				if (player) {
 					let m = message.seeker;
 					let seeker = this.seekerPool.getFirstDead();
 					seeker.id = m.owner;
-					seeker.target = target;
 					seeker.timer = Date.now() + 2000;
 					seeker.setTint(player.tint);
 					seeker.setTrail(player.particles);
+
+					if (target) {
+						seeker.target = target;
+					} else {
+						seeker.rotation = player.rotation;
+						seeker.target = {alive: false}
+					}
 					seeker.reset(player.x, player.y);
 				}
 			}
@@ -138,8 +163,9 @@ class Main extends Phaser.State {
 
 					client.dest.x = m.x;
 					client.dest.y = m.y;
-					client.dest.angle = m.angle - 90;
 					client.setHealth(m.health);
+
+					if (m.angle) client.dest.angle = m.angle - 90;
 
 					if (m.active.length > 0) {
 						client.powers.update(m.active);
@@ -149,8 +175,11 @@ class Main extends Phaser.State {
 
 			if (message.leaderboard) {
 				let player = this.clients[this.id];
-				if (player) {
-					player.ui.updateLeaderboard(message.leaderboard);
+				let m = message.leaderboard;
+				if (player && player.ui) {
+					player.ui.updateLeaderboard(m.lb);
+					player.ui.scoreText.text = 'Score: ' + m.score;
+					player.ui.posText.text = `Position: ${m.pos}/${m.lb.length}`;
 				}
 			}
 
@@ -166,6 +195,29 @@ class Main extends Phaser.State {
 				if (player) {
 					this.emitDeath(player);
 					player.die();
+				}
+			}
+
+			if (message.shockwave) {
+				let m = message.shockwave;
+				let shockwave = this.shockwavePool.getFirstDead();
+				shockwave.start(m.x, m.y, this.clients[this.id].tint);
+
+				for (let id in this.clients) {
+					let player = this.clients[id]
+					let dist = this.distanceBetween({x: m.x, y: m.y}, player);
+					if (dist < 300) {
+						setTimeout(() => {
+							if (player.alive) {
+								if (!player.powers.active.includes('shield')) {
+									this.tweenTint(player, player.originalTint, 0xffffff, 50);
+									if (id == this.id && m.id !== this.id) {
+										this.game.camera.shake(0.01, 50);
+									}
+								}
+							}
+						}, dist * 1.5);
+					}
 				}
 			}
 		});
@@ -192,37 +244,48 @@ class Main extends Phaser.State {
 		});
 
 		this.game.room.listen("players/:id", change => {
-			if (change.operation === "add") {
-				if (change.path.id !== this.id) {
-					this.clients[change.path.id] = new Client(this.game, change.value.level, change.value.health, change.value.maxHealth);
+			if (change.path.id && change.path.id !== this.id) {
+				if (change.operation === "add") {
+					let client = this.clientGroupIdle.getFirstDead();
+					this.clientGroupActive.add(client);
+
+					client.revive(-500, -500);
+					client.level = change.value.level;
+					client.health = change.value.health;
+					client.maxHealth = change.value.maxHealth;
+					this.clients[change.path.id] = client;
+					this.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
+				} else if (change.operation === "remove") {
+					let client = this.clients[change.path.id];
+					this.clientGroupIdle.add(client);
+					client.die();
+
+					delete this.clients[change.path.id];
 				}
-			} else if (change.operation === "remove") {
-				this.clients[change.path.id].leave();
-				this.clients[change.path.id].destroy();
-				delete this.clients[change.path.id];
 			}
 		});
 
 		this.game.room.listen("bits/:id", change => {
 			if (change.operation === 'add') {
 				let bit = this.bitsPool.getFirstDead();
-				bit.id = change.path.id;
-				bit.scale.setTo(0);
-				bit.reset(change.value.x, change.value.y);
-				bit.scaleTween.start();
-				if (change.value.trap) {
-					let fakeBit = this.game.add.sprite(bit.x, bit.y, 'bit');
-					fakeBit.scale.setTo(0);
-					fakeBit.anchor.setTo(0.5);
-					this.game.add.tween(fakeBit.scale).to({x: 2, y: 2}, 500, Phaser.Easing.Linear.none, true);
-					let tween = this.game.add.tween(fakeBit).to({alpha: 0}, 500, Phaser.Easing.Linear.none, true);
-					tween.onComplete.add(() => fakeBit.destroy());
+				if (bit) {
+					bit.id = change.path.id;
+					bit.scale.setTo(0);
+					bit.reset(change.value.x, change.value.y);
+					bit.scaleTween.start();
+					if (change.value.trap) {
+						let fakeBit = this.game.add.sprite(bit.x, bit.y, 'bit');
+						fakeBit.scale.setTo(0);
+						fakeBit.anchor.setTo(0.5);
+						this.game.add.tween(fakeBit.scale).to({x: 4, y: 4}, 500, Phaser.Easing.Linear.none, true);
+						let tween = this.game.add.tween(fakeBit).to({alpha: 0}, 500, Phaser.Easing.Linear.none, true);
+						tween.onComplete.add(() => fakeBit.destroy());
+					}
 				}
 			} else if (change.operation === 'remove') {
 				setTimeout(() => {
 					let bit = this.findInGroup(change.path.id, this.bitsPool);
-
-					if (bit && !bit.activated) bit.kill();
+					if (bit && bit.alive) bit.kill();
 				}, 1000);
 			}
 		});
@@ -230,14 +293,20 @@ class Main extends Phaser.State {
 		this.game.room.listen("powerUps/:id", change => {
 			if (change.operation === 'add') {
 				let powerUp = this.powerUpPool.getFirstDead();
-				powerUp.id = change.path.id;
-				powerUp.type = change.value.type;
-				powerUp.reset(change.value.x, change.value.y);
+				if (powerUp) {
+					powerUp.id = change.path.id;
+					if (change.value.type === 'healthBoost') {
+						powerUp.tint = 0x00A549;
+					} else if (change.value.type === 'xpBoost') {
+						powerUp.tint = 0xB7C9E5;
+					}
+					powerUp.reset(change.value.x, change.value.y);
+					powerUp.scaleTween.start();
+				}
 			} else if (change.operation === 'remove') {
 				setTimeout(() => {
 					let powerUp = this.findInGroup(change.path.id, this.powerUpPool);
-
-					if (powerUp && !powerUp.activated) powerUp.kill();
+					if (powerUp && powerUp.alive) powerUp.kill();
 				}, 1000);
 			}
 		});
@@ -245,10 +314,12 @@ class Main extends Phaser.State {
 		this.game.room.listen("comets/:id", change => {
 			if (change.operation === 'add') {
 				let comet = this.cometPool.getFirstDead();
-				comet.id = change.path.id;
-				comet.scale.setTo(0);				
-				comet.reset(change.value.x, change.value.y);
-				comet.scaleTween.start();
+				if (comet) {
+					comet.id = change.path.id;
+					comet.scale.setTo(0);				
+					comet.reset(change.value.x, change.value.y);
+					comet.scaleTween.start();
+				}
 			} else if (change.operation === 'remove') {
 				let comet = this.findInGroup(change.path.id, this.cometPool);
 				if (comet) {
@@ -286,6 +357,18 @@ class Main extends Phaser.State {
 	createSeekerPool() {
 		for (let i = 0; i < 10; i++) {
 			this.seekerPool.add(new Seeker(this.game));
+		}
+	}
+
+	createShockwavePool() {
+		for (let i = 0; i < 10; i++) {
+			this.shockwavePool.add(new Shockwave(this.game));
+		}
+	}
+
+	createClientPool() {
+		for (let i = 0; i < 10; i++) {
+			this.clientGroupIdle.add(new Client(this.game));
 		}
 	}
 

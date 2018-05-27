@@ -5174,7 +5174,7 @@ var Game = function (_Phaser$Game) {
 
 new Game();
 
-},{"colyseus.js":13,"states/Boot":48,"states/Main":49,"states/Menu":50,"states/Preload":51}],37:[function(require,module,exports){
+},{"colyseus.js":13,"states/Boot":49,"states/Main":50,"states/Menu":51,"states/Preload":52}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5223,12 +5223,11 @@ var Bit = function (_Phaser$Sprite) {
 		_this.anchor.setTo(0.5, 0.5);
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.scale.setTo(0);
-		_this.rotation = Math.random() - 180;
+		_this.angle = Math.floor(Math.random() * 360);
 		_this.autoCull = true;
-		var rs = Math.random() * 0.2 + 0.5;
-		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 1000, Phaser.Easing.Elastic.Out, true);
+		var rs = Math.random() * 0.3 + 0.5;
+		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 1000, Phaser.Easing.Elastic.Out);
 		_this.kill();
-		_this.game.add.existing(_this);
 		return _this;
 	}
 
@@ -5243,8 +5242,8 @@ var Bit = function (_Phaser$Sprite) {
 		key: 'moveToTarget',
 		value: function moveToTarget() {
 			if (this.target) {
-				this.x = this.lerp(this.x, this.target.x, 0.1);
-				this.y = this.lerp(this.y, this.target.y, 0.1);
+				this.x = this.lerp(this.x, this.target.x, 0.16);
+				this.y = this.lerp(this.y, this.target.y, 0.16);
 
 				var dx = this.target.x - this.x;
 				var dy = this.target.y - this.y;
@@ -5314,11 +5313,11 @@ var Bullet = function (_Phaser$Sprite) {
 		_this.id;
 		_this.game = game;
 		_this.timer = Date.now();
+		_this.trailTimer = Date.now();
 		_this.anchor.setTo(0.5, 0.5);
+		_this.z = 1;
 		_this.particles;
 		_this.kill();
-
-		_this.game.add.existing(_this);
 		return _this;
 	}
 
@@ -5326,11 +5325,12 @@ var Bullet = function (_Phaser$Sprite) {
 		key: 'update',
 		value: function update() {
 			if (this.alive && this.dest) {
-				this.x = this.lerp(this.x, this.dest.x, 0.03);
-				this.y = this.lerp(this.y, this.dest.y, 0.03);
+				this.x = this.lerp(this.x, this.dest.x, 0.02);
+				this.y = this.lerp(this.y, this.dest.y, 0.02);
 
-				if (this.particles) {
+				if (this.particles && this.trailTimer < Date.now()) {
 					this.particles.bulletTrail(this.x, this.y);
+					this.trailTimer = Date.now() + 50;
 				}
 
 				if (Date.now() > this.timer) {
@@ -5428,9 +5428,9 @@ var Client = function (_Phaser$Sprite) {
 		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, 0, 0, 'spaceship_white'));
 
 		_this.game = game;
-		_this.health = health;
-		_this.maxHealth = maxHealth;
-		_this.level = level;
+		_this.health = 0;
+		_this.maxHealth = 0;
+		_this.level = 0;
 		_this.angle = 0;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.originalTint = _this.tint;
@@ -5438,10 +5438,12 @@ var Client = function (_Phaser$Sprite) {
 		_this.alpha = 0;
 		_this.dead = false;
 		_this.dest = { x: 0, y: 0, angle: _this.angle };
+		_this.healthBarGroup = _this.game.add.group();
+		_this.healthBarGroup.z = 2;
 
 		//Sprite
-		_this.scale.setTo(0.75, 0.75);
-		_this.anchor.setTo(0.5, 0.5);
+		_this.scale.setTo(0.75);
+		_this.anchor.setTo(0.5);
 		//Particles and emitters
 		_this.particles = new _Particles2.default(_this.game, _this.tint);
 		//Powers container
@@ -5456,8 +5458,9 @@ var Client = function (_Phaser$Sprite) {
 		});
 		_this.playerHealthBar.barSprite.alpha = 0;
 		_this.playerHealthBar.bgSprite.alpha = 0;
-
-		_this.game.add.existing(_this);
+		_this.healthBarGroup.add(_this.playerHealthBar.bgSprite);
+		_this.healthBarGroup.add(_this.playerHealthBar.barSprite);
+		_this.kill();
 		return _this;
 	}
 
@@ -5465,10 +5468,9 @@ var Client = function (_Phaser$Sprite) {
 		key: 'update',
 		value: function update() {
 			if (this.alive) {
-				var x = this.x + Math.sin(this.angle * Math.PI / 180);
-				var y = this.y + Math.cos(this.angle * Math.PI / 180);
-				this.x = this.lerp(x, this.dest.x, 0.1);
-				this.y = this.lerp(y, this.dest.y, 0.1);
+				this.x = this.lerp(this.x, this.dest.x, 0.1);
+				this.y = this.lerp(this.y, this.dest.y, 0.1);
+
 				var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 				this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
 				this.playerHealthBar.setPosition(this.x, this.y + 55);
@@ -5498,12 +5500,6 @@ var Client = function (_Phaser$Sprite) {
 		key: 'setHealth',
 		value: function setHealth(value) {
 			this.playerHealthBar.setPercent(value / this.maxHealth * 100);
-		}
-	}, {
-		key: 'leave',
-		value: function leave() {
-			this.playerHealthBar.barSprite.destroy();
-			this.playerHealthBar.bgSprite.destroy();
 		}
 	}, {
 		key: 'lerp',
@@ -5568,10 +5564,9 @@ var Comet = function (_Phaser$Sprite) {
 		_this.autoCull = true;
 		_this.angle = Math.random() * 180;
 		_this.scale.setTo(0);
+		_this.z = 2;
 		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out, true);
 		_this.kill();
-
-		_this.game.add.existing(_this);
 		return _this;
 	}
 
@@ -5789,39 +5784,60 @@ function _classCallCheck(instance, Constructor) {
 
 var Particles = function () {
 	function Particles(game, tint) {
+		var _this = this;
+
 		_classCallCheck(this, Particles);
 
+		this.game = game;
 		this.tint = tint;
-		this.playerMoveGroup = game.add.group();
+		this.playerMoveGroup = this.game.add.group();
+		this.playerMoveGroup.z = 1;
 		this.playerMoveTime = Date.now();
 		this.playerMoveDelay = 300;
 
-		this.bulletTrailGroup = game.add.group();
+		this.bulletTrailGroup = this.game.add.group();
+		this.bulletTrailGroup.z = 1;
 		this.bulletTrailTime = Date.now();
-		this.bulletTrailDelay = 25;
+		this.bulletTrailDelay = 100;
 
 		// Moving player particles
-		for (var i = 0; i < 5; i++) {
-			var particle = game.add.sprite(0, 0, 'deathParticle');
-			particle.tween = game.add.tween(particle.scale).to({ x: 0, y: 0 }, 1000, Phaser.Easing.Linear.None, false);
+
+		var _loop = function _loop(i) {
+			var particle = _this.game.add.sprite(0, 0, 'deathParticle');
+			particle.tween = _this.game.add.tween(particle.scale).to({ x: 0, y: 0 }, 1000, Phaser.Easing.Linear.None, false);
+			particle.tween.onComplete.add(function () {
+				particle.kill();
+			});
 			particle.scale.setTo(5);
 			particle.anchor.setTo(0.5);
 			particle.kill();
-			this.playerMoveGroup.add(particle);
+			_this.playerMoveGroup.add(particle);
+		};
+
+		for (var i = 0; i < 5; i++) {
+			_loop(i);
 		}
 
-		// Moving player particles
-		for (var _i = 0; _i < 5; _i++) {
-			var _particle = game.add.sprite(0, 0, 'bullet');
-			_particle.tween = game.add.tween(_particle.scale).to({ x: 0, y: 0 }, 200, Phaser.Easing.Linear.None, false);
-			_particle.scale.setTo(1);
-			_particle.anchor.setTo(0.5);
-			_particle.kill();
-			this.bulletTrailGroup.add(_particle);
+		// Bulle trail particles
+
+		var _loop2 = function _loop2(i) {
+			var particle = _this.game.add.sprite(0, 0, 'bullet');
+			particle.tween = _this.game.add.tween(particle.scale).to({ x: 0, y: 0 }, 400, Phaser.Easing.Linear.None, false);
+			particle.tween.onComplete.add(function () {
+				particle.kill();
+			});
+			particle.scale.setTo(1);
+			particle.anchor.setTo(0.5);
+			particle.kill();
+			_this.bulletTrailGroup.add(particle);
+		};
+
+		for (var i = 0; i < 15; i++) {
+			_loop2(i);
 		}
 
 		//Bullet hit emitter
-		this.bulletHit = game.add.emitter(0, 0, 12);
+		this.bulletHit = this.game.add.emitter(0, 0, 12);
 		this.bulletHit.makeParticles('deathParticle');
 		this.bulletHit.setAlpha(1, 0, 500);
 		this.bulletHit.setScale(1, 0, 1, 0, 500);
@@ -5841,9 +5857,6 @@ var Particles = function () {
 				particle.reset(x, y);
 				particle.tween.start();
 				this.playerMoveTime = Date.now() + this.playerMoveDelay;
-				particle.tween.onComplete.add(function () {
-					particle.kill();
-				});
 			}
 		}
 	}, {
@@ -5851,15 +5864,11 @@ var Particles = function () {
 		value: function bulletTrail(x, y) {
 			var particle = this.bulletTrailGroup.getFirstDead();
 
-			if (particle && this.bulletTrailTime < Date.now()) {
+			if (particle) {
 				particle.tint = this.tint;
 				particle.scale.setTo(1);
 				particle.reset(x, y);
 				particle.tween.start();
-				this.bulletTrailTime = Date.now() + this.bulletTrailDelay;
-				particle.tween.onComplete.add(function () {
-					particle.kill();
-				});
 			}
 		}
 	}, {
@@ -5947,42 +5956,28 @@ var Player = function (_Phaser$Sprite) {
 		_this.deg = 0;
 		_this.exp = 0;
 		_this.expAmount = 0;
-		_this.angleRate = 100;
+		_this.angleRate = 200;
 		_this.lastUpdate = Date.now() + _this.angleRate;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.originalTint = _this.tint;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
 		_this.stats = {
-			level: 1,
+			level: 0,
 			points: 0,
-			firerate: 1,
-			speed: 1,
-			damage: 1,
-			health: 1,
-			acceleration: 1,
-			angulation: 1
+			firerate: 0,
+			speed: 0,
+			damage: 0,
+			health: 0
 
 			//Sprite
-		};_this.scale.setTo(0.75, 0.75);
+		};_this.scale.setTo(0.75);
 		_this.anchor.setTo(0.5);
+
 		//Emitters and particles
 		_this.particles = new _Particles2.default(_this.game, _this.tint);
 		//Powers container
 		_this.powers = new _Powers2.default(_this.game, _this);
-
-		//Healthbar
-		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
-			x: _this.x,
-			y: _this.y + 64,
-			width: 64,
-			height: 8,
-			animationDuration: 10
-		});
-
-		_this.kill();
-		_this.playerHealthBar.barSprite.alpha = 0;
-		_this.playerHealthBar.bgSprite.alpha = 0;
 
 		//Inputs
 		if (_this.game.onMobile) {
@@ -6005,8 +6000,10 @@ var Player = function (_Phaser$Sprite) {
 
 		//UI
 		_this.ui = new _UI2.default(_this.game, _this.stats);
+		_this.playerHealthBar = _this.ui.healthbar;
 
 		//Add player to stage
+		_this.kill();
 		_this.game.add.existing(_this);
 		return _this;
 	}
@@ -6023,15 +6020,19 @@ var Player = function (_Phaser$Sprite) {
 			this.playerHealthBar.setPercent(value / this.maxHealth * 100);
 		}
 	}, {
+		key: 'getMagnitude',
+		value: function getMagnitude() {
+			return Math.sqrt(this.x * this.x + this.y * this.y);
+		}
+	}, {
 		key: 'updatePlayerPos',
 		value: function updatePlayerPos() {
-			var x = this.x + Math.sin(this.angle * Math.PI / 180);
-			var y = this.y + Math.cos(this.angle * Math.PI / 180);
-			this.x = this.lerp(x, this.dest.x, 0.1);
-			this.y = this.lerp(y, this.dest.y, 0.1);
+			this.x = this.lerp(this.x, this.dest.x, 0.1);
+			this.y = this.lerp(this.y, this.dest.y, 0.1);
 
-			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
-			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.1);
+			var destAngle = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, destAngle);
+			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
 		}
 	}, {
@@ -6056,12 +6057,6 @@ var Player = function (_Phaser$Sprite) {
 				case 'health':
 					this.stats.health++;
 					this.maxHealth = value;
-					break;
-				case 'acceleration':
-					this.stats.acceleration++;
-					break;
-				case 'angulation':
-					this.stats.angulation++;
 					break;
 			}
 
@@ -6095,7 +6090,11 @@ var Player = function (_Phaser$Sprite) {
 	}, {
 		key: 'playerShoot',
 		value: function playerShoot(obj) {
-			this.game.room.send({ shoot: obj.isDown });
+			if (this.game.onMobile) {
+				this.game.room.send({ shoot: obj.isDown });
+			} else {
+				if (obj.parent.targetObject == null) this.game.room.send({ shoot: obj.isDown });
+			}
 		}
 	}, {
 		key: 'respawn',
@@ -6132,7 +6131,7 @@ var Player = function (_Phaser$Sprite) {
 
 exports.default = Player;
 
-},{"./HealthBar":41,"./Particles":42,"./Powers":45,"./UI":47}],44:[function(require,module,exports){
+},{"./HealthBar":41,"./Particles":42,"./Powers":45,"./UI":48}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6173,13 +6172,15 @@ var PowerUp = function (_Phaser$Sprite) {
 	function PowerUp(game, x, y) {
 		_classCallCheck(this, PowerUp);
 
-		var _this = _possibleConstructorReturn(this, (PowerUp.__proto__ || Object.getPrototypeOf(PowerUp)).call(this, game, x, y, 'powerUp'));
+		var _this = _possibleConstructorReturn(this, (PowerUp.__proto__ || Object.getPrototypeOf(PowerUp)).call(this, game, x, y, 'powerup'));
 
 		_this.id;
 		_this.target;
 		_this.type = undefined;
 		_this.game = game;
-		_this.anchor.setTo(0.5, 0.5);
+		_this.anchor.setTo(0.5);
+		_this.scale.setTo(0);
+		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: 0.75, y: 0.75 }, 6000, Phaser.Easing.Elastic.Out);
 		_this.kill();
 
 		_this.game.add.existing(_this);
@@ -6189,6 +6190,8 @@ var PowerUp = function (_Phaser$Sprite) {
 	_createClass(PowerUp, [{
 		key: 'update',
 		value: function update() {
+			this.rotation += 0.1;
+
 			if (this.activated) {
 				this.moveToTarget();
 			}
@@ -6197,8 +6200,8 @@ var PowerUp = function (_Phaser$Sprite) {
 		key: 'moveToTarget',
 		value: function moveToTarget() {
 			if (this.target) {
-				this.x = this.lerp(this.x, this.target.x, 0.1);
-				this.y = this.lerp(this.y, this.target.y, 0.1);
+				this.x = this.lerp(this.x, this.target.x, 0.13);
+				this.y = this.lerp(this.y, this.target.y, 0.13);
 
 				var dx = this.target.x - this.x;
 				var dy = this.target.y - this.y;
@@ -6259,7 +6262,6 @@ var Powers = function () {
 
 		//Power assets
 		this.powerShield = this.game.add.sprite(0, 0, 'power_shield');
-		this.powerShield.scale.setTo(0);
 		this.powerShield.tweenIn = this.game.add.tween(this.powerShield.scale).to({ x: 1, y: 1 }, 500, Phaser.Easing.Elastic.Out);
 		this.powerShield.tweenOut = this.game.add.tween(this.powerShield).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none);
 		this.powerShield.tweenIn.onStart.add(function () {
@@ -6270,7 +6272,6 @@ var Powers = function () {
 		});
 
 		this.powerMagnet = this.game.add.sprite(0, 0, 'power_magnet');
-		this.powerMagnet.scale.setTo(0);
 		this.powerMagnet.tweenIn = this.game.add.tween(this.powerMagnet.scale).to({ x: 1, y: 1 }, 500, Phaser.Easing.Elastic.Out);
 		this.powerMagnet.tweenOut = this.game.add.tween(this.powerMagnet).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none);
 		this.powerMagnet.tweenIn.onStart.add(function () {
@@ -6286,8 +6287,9 @@ var Powers = function () {
 
 		this.powersGroup.forEach(function (power) {
 			power.tint = player.tint;
-			power.kill();
 			power.anchor.setTo(0.5);
+			power.scale.setTo(0.5);
+			power.kill();
 		});
 
 		this.player.addChild(this.powersGroup);
@@ -6308,7 +6310,7 @@ var Powers = function () {
 								var index = _this2.active.findIndex(function (item) {
 									return item === 'shield';
 								});
-								_this2.active.splice(index, 1);
+								if (index) _this2.active.splice(index, 1);
 							}, 6000);
 							break;
 						case 'magnet':
@@ -6318,7 +6320,7 @@ var Powers = function () {
 								var index = _this2.active.findIndex(function (item) {
 									return item === 'magnet';
 								});
-								_this2.active.splice(index, 1);
+								if (index) _this2.active.splice(index, 1);
 							}, 10000);
 							break;
 					}
@@ -6381,12 +6383,11 @@ var Seeker = function (_Phaser$Sprite) {
 		_this.target;
 		_this.game = game;
 		_this.timer = Date.now();
+		_this.trailTimer = Date.now();
 		_this.anchor.setTo(0.5, 0.5);
 		_this.scale.setTo(2);
 		_this.particles;
 		_this.kill();
-
-		_this.game.add.existing(_this);
 		return _this;
 	}
 
@@ -6403,8 +6404,9 @@ var Seeker = function (_Phaser$Sprite) {
 				this.x += Math.cos(this.rotation) * 16 / 3;
 				this.y += Math.sin(this.rotation) * 16 / 3;
 
-				if (this.particles) {
+				if (this.particles && this.trailTimer < Date.now()) {
 					this.particles.bulletTrail(this.x, this.y);
+					this.trailTimer = Date.now() + 50;
 				}
 
 				if (Date.now() > this.timer) {
@@ -6451,6 +6453,79 @@ var _createClass = function () {
 	};
 }();
 
+function _classCallCheck(instance, Constructor) {
+	if (!(instance instanceof Constructor)) {
+		throw new TypeError("Cannot call a class as a function");
+	}
+}
+
+function _possibleConstructorReturn(self, call) {
+	if (!self) {
+		throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	}return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+	if (typeof superClass !== "function" && superClass !== null) {
+		throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+	}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var Shockwave = function (_Phaser$Sprite) {
+	_inherits(Shockwave, _Phaser$Sprite);
+
+	function Shockwave(game, x, y) {
+		_classCallCheck(this, Shockwave);
+
+		var _this = _possibleConstructorReturn(this, (Shockwave.__proto__ || Object.getPrototypeOf(Shockwave)).call(this, game, x, y, 'shockwave'));
+
+		_this.game = game;
+		_this.alpha = 1;
+		_this.anchor.setTo(0.5);
+
+		_this.fadeOut = _this.game.add.tween(_this).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none);
+		_this.tweenIn = _this.game.add.tween(_this.scale).to({ x: 3, y: 3 }, 500, Phaser.Easing.Linear.none);
+		_this.tweenIn.onComplete.add(function () {
+			return _this.kill();
+		});
+		_this.kill();
+		return _this;
+	}
+
+	_createClass(Shockwave, [{
+		key: 'start',
+		value: function start(x, y, tint) {
+			this.alpha = 1;
+			this.tint = tint;
+			this.scale.setTo(0);
+			this.reset(x, y);
+			this.tweenIn.start();
+			this.fadeOut.start();
+		}
+	}]);
+
+	return Shockwave;
+}(Phaser.Sprite);
+
+exports.default = Shockwave;
+
+},{}],48:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () {
+	function defineProperties(target, props) {
+		for (var i = 0; i < props.length; i++) {
+			var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+		}
+	}return function (Constructor, protoProps, staticProps) {
+		if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	};
+}();
+
 var _HealthBar = require('./HealthBar');
 
 var _HealthBar2 = _interopRequireDefault(_HealthBar);
@@ -6475,67 +6550,123 @@ var UI = function () {
 
 		this.game = game;
 		this.stats = stats;
+		this.maxStats = 10;
 
+		this.healthBarGroup = this.game.add.group();
+		this.expBarGroup = this.game.add.group();
 		this.statTextGroup = this.game.add.group();
 		this.lbTextGroup = this.game.add.group();
 		this.actionbarGroup = this.game.add.group();
-		this.heroPowerBtnGroup = this.game.add.group();
+		this.actionbarGroup_stat = this.game.add.group();
 		this.hotkeyList = [];
+		this.hotkey_statList = [];
 		var hotkeys = ['Q', 'W', 'E', 'R'];
+		var hotkeys_stat = ['1', '2', '3', '4'];
+		var stat_label = ['Firerate', 'Speed', 'Damage', 'Health'];
 
 		if (!this.game.onMobile) {
+			//Power keys
 			var key_q = game.input.keyboard.addKey(Phaser.Keyboard.Q);
 			var key_w = game.input.keyboard.addKey(Phaser.Keyboard.W);
 			var key_e = game.input.keyboard.addKey(Phaser.Keyboard.E);
 			var key_r = game.input.keyboard.addKey(Phaser.Keyboard.R);
+
+			//Stat keys
+			var key_1 = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+			var key_2 = game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+			var key_3 = game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+			var key_4 = game.input.keyboard.addKey(Phaser.Keyboard.FOUR);
+
 			this.hotkeyList.push(key_q);
 			this.hotkeyList.push(key_w);
 			this.hotkeyList.push(key_e);
 			this.hotkeyList.push(key_r);
+
+			this.hotkey_statList.push(key_1);
+			this.hotkey_statList.push(key_2);
+			this.hotkey_statList.push(key_3);
+			this.hotkey_statList.push(key_4);
 		}
 
 		//Experience bar
 		this.expBar = new _HealthBar2.default(this.game, {
-			x: 100,
-			y: 50,
-			width: 128,
-			height: 16,
-			animationDuration: 200
+			x: window.innerWidth / 2 - 5,
+			y: window.innerHeight - 20,
+			width: 324,
+			height: 24,
+			animationDuration: 200,
+			bg: {
+				color: '#021421'
+			},
+			bar: {
+				color: '#15354D'
+			}
 		});
 		this.expBar.setPercent(0);
 
-		// Stat UI
-		this.levelText = this.game.add.bitmapText(156, 100, 'font', 'Level: ' + 1, 32);
-		this.pointsText = this.game.add.bitmapText(156, 225, 'font', 'Points: ' + 0, 23);
-		this.firerateText = this.game.add.bitmapText(156, 250, 'font', 'Firerate: ' + 1, 23);
-		this.speedText = this.game.add.bitmapText(156, 275, 'font', 'Speed: ' + 1, 23);
-		this.damageText = this.game.add.bitmapText(156, 300, 'font', 'Damage: ' + 1, 23);
-		this.healthText = this.game.add.bitmapText(156, 325, 'font', 'Health: ' + 1, 23);
-		this.accelerationText = this.game.add.bitmapText(156, 350, 'font', 'Acceleration: ' + 1, 23);
-		this.angulationText = this.game.add.bitmapText(156, 375, 'font', 'Angulation: ' + 1, 23);
+		this.expBar_bar = this.game.add.sprite(this.expBar.x, this.expBar.y, 'actionbar_bar');
+		this.expBar_bar.anchor.setTo(0.5);
+		this.expBar_text = this.game.add.bitmapText(0, 0, 'font', 'XP', 16);
+		this.expBar_text.anchor.setTo(0.5);
+		this.expBar_text.alpha = 0.5;
+		this.expBar_bar.addChild(this.expBar_text);
+		this.expBarGroup.alpha = 0.75;
+		this.expBarGroup.add(this.expBar.bgSprite);
+		this.expBarGroup.add(this.expBar.barSprite);
+		this.expBarGroup.add(this.expBar_bar);
 
-		this.statTextGroup.add(this.levelText);
-		this.statTextGroup.add(this.pointsText);
-		this.statTextGroup.add(this.firerateText);
-		this.statTextGroup.add(this.speedText);
-		this.statTextGroup.add(this.damageText);
-		this.statTextGroup.add(this.healthText);
-		this.statTextGroup.add(this.accelerationText);
-		this.statTextGroup.add(this.angulationText);
-
-		this.statTextGroup.forEach(function (item) {
-			item.anchor.setTo(1, 1);
-			item.inputEnabled = true;
-			var name = item.text.substring(0, item.text.indexOf(':')).toLowerCase();
-
-			if (['firerate', 'speed', 'damage', 'health', 'acceleration', 'angulation'].toString().includes(name)) {
-				item.alpha = 0.5;
-				item.name = name;
-				item.events.onInputDown.add(_this2.addStat, _this2);
-				item.events.onInputOver.add(_this2.textOver, _this2);
-				item.events.onInputOut.add(_this2.textOut, _this2);
+		//Health bar
+		this.healthbar = new _HealthBar2.default(this.game, {
+			x: this.expBar.x,
+			y: this.expBar.y - 32,
+			width: 324,
+			height: 24,
+			animationDuration: 100,
+			bg: {
+				color: '#002611'
+			},
+			bar: {
+				color: '#00A549'
 			}
 		});
+
+		this.healthbar_bar = this.game.add.sprite(this.healthbar.x, this.healthbar.y, 'actionbar_bar');
+		this.healthbar_bar.anchor.setTo(0.5);
+		this.healthbar_text = this.game.add.bitmapText(0, 0, 'font', 'HP', 16);
+		this.healthbar_text.anchor.setTo(0.5);
+		this.healthbar_text.alpha = 0.5;
+		this.healthbar_bar.addChild(this.healthbar_text);
+		this.healthBarGroup.alpha = 0.75;
+		this.healthBarGroup.add(this.healthbar.bgSprite);
+		this.healthBarGroup.add(this.healthbar.barSprite);
+		this.healthBarGroup.add(this.healthbar_bar);
+
+		// Stat UI
+		this.scoreText = this.game.add.bitmapText(window.innerWidth / 2 - 100, window.innerHeight - 185, 'font', 'Score:', 20);
+		this.posText = this.game.add.bitmapText(window.innerWidth / 2 - 100, window.innerHeight - 165, 'font', 'Position:', 25);
+
+		this.nameText = this.game.add.bitmapText(window.innerWidth / 2 + 100, window.innerHeight - 185, 'font', this.game.myName, 20);
+		this.levelText = this.game.add.bitmapText(window.innerWidth / 2 + 100, window.innerHeight - 165, 'font', 'Level: 0', 25);
+
+		this.pointsText = this.game.add.bitmapText(83, 140, 'font', 'Points available: 0', 16);
+
+		this.statTextGroup.add(this.nameText);
+		this.statTextGroup.add(this.scoreText);
+		this.statTextGroup.add(this.posText);
+		this.statTextGroup.add(this.levelText);
+		this.statTextGroup.add(this.pointsText);
+
+		this.statTextGroup.forEach(function (item) {
+			item.anchor.setTo(0.5);
+			item.alpha = 0.75;
+		});
+
+		if (!this.game.onMobile) {
+			this.hotkey_statList.forEach(function (key, i) {
+				key.name = stat_label[i].toLowerCase();
+				key.onDown.add(_this2.addStat, _this2);
+			});
+		}
 
 		// Leaderboard UI
 		this.lbHeader = this.game.add.bitmapText(window.innerWidth - 100, 25, 'font', 'Leaderboard', 32);
@@ -6554,24 +6685,29 @@ var UI = function () {
 
 		this.lbTextGroup.add(this.lbHeader);
 
-		//Actionbar UI
+		//Power actionbar UI
 		var spaceX = window.innerWidth / 2 - 134;
 
 		var _loop = function _loop(_i) {
-			var actionbar = _this2.game.add.sprite(spaceX, window.innerHeight - 60, 'actionbar');
+			var actionbar = _this2.game.add.sprite(spaceX, window.innerHeight - 110, 'actionbar');
+			var chosenPower = _this2.game.add.sprite(0, 0, null);
 			var newPowerIcon = _this2.game.add.sprite(0, 0, 'icon_generic');
-			var cooldownText = _this2.game.add.bitmapText(0, 0, 'font', '', 30);
+			var cooldownText = _this2.game.add.bitmapText(0, 0, 'font', '', 40);
 			var hotkeyIcon = void 0;
 			if (!_this2.game.onMobile) {
 				hotkeyIcon = _this2.game.add.bitmapText(-32, 32, 'font', '[' + hotkeys[_i] + ']', 20);
 				hotkeyIcon.anchor.setTo(0, 1);
+				_this2.lbTextGroup.add(hotkeyIcon);
 			}
+
+			chosenPower.anchor.setTo(0.5);
 
 			newPowerIcon.scale.setTo(0);
 			newPowerIcon.anchor.setTo(0.5);
 			newPowerIcon.kill();
 
 			cooldownText.anchor.setTo(0.5);
+			cooldownText.tint = 0xFF0000;
 			cooldownText.kill();
 
 			actionbar.anchor.setTo(0.5);
@@ -6580,7 +6716,9 @@ var UI = function () {
 			actionbar.powerNumber = _i;
 			actionbar.cooldown = Date.now();
 			actionbar.timer = _this2.game.time.create();
+			actionbar.chosenPower = chosenPower;
 			actionbar.cooldownText = cooldownText;
+			actionbar.newPowerIcon = newPowerIcon;
 
 			actionbar.events.onInputOver.add(_this2.buttonOver, _this2);
 			actionbar.events.onInputOut.add(_this2.buttonOut, _this2);
@@ -6594,10 +6732,8 @@ var UI = function () {
 			actionbar.show.onStart.add(function () {
 				return newPowerIcon.revive();
 			});
-			actionbar.hide = function () {
-				return newPowerIcon.kill();
-			};
 
+			actionbar.addChild(chosenPower);
 			actionbar.addChild(newPowerIcon);
 			actionbar.addChild(cooldownText);
 
@@ -6613,8 +6749,59 @@ var UI = function () {
 			_loop(_i);
 		}
 
+		//Stat actionbar UI
+		var spaceY = 170;
+
+		var _loop2 = function _loop2(_i2) {
+			var actionbar = _this2.game.add.sprite(15, spaceY, 'actionbar_stat');
+			var label = _this2.game.add.bitmapText(20, 0, 'font', '' + stat_label[_i2], 20);
+			var stat = _this2.game.add.bitmapText(118, 0, 'font', '0', 20);
+			var add = _this2.game.add.sprite(155, 0, 'actionbar_add');
+
+			var hotkeyIcon = void 0;
+			if (!_this2.game.onMobile) {
+				hotkeyIcon = _this2.game.add.bitmapText(2, 16, 'font', '[' + hotkeys_stat[_i2] + ']', 13);
+				hotkeyIcon.anchor.setTo(0, 1);
+				_this2.lbTextGroup.add(hotkeyIcon);
+			}
+
+			actionbar.anchor.setTo(0, 0.5);
+			label.anchor.setTo(0, 0.5);
+			stat.anchor.setTo(0.5);
+			add.anchor.setTo(0.5);
+			add.scale.setTo(0);
+			add.inputEnabled = true;
+			add.name = stat_label[_i2].toLowerCase();
+			add.tweenIn = _this2.game.add.tween(add.scale).to({ x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out);
+			add.tweenOut = _this2.game.add.tween(add.scale).to({ x: 0, y: 0 }, 500, Phaser.Easing.Elastic.Out);
+			add.tweenIn.onStart.add(function () {
+				return add.revive();
+			});
+			add.tweenOut.onComplete.add(function () {
+				return add.kill();
+			});
+			add.events.onInputDown.add(_this2.addStat, _this2);
+			add.kill();
+
+			actionbar.stat = stat;
+			actionbar.add = add;
+
+			actionbar.addChild(label);
+			actionbar.addChild(hotkeyIcon);
+			actionbar.addChild(stat);
+			actionbar.addChild(add);
+
+			_this2.actionbarGroup_stat.add(actionbar);
+
+			spaceY += actionbar.height + 2;
+		};
+
+		for (var _i2 = 0; _i2 < 4; _i2++) {
+			_loop2(_i2);
+		}
+
 		//Choose heropower UI
-		this.choosetext = this.game.add.bitmapText(window.innerWidth / 2, window.innerHeight - window.innerHeight * 0.32, 'font', 'Choose hero power:', 26);
+		this.choosetext = this.game.add.bitmapText(window.innerWidth / 2, window.innerHeight - 320, 'font', 'Choose hero power:', 26);
 		this.choosetext.anchor.setTo(0.5);
 
 		this.opt1Button = this.game.add.sprite(-50, 50, 'icon_generic');
@@ -6656,15 +6843,18 @@ var UI = function () {
       this.lbHeader.x = window.innerWidth - 100;
   }, this);*/
 
-		this.expBar.barSprite.fixedToCamera = true;
-		this.expBar.bgSprite.fixedToCamera = true;
+		this.expBar.setFixedToCamera(true);
+		this.healthbar.setFixedToCamera(true);
+		this.expBar_bar.fixedToCamera = true;
+		this.healthbar_bar.fixedToCamera = true;
 		this.statTextGroup.fixedToCamera = true;
 		this.lbTextGroup.fixedToCamera = true;
 		this.actionbarGroup.fixedToCamera = true;
+		this.actionbarGroup_stat.fixedToCamera = true;
 		this.choosetext.fixedToCamera = true;
 
-		for (var _i2 = 0; _i2 < 4; _i2++) {
-			this.newPowerAvailable(_i2);
+		for (var _i3 = 0; _i3 < 4; _i3++) {
+			this.newPowerAvailable(_i3);
 		}
 
 		return this;
@@ -6693,12 +6883,12 @@ var UI = function () {
 		value: function updateLeaderboard(leaderboard) {
 			var _this4 = this;
 
-			this.lbText.forEach(function (item) {
+			this.lbText.forEach(function (item, i) {
 				item.text = '';
 			});
 
-			leaderboard.forEach(function (item, index, obj) {
-				_this4.lbText[index].text = item.name + ': ' + item.score;
+			leaderboard.forEach(function (item, index) {
+				_this4.lbText[index].text = index + 1 + '. ' + item.name + ': ' + item.score;
 			});
 		}
 	}, {
@@ -6709,27 +6899,43 @@ var UI = function () {
 					this.levelText.text = 'Level: ' + this.stats.level;
 					break;
 				case 'points':
-					this.pointsText.text = 'Points: ' + this.stats.points;
+					this.pointsText.text = 'Points available: ' + this.stats.points;
 					break;
 				case 'firerate':
-					this.firerateText.text = 'Firerate: ' + this.stats.firerate;
+					if (this.stats.firerate >= this.maxStats) {
+						this.actionbarGroup_stat.getAt(0).stat.scale.setTo(0.75);
+						this.actionbarGroup_stat.getAt(0).stat.text = 'MAX';
+					} else {
+						this.actionbarGroup_stat.getAt(0).stat.text = this.stats.firerate;
+					}
 					break;
 				case 'speed':
-					this.speedText.text = 'Speed: ' + this.stats.speed;
+					if (this.stats.speed >= this.maxStats) {
+						this.actionbarGroup_stat.getAt(1).stat.scale.setTo(0.75);
+						this.actionbarGroup_stat.getAt(1).stat.text = 'MAX';
+					} else {
+						this.actionbarGroup_stat.getAt(1).stat.text = this.stats.speed;
+					}
 					break;
 				case 'damage':
-					this.damageText.text = 'Damage: ' + this.stats.damage;
+					if (this.stats.damage >= this.maxStats) {
+						this.actionbarGroup_stat.getAt(2).stat.scale.setTo(0.75);
+						this.actionbarGroup_stat.getAt(2).stat.text = 'MAX';
+					} else {
+						this.actionbarGroup_stat.getAt(2).stat.text = this.stats.damage;
+					}
 					break;
 				case 'health':
-					this.healthText.text = 'Health: ' + this.stats.health;
-					break;
-				case 'acceleration':
-					this.accelerationText.text = 'Acceleration: ' + this.stats.acceleration;
-					break;
-				case 'angulation':
-					this.angulationText.text = 'Angulation: ' + this.stats.angulation;
+					if (this.stats.health >= this.maxStats) {
+						this.actionbarGroup_stat.getAt(3).stat.scale.setTo(0.75);
+						this.actionbarGroup_stat.getAt(3).stat.text = 'MAX';
+					} else {
+						this.actionbarGroup_stat.getAt(3).stat.text = this.stats.health;
+					}
 					break;
 			}
+
+			this.checkPoints();
 		}
 	}, {
 		key: 'newPowerAvailable',
@@ -6783,9 +6989,9 @@ var UI = function () {
 					break;
 				case 3:
 					texts.opt1Text = 'Trap';
-					texts.opt2Text = 'Bomb';
-					texts.btn1Texture = 'icon_magnet';
-					texts.btn2Texture = 'icon_warpspeed';
+					texts.opt2Text = 'Shockwave';
+					texts.btn1Texture = 'icon_trap';
+					texts.btn2Texture = 'icon_shockwave';
 					break;
 			}
 
@@ -6796,28 +7002,31 @@ var UI = function () {
 		value: function sendPowerUpgrade(button) {
 			this.hideHeroBtns.start();
 
-			var chosenPower = this.game.add.sprite(0, 0, button.key);
-			chosenPower.anchor.setTo(0.5);
 			var actionbar = this.actionbarGroup.getAt(button.actionbarIndex);
-			actionbar.hide();
-			actionbar.addChild(chosenPower);
-			actionbar.events.onInputDown.removeAll();
-			actionbar.events.onInputDown.add(this.activateHeroPower, this, 0, actionbar);
-			if (!this.game.onMobile) {
-				var key = this.hotkeyList[button.actionbarIndex];
-				key.onDown.removeAll();
-				key.onDown.add(this.activateHeroPower, this, 0, actionbar);
-			}
 
-			this.game.room.send({ powerChosen: { option: button.opt, index: actionbar.powerNumber } });
+			if (actionbar) {
+				actionbar.chosenPower.loadTexture(button.key);
+				actionbar.newPowerIcon.kill();
+				actionbar.events.onInputDown.removeAll();
+				actionbar.events.onInputDown.add(this.activateHeroPower, { actionbar: actionbar, game: this.game });
+				if (!this.game.onMobile) {
+					var key = this.hotkeyList[button.actionbarIndex];
+					key.onDown.removeAll();
+					key.onDown.add(this.activateHeroPower, { actionbar: actionbar, game: this.game });
+				}
+
+				this.game.room.send({ powerChosen: { option: button.opt, index: actionbar.powerNumber } });
+			}
 		}
 	}, {
 		key: 'activateHeroPower',
-		value: function activateHeroPower(BomfunkMCs, bar) {
-			if (bar.cooldown < Date.now()) {
-				bar.cooldownTween.start();
-				this.game.room.send({ activatePower: bar.powerNumber });
-				bar.cooldown = Date.now() + 30000;
+		value: function activateHeroPower() {
+			if (this.actionbar) {
+				if (this.actionbar.cooldown < Date.now()) {
+					this.actionbar.cooldownTween.start();
+					this.game.room.send({ activatePower: this.actionbar.powerNumber });
+					this.actionbar.cooldown = Date.now() + 30000;
+				}
 			}
 		}
 	}, {
@@ -6825,6 +7034,23 @@ var UI = function () {
 		value: function addPoints() {
 			this.stats.points++;
 			this.updateText('points', this.stats.points);
+		}
+	}, {
+		key: 'checkPoints',
+		value: function checkPoints() {
+			var _this5 = this;
+
+			this.actionbarGroup_stat.forEach(function (item) {
+				if (_this5.stats.points > 0) {
+					if (item.stat.text == 'MAX') {
+						item.add.tweenOut.start();
+					} else if (item.stat.text <= _this5.maxStats) {
+						item.add.tweenIn.start();
+					}
+				} else {
+					item.add.tweenOut.start();
+				}
+			});
 		}
 	}, {
 		key: 'addStat',
@@ -6864,7 +7090,7 @@ var UI = function () {
 
 exports.default = UI;
 
-},{"./HealthBar":41}],48:[function(require,module,exports){
+},{"./HealthBar":41}],49:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6931,7 +7157,7 @@ var Boot = function (_Phaser$State) {
 
 exports.default = Boot;
 
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6963,6 +7189,10 @@ var _Bullet2 = _interopRequireDefault(_Bullet);
 var _Seeker = require('objects/Seeker');
 
 var _Seeker2 = _interopRequireDefault(_Seeker);
+
+var _Shockwave = require('objects/Shockwave');
+
+var _Shockwave2 = _interopRequireDefault(_Shockwave);
 
 var _Bit = require('objects/Bit');
 
@@ -7012,12 +7242,12 @@ var Main = function (_Phaser$State) {
 		value: function create() {
 			this.game.stage.backgroundColor = '#021421';
 			this.game.stage.disableVisibilityChange = true;
-			this.game.world.setBounds(0, 0, 1920, 1920);
+			this.game.world.setBounds(0, 0, 2880, 2880);
 			this.game.onMobile = !this.game.device.desktop;
 			this.game.time.advancedTiming = true;
 
 			//Background
-			this.starfield = this.add.tileSprite(0, 0, 1920, 1920, 'starfield');
+			this.starfield = this.add.tileSprite(0, 0, 2880, 2880, 'starfield');
 			this.starfield.fixedToCamera = true;
 			this.starfield.alpha = 0.5;
 
@@ -7028,8 +7258,20 @@ var Main = function (_Phaser$State) {
 			this.powerUpPool = this.game.add.group();
 			this.cometPool = this.game.add.group();
 			this.seekerPool = this.game.add.group();
+			this.shockwavePool = this.game.add.group();
+			this.clientGroupIdle = this.game.add.group();
+			this.clientGroupActive = this.game.add.group();
+			this.playerGroup = this.game.add.group();
 			this.clients = {};
 			this.id;
+
+			this.bulletPool.z = 1;
+			this.bitsPool.z = 1;
+			this.powerUpPool.z = 1;
+			this.cometPool.z = 1;
+			this.seekerPool.z = 1;
+			this.clientGroupActive.z = 2;
+			this.playerGroup.z = 3;
 
 			//Death particles
 			this.deathEmitter = this.game.add.emitter(0, 0, 20);
@@ -7043,7 +7285,9 @@ var Main = function (_Phaser$State) {
 			this.createBitsPool();
 			this.createPowerUpPool();
 			this.createCometPool();
+			this.createShockwavePool();
 			this.createSeekerPool();
+			this.createClientPool();
 
 			this.netListener();
 		}
@@ -7066,7 +7310,9 @@ var Main = function (_Phaser$State) {
 					var me = message.me;
 					_this2.id = me.id;
 					_this2.clients[_this2.id] = new _Player2.default(_this2.game, _this2.game.world.centerX, _this2.game.world.centerY, 0, 100, 0);
-					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+					_this2.playerGroup.add(_this2.clients[_this2.id]);
+					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.05, 0.05);
+					_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 				}
 
 				if (message.bitHit) {
@@ -7075,6 +7321,8 @@ var Main = function (_Phaser$State) {
 						var player = _this2.clients[message.bitHit.player];
 						bit.target = player;
 						bit.activated = true;
+
+						if (message.bitHit.trap && message.bitHit.player === _this2.id) _this2.game.camera.shake(0.01, 50);
 					}
 				}
 
@@ -7093,7 +7341,7 @@ var Main = function (_Phaser$State) {
 						var bullet = _this2.bulletPool.getFirstDead();
 						bullet.id = message.bullet.id;
 						bullet.angle = message.bullet.angle;
-						bullet.timer = Date.now() + 600;
+						bullet.timer = Date.now() + 1000;
 						bullet.setTint(_player2.tint);
 						bullet.setTrail(_player2.particles);
 						bullet.setDest(message.bullet.x, message.bullet.y);
@@ -7104,14 +7352,20 @@ var Main = function (_Phaser$State) {
 				if (message.seeker) {
 					var _player3 = _this2.clients[message.seeker.owner];
 					var target = _this2.clients[message.seeker.target];
-					if (_player3 && target) {
+					if (_player3) {
 						var m = message.seeker;
 						var seeker = _this2.seekerPool.getFirstDead();
 						seeker.id = m.owner;
-						seeker.target = target;
 						seeker.timer = Date.now() + 2000;
 						seeker.setTint(_player3.tint);
 						seeker.setTrail(_player3.particles);
+
+						if (target) {
+							seeker.target = target;
+						} else {
+							seeker.rotation = _player3.rotation;
+							seeker.target = { alive: false };
+						}
 						seeker.reset(_player3.x, _player3.y);
 					}
 				}
@@ -7143,8 +7397,9 @@ var Main = function (_Phaser$State) {
 
 						client.dest.x = _m.x;
 						client.dest.y = _m.y;
-						client.dest.angle = _m.angle - 90;
 						client.setHealth(_m.health);
+
+						if (_m.angle) client.dest.angle = _m.angle - 90;
 
 						if (_m.active.length > 0) {
 							client.powers.update(_m.active);
@@ -7154,24 +7409,56 @@ var Main = function (_Phaser$State) {
 
 				if (message.leaderboard) {
 					var _player5 = _this2.clients[_this2.id];
-					if (_player5) {
-						_player5.ui.updateLeaderboard(message.leaderboard);
+					var _m2 = message.leaderboard;
+					if (_player5 && _player5.ui) {
+						_player5.ui.updateLeaderboard(_m2.lb);
+						_player5.ui.scoreText.text = 'Score: ' + _m2.score;
+						_player5.ui.posText.text = 'Position: ' + _m2.pos + '/' + _m2.lb.length;
 					}
 				}
 
 				if (message.respawn) {
-					var _m2 = message.respawn;
-					var _player6 = _this2.clients[_m2.id];
-					if (_player6) _player6.respawn(_m2.x, _m2.y);
+					var _m3 = message.respawn;
+					var _player6 = _this2.clients[_m3.id];
+					if (_player6) _player6.respawn(_m3.x, _m3.y);
 				}
 
 				if (message.death) {
-					var _m3 = message.death;
-					var _player7 = _this2.clients[_m3.id];
+					var _m4 = message.death;
+					var _player7 = _this2.clients[_m4.id];
 					if (_player7) {
 						_this2.emitDeath(_player7);
 						_player7.die();
 					}
+				}
+
+				if (message.shockwave) {
+					(function () {
+						var m = message.shockwave;
+						var shockwave = _this2.shockwavePool.getFirstDead();
+						shockwave.start(m.x, m.y, _this2.clients[_this2.id].tint);
+
+						var _loop = function _loop(id) {
+							var player = _this2.clients[id];
+							var dist = _this2.distanceBetween({ x: m.x, y: m.y }, player);
+							if (dist < 300) {
+								setTimeout(function () {
+									if (player.alive) {
+										if (!player.powers.active.includes('shield')) {
+											_this2.tweenTint(player, player.originalTint, 0xffffff, 50);
+											if (id == _this2.id && m.id !== _this2.id) {
+												_this2.game.camera.shake(0.01, 50);
+											}
+										}
+									}
+								}, dist * 1.5);
+							}
+						};
+
+						for (var id in _this2.clients) {
+							_loop(id);
+						}
+					})();
 				}
 			});
 
@@ -7197,39 +7484,50 @@ var Main = function (_Phaser$State) {
 			});
 
 			this.game.room.listen("players/:id", function (change) {
-				if (change.operation === "add") {
-					if (change.path.id !== _this2.id) {
-						_this2.clients[change.path.id] = new _Client2.default(_this2.game, change.value.level, change.value.health, change.value.maxHealth);
+				if (change.path.id && change.path.id !== _this2.id) {
+					if (change.operation === "add") {
+						var client = _this2.clientGroupIdle.getFirstDead();
+						_this2.clientGroupActive.add(client);
+
+						client.revive(-500, -500);
+						client.level = change.value.level;
+						client.health = change.value.health;
+						client.maxHealth = change.value.maxHealth;
+						_this2.clients[change.path.id] = client;
+						_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
+					} else if (change.operation === "remove") {
+						var _client = _this2.clients[change.path.id];
+						_this2.clientGroupIdle.add(_client);
+						_client.die();
+
+						delete _this2.clients[change.path.id];
 					}
-				} else if (change.operation === "remove") {
-					_this2.clients[change.path.id].leave();
-					_this2.clients[change.path.id].destroy();
-					delete _this2.clients[change.path.id];
 				}
 			});
 
 			this.game.room.listen("bits/:id", function (change) {
 				if (change.operation === 'add') {
 					var bit = _this2.bitsPool.getFirstDead();
-					bit.id = change.path.id;
-					bit.scale.setTo(0);
-					bit.reset(change.value.x, change.value.y);
-					bit.scaleTween.start();
-					if (change.value.trap) {
-						var fakeBit = _this2.game.add.sprite(bit.x, bit.y, 'bit');
-						fakeBit.scale.setTo(0);
-						fakeBit.anchor.setTo(0.5);
-						_this2.game.add.tween(fakeBit.scale).to({ x: 2, y: 2 }, 500, Phaser.Easing.Linear.none, true);
-						var tween = _this2.game.add.tween(fakeBit).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none, true);
-						tween.onComplete.add(function () {
-							return fakeBit.destroy();
-						});
+					if (bit) {
+						bit.id = change.path.id;
+						bit.scale.setTo(0);
+						bit.reset(change.value.x, change.value.y);
+						bit.scaleTween.start();
+						if (change.value.trap) {
+							var fakeBit = _this2.game.add.sprite(bit.x, bit.y, 'bit');
+							fakeBit.scale.setTo(0);
+							fakeBit.anchor.setTo(0.5);
+							_this2.game.add.tween(fakeBit.scale).to({ x: 4, y: 4 }, 500, Phaser.Easing.Linear.none, true);
+							var tween = _this2.game.add.tween(fakeBit).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none, true);
+							tween.onComplete.add(function () {
+								return fakeBit.destroy();
+							});
+						}
 					}
 				} else if (change.operation === 'remove') {
 					setTimeout(function () {
 						var bit = _this2.findInGroup(change.path.id, _this2.bitsPool);
-
-						if (bit && !bit.activated) bit.kill();
+						if (bit && bit.alive) bit.kill();
 					}, 1000);
 				}
 			});
@@ -7237,14 +7535,20 @@ var Main = function (_Phaser$State) {
 			this.game.room.listen("powerUps/:id", function (change) {
 				if (change.operation === 'add') {
 					var powerUp = _this2.powerUpPool.getFirstDead();
-					powerUp.id = change.path.id;
-					powerUp.type = change.value.type;
-					powerUp.reset(change.value.x, change.value.y);
+					if (powerUp) {
+						powerUp.id = change.path.id;
+						if (change.value.type === 'healthBoost') {
+							powerUp.tint = 0x00A549;
+						} else if (change.value.type === 'xpBoost') {
+							powerUp.tint = 0xB7C9E5;
+						}
+						powerUp.reset(change.value.x, change.value.y);
+						powerUp.scaleTween.start();
+					}
 				} else if (change.operation === 'remove') {
 					setTimeout(function () {
 						var powerUp = _this2.findInGroup(change.path.id, _this2.powerUpPool);
-
-						if (powerUp && !powerUp.activated) powerUp.kill();
+						if (powerUp && powerUp.alive) powerUp.kill();
 					}, 1000);
 				}
 			});
@@ -7252,10 +7556,12 @@ var Main = function (_Phaser$State) {
 			this.game.room.listen("comets/:id", function (change) {
 				if (change.operation === 'add') {
 					var comet = _this2.cometPool.getFirstDead();
-					comet.id = change.path.id;
-					comet.scale.setTo(0);
-					comet.reset(change.value.x, change.value.y);
-					comet.scaleTween.start();
+					if (comet) {
+						comet.id = change.path.id;
+						comet.scale.setTo(0);
+						comet.reset(change.value.x, change.value.y);
+						comet.scaleTween.start();
+					}
 				} else if (change.operation === 'remove') {
 					var _comet = _this2.findInGroup(change.path.id, _this2.cometPool);
 					if (_comet) {
@@ -7301,6 +7607,20 @@ var Main = function (_Phaser$State) {
 			}
 		}
 	}, {
+		key: 'createShockwavePool',
+		value: function createShockwavePool() {
+			for (var i = 0; i < 10; i++) {
+				this.shockwavePool.add(new _Shockwave2.default(this.game));
+			}
+		}
+	}, {
+		key: 'createClientPool',
+		value: function createClientPool() {
+			for (var i = 0; i < 10; i++) {
+				this.clientGroupIdle.add(new _Client2.default(this.game));
+			}
+		}
+	}, {
 		key: 'findInGroup',
 		value: function findInGroup(id, group) {
 			var foundItem = void 0;
@@ -7320,9 +7640,9 @@ var Main = function (_Phaser$State) {
 			for (var id in this.clients) {
 				if (id !== this.id) {
 					var target = this.clients[id];
-					var dist = this.distanceBetween(this.clients[this.id], target);
+					var _dist = this.distanceBetween(this.clients[this.id], target);
 
-					if (dist < 950) {
+					if (_dist < 950) {
 						if (target.alive && target.alpha === 0) {
 							target.x = target.dest.x;
 							target.y = target.dest.y;
@@ -7427,7 +7747,7 @@ var Main = function (_Phaser$State) {
 
 exports.default = Main;
 
-},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Comet":40,"objects/Player":43,"objects/PowerUp":44,"objects/Seeker":46}],50:[function(require,module,exports){
+},{"objects/Bit":37,"objects/Bullet":38,"objects/Client":39,"objects/Comet":40,"objects/Player":43,"objects/PowerUp":44,"objects/Seeker":46,"objects/Shockwave":47}],51:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7523,7 +7843,7 @@ var Menu = function (_Phaser$State) {
 
 exports.default = Menu;
 
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -7572,14 +7892,17 @@ var Preload = function (_Phaser$State) {
 		value: function preload() {
 			this.game.load.image('spaceship_white', 'assets/spaceship_white.png');
 			this.game.load.image('bit', 'assets/bit.png');
-			this.game.load.image('powerUp', 'assets/powerUp.png');
+			this.game.load.image('powerup', 'assets/powerup.png');
 			this.game.load.image('bullet', 'assets/bullet.png');
 			this.game.load.image('seeker', 'assets/seeker.png');
+			this.game.load.image('shockwave', 'assets/shockwave.png');
 			this.game.load.image('comet', 'assets/comet.png');
 			this.game.load.image('deathParticle', 'assets/particle.png');
-			this.game.load.image('button', 'assets/button.png');
 			this.game.load.image('starfield', 'assets/starfield.png');
 			this.game.load.image('actionbar', 'assets/actionbar.png');
+			this.game.load.image('actionbar_stat', 'assets/actionbar_stat.png');
+			this.game.load.image('actionbar_add', 'assets/actionbar_add.png');
+			this.game.load.image('actionbar_bar', 'assets/actionbar_bar.png');
 			this.game.load.image('power_shield', 'assets/power_shield.png');
 			this.game.load.image('power_magnet', 'assets/power_magnet.png');
 			this.game.load.image('icon_generic', 'assets/icon_generic.png');
@@ -7589,6 +7912,8 @@ var Preload = function (_Phaser$State) {
 			this.game.load.image('icon_seeker', 'assets/icon_seeker.png');
 			this.game.load.image('icon_magnet', 'assets/icon_magnet.png');
 			this.game.load.image('icon_warpspeed', 'assets/icon_warpspeed.png');
+			this.game.load.image('icon_trap', 'assets/icon_trap.png');
+			this.game.load.image('icon_shockwave', 'assets/icon_shockwave.png');
 
 			this.load.atlas('arcade', 'assets/joystick/arcade-joystick.png', 'assets/joystick/arcade-joystick.json');
 
