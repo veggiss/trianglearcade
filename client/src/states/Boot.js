@@ -8,8 +8,8 @@ class Boot extends Phaser.State {
 		let height = window.innerHeight;
 
 		if (!this.game.device.desktop) {
-			width = window.innerWidth * 1.5;
-			height = window.innerHeight * 1.5;
+			width = window.innerWidth * 2;
+			height = window.innerHeight * 2;
 		}
 
 		this.game.scale.setGameSize(width, height);
