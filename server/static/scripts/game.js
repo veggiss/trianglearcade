@@ -7152,7 +7152,7 @@ var Boot = function (_Phaser$State) {
 			}
 
 			this.game.scale.setGameSize(width, height);
-			this.game.scale.scaleMode = !this.game.device.desktop ? Phaser.ScaleManager.RESIZE : Phaser.ScaleManager.SHOW_ALL;
+			this.game.scale.scaleMode = this.game.device.desktop ? Phaser.ScaleManager.RESIZE : Phaser.ScaleManager.SHOW_ALL;
 			this.game.canvas.oncontextmenu = function (e) {
 				e.preventDefault();
 			};
