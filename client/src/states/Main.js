@@ -13,7 +13,7 @@ class Main extends Phaser.State {
 		this.game.stage.backgroundColor = '#021421';
 		this.game.stage.disableVisibilityChange = true;
 		this.game.world.setBounds(0, 0, 2880, 2880);
-		this.game.onMobile = !this.game.device.desktop;
+		this.game.onMobile = true//!this.game.device.desktop;
 		this.game.time.advancedTiming = true;
 		
 		//Background
@@ -75,7 +75,7 @@ class Main extends Phaser.State {
 			if (message.me) {
 				let me = message.me;
 				this.id = me.id;
-				this.clients[this.id] = new Player(this.game, this.game.world.centerX, this.game.world.centerY, 0, 100, 0);
+				this.clients[this.id] = new Player(this.game, -500, -500, 0, 100, 0);
 				this.playerGroup.add(this.clients[this.id]);
 				this.game.camera.follow(this.clients[this.id], Phaser.Camera.FOLLOW_LOCKON, 0.05, 0.05);
 				this.game.world.sort('z', Phaser.Group.SORT_ASCENDING);

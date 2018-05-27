@@ -5960,6 +5960,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.lastUpdate = Date.now() + _this.angleRate;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.originalTint = _this.tint;
+		_this.stickDown = false;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 
 		_this.stats = {
@@ -5984,7 +5985,6 @@ var Player = function (_Phaser$Sprite) {
 			_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
 			_this.stick.alignBottomLeft();
 
-			_this.stick.onDown.add(_this.playerControls, _this, 1, true);
 			_this.stick.onUp.add(_this.playerControls, _this, 1, false);
 
 			_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
@@ -6030,7 +6030,9 @@ var Player = function (_Phaser$Sprite) {
 			this.x = this.lerp(this.x, this.dest.x, 0.1);
 			this.y = this.lerp(this.y, this.dest.y, 0.1);
 
-			var destAngle = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+			if (this.game.onMobile) {} else {}
+			var destAngle = this.stick.angle;
+			//let destAngle = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
 			var shortestAngle = Phaser.Math.getShortestAngle(this.angle, destAngle);
 			this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
@@ -6068,10 +6070,14 @@ var Player = function (_Phaser$Sprite) {
 			if (this.lastUpdate < Date.now()) {
 				var deg = void 0;
 
-				if (this.game.onMobile) {
-					deg = this.stick.isDown ? Phaser.Math.radToDeg(this.stick.rotation) + 90 : this.deg + 90;
+				deg = this.stick.isDown ? Phaser.Math.radToDeg(this.stick.rotation) + 90 : this.deg + 90;
+				if (this.stick.force > 0.4) {
+					this.playerControls({ isDown: true });
 				} else {
-					deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
+					this.playerControls({ isDown: false });
+				}
+				if (this.game.onMobile) {} else {
+					//deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
 				}
 
 				var destAngle = deg < 0 ? deg + 360 : deg;
@@ -6693,11 +6699,12 @@ var UI = function () {
 			var chosenPower = _this2.game.add.sprite(0, 0, null);
 			var newPowerIcon = _this2.game.add.sprite(0, 0, 'icon_generic');
 			var cooldownText = _this2.game.add.bitmapText(0, 0, 'font', '', 40);
-			var hotkeyIcon = void 0;
+
 			if (!_this2.game.onMobile) {
-				hotkeyIcon = _this2.game.add.bitmapText(-32, 32, 'font', '[' + hotkeys[_i] + ']', 20);
+				var hotkeyIcon = _this2.game.add.bitmapText(-32, 32, 'font', '[' + hotkeys[_i] + ']', 20);
 				hotkeyIcon.anchor.setTo(0, 1);
 				_this2.lbTextGroup.add(hotkeyIcon);
+				actionbar.addChild(hotkeyIcon);
 			}
 
 			chosenPower.anchor.setTo(0.5);
@@ -6736,10 +6743,6 @@ var UI = function () {
 			actionbar.addChild(chosenPower);
 			actionbar.addChild(newPowerIcon);
 			actionbar.addChild(cooldownText);
-
-			if (!_this2.game.onMobile) {
-				actionbar.addChild(hotkeyIcon);
-			}
 			_this2.actionbarGroup.add(actionbar);
 
 			spaceX += actionbar.width + 10;
@@ -6758,11 +6761,11 @@ var UI = function () {
 			var stat = _this2.game.add.bitmapText(118, 0, 'font', '0', 20);
 			var add = _this2.game.add.sprite(155, 0, 'actionbar_add');
 
-			var hotkeyIcon = void 0;
 			if (!_this2.game.onMobile) {
-				hotkeyIcon = _this2.game.add.bitmapText(2, 16, 'font', '[' + hotkeys_stat[_i2] + ']', 13);
+				var hotkeyIcon = _this2.game.add.bitmapText(2, 16, 'font', '[' + hotkeys_stat[_i2] + ']', 13);
 				hotkeyIcon.anchor.setTo(0, 1);
 				_this2.lbTextGroup.add(hotkeyIcon);
+				actionbar.addChild(hotkeyIcon);
 			}
 
 			actionbar.anchor.setTo(0, 0.5);
@@ -6787,7 +6790,6 @@ var UI = function () {
 			actionbar.add = add;
 
 			actionbar.addChild(label);
-			actionbar.addChild(hotkeyIcon);
 			actionbar.addChild(stat);
 			actionbar.addChild(add);
 
@@ -7243,7 +7245,7 @@ var Main = function (_Phaser$State) {
 			this.game.stage.backgroundColor = '#021421';
 			this.game.stage.disableVisibilityChange = true;
 			this.game.world.setBounds(0, 0, 2880, 2880);
-			this.game.onMobile = !this.game.device.desktop;
+			this.game.onMobile = true; //!this.game.device.desktop;
 			this.game.time.advancedTiming = true;
 
 			//Background
@@ -7309,7 +7311,7 @@ var Main = function (_Phaser$State) {
 				if (message.me) {
 					var me = message.me;
 					_this2.id = me.id;
-					_this2.clients[_this2.id] = new _Player2.default(_this2.game, _this2.game.world.centerX, _this2.game.world.centerY, 0, 100, 0);
+					_this2.clients[_this2.id] = new _Player2.default(_this2.game, -500, -500, 0, 100, 0);
 					_this2.playerGroup.add(_this2.clients[_this2.id]);
 					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.05, 0.05);
 					_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);

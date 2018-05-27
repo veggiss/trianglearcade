@@ -148,11 +148,12 @@ class UI {
 			let chosenPower = this.game.add.sprite(0, 0, null);
 			let newPowerIcon = this.game.add.sprite(0, 0, 'icon_generic');
 			let cooldownText = this.game.add.bitmapText(0, 0, 'font', '', 40);
-			let hotkeyIcon;
+			
 			if (!this.game.onMobile) {
-				hotkeyIcon = this.game.add.bitmapText(-32, 32, 'font', `[${hotkeys[i]}]`, 20);
+				let hotkeyIcon = this.game.add.bitmapText(-32, 32, 'font', `[${hotkeys[i]}]`, 20);
 				hotkeyIcon.anchor.setTo(0, 1);
 				this.lbTextGroup.add(hotkeyIcon);
+				actionbar.addChild(hotkeyIcon);
 			}
 
 			chosenPower.anchor.setTo(0.5);
@@ -187,10 +188,6 @@ class UI {
 			actionbar.addChild(chosenPower);
 			actionbar.addChild(newPowerIcon);
 			actionbar.addChild(cooldownText);
-
-			if (!this.game.onMobile) {
-				actionbar.addChild(hotkeyIcon);
-			}
 			this.actionbarGroup.add(actionbar);
 
 			spaceX += actionbar.width + 10;
@@ -203,12 +200,12 @@ class UI {
 			let label = this.game.add.bitmapText(20, 0, 'font', `${stat_label[i]}`, 20);
 			let stat = this.game.add.bitmapText(118, 0, 'font', '0', 20);
 			let add = this.game.add.sprite(155, 0, 'actionbar_add');
-
-			let hotkeyIcon;
+			
 			if (!this.game.onMobile) {
-				hotkeyIcon = this.game.add.bitmapText(2, 16, 'font', `[${hotkeys_stat[i]}]`, 13);
+				let hotkeyIcon = this.game.add.bitmapText(2, 16, 'font', `[${hotkeys_stat[i]}]`, 13);
 				hotkeyIcon.anchor.setTo(0, 1);
 				this.lbTextGroup.add(hotkeyIcon);
+				actionbar.addChild(hotkeyIcon);
 			}
 
 			actionbar.anchor.setTo(0, 0.5);
@@ -229,7 +226,6 @@ class UI {
 			actionbar.add = add;
 
 			actionbar.addChild(label);
-			actionbar.addChild(hotkeyIcon);
 			actionbar.addChild(stat);
 			actionbar.addChild(add);
 

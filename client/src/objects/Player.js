@@ -19,6 +19,7 @@ class Player extends Phaser.Sprite {
 		this.lastUpdate = Date.now() + this.angleRate;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.originalTint = this.tint;
+		this.stickDown = false;
 		this.dest = {x: x, y: y, angle: this.angle};
 
 		this.stats = {
@@ -44,7 +45,6 @@ class Player extends Phaser.Sprite {
 	        this.stick = this.pad.addStick(0, 0, 200, 'arcade');
 	        this.stick.alignBottomLeft();
 
-			this.stick.onDown.add(this.playerControls, this, 1, true);
 			this.stick.onUp.add(this.playerControls, this, 1, false);
 
 	        this.buttonA = this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
@@ -84,7 +84,14 @@ class Player extends Phaser.Sprite {
 		this.x = this.lerp(this.x, this.dest.x, 0.1);
 		this.y = this.lerp(this.y, this.dest.y, 0.1);
 
-		let destAngle = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
+
+		if (this.game.onMobile) {
+
+		} else {
+
+		}
+		let destAngle = this.stick.angle;
+		//let destAngle = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this));
 		let shortestAngle = Phaser.Math.getShortestAngle(this.angle, destAngle);
 		this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.075);
 		this.playerHealthBar.setPosition(this.x, this.y + 55);
@@ -118,11 +125,18 @@ class Player extends Phaser.Sprite {
 	updateAngle() {
 		if (this.lastUpdate < Date.now()) {
 			let deg;
-
-			if (this.game.onMobile) {
-				deg = this.stick.isDown ? Phaser.Math.radToDeg(this.stick.rotation) + 90 : this.deg + 90;
+			
+			
+			deg = this.stick.isDown ? Phaser.Math.radToDeg(this.stick.rotation) + 90 : this.deg + 90;
+			if (this.stick.force > 0.4) {
+				this.playerControls({isDown: true});
 			} else {
-				deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
+				this.playerControls({isDown: false});
+			}
+			if (this.game.onMobile) {
+								
+			} else {
+				//deg = Phaser.Math.radToDeg(this.game.physics.arcade.angleToPointer(this)) + 90;
 			}
 
 			let destAngle = deg < 0 ? deg + 360 : deg;
