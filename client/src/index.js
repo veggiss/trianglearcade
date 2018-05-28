@@ -5,6 +5,8 @@ import Menu from 'states/Menu';
 import Main from 'states/Main';
 
 const config = {
+	width: window.innerWidth,
+	height: window.innerHeight,
 	renderer: Phaser.WEBGL,
 	parent: 'trianglearcade'
 }
