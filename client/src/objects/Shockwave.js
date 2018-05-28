@@ -1,6 +1,6 @@
 class Shockwave extends Phaser.Sprite {
 	constructor(game, x, y) {
-		super(game, x, y, 'shockwave');
+		super(game, x, y, 'atlas', 'shockwave.png');
 
 		this.game = game;
 		this.alpha = 1;

@@ -6,13 +6,13 @@ class Powers {
 		this.active = [];
 
 		//Power assets
-		this.powerShield = this.game.add.sprite(0, 0, 'power_shield');
+		this.powerShield = this.game.add.sprite(0, 0, 'atlas', 'power_shield.png');
 		this.powerShield.tweenIn = this.game.add.tween(this.powerShield.scale).to({x: 1, y: 1}, 500, Phaser.Easing.Elastic.Out);
 		this.powerShield.tweenOut = this.game.add.tween(this.powerShield).to({alpha: 0}, 500, Phaser.Easing.Linear.none);
 		this.powerShield.tweenIn.onStart.add(() => {this.powerShield.revive(); this.powerShield.alpha = 1;});
 		this.powerShield.tweenOut.onComplete.add(() => {this.powerShield.kill(); this.powerShield.scale.setTo(0)});
 
-		this.powerMagnet = this.game.add.sprite(0, 0, 'power_magnet');
+		this.powerMagnet = this.game.add.sprite(0, 0, 'atlas', 'power_magnet.png');
 		this.powerMagnet.tweenIn = this.game.add.tween(this.powerMagnet.scale).to({x: 1, y: 1}, 500, Phaser.Easing.Elastic.Out);
 		this.powerMagnet.tweenOut = this.game.add.tween(this.powerMagnet).to({alpha: 0}, 500, Phaser.Easing.Linear.none);
 		this.powerMagnet.tweenIn.onStart.add(() => {this.powerMagnet.revive(); this.powerMagnet.alpha = 1;});

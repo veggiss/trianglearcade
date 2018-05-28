@@ -14,7 +14,7 @@ class Particles {
 
 		// Moving player particles
 		for (let i = 0; i < 5; i++) {
-			let particle = this.game.add.sprite(0, 0, 'deathParticle');
+			let particle = this.game.add.sprite(0, 0, 'atlas', 'particle.png');
 			particle.tween = this.game.add.tween(particle.scale).to({x: 0, y: 0}, 1000, Phaser.Easing.Linear.None, false);
 			particle.tween.onComplete.add(() => {
 				particle.kill();
@@ -25,9 +25,9 @@ class Particles {
 			this.playerMoveGroup.add(particle);
 		}
 
-		// Bulle trail particles
+		// Bullet trail particles
 		for (let i = 0; i < 15; i++) {
-			let particle = this.game.add.sprite(0, 0, 'bullet');
+			let particle = this.game.add.sprite(0, 0, 'atlas', 'bullet.png');
 			particle.tween = this.game.add.tween(particle.scale).to({x: 0, y: 0}, 400, Phaser.Easing.Linear.None, false);
 			particle.tween.onComplete.add(() => {
 				particle.kill();
@@ -40,7 +40,7 @@ class Particles {
 
 		//Bullet hit emitter
 		this.bulletHit = this.game.add.emitter(0, 0, 12);
-		this.bulletHit.makeParticles('deathParticle');
+		this.bulletHit.makeParticles('atlas', 'particle.png');
 		this.bulletHit.setAlpha(1, 0, 500);
 		this.bulletHit.setScale(1, 0, 1, 0, 500);
 		this.bulletHit.lifespan = 500;

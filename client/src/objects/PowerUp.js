@@ -1,6 +1,6 @@
 class PowerUp extends Phaser.Sprite {
 	constructor(game, x, y) {
-		super(game, x, y, 'powerup');
+		super(game, x, y, 'atlas', 'powerup.png');
 		
 		this.id;
 		this.target;

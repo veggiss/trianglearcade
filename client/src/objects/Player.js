@@ -5,7 +5,7 @@ import UI from './UI';
 
 class Player extends Phaser.Sprite {
 	constructor(game, x, y, health, angle, color) {
-		super(game, x, y, 'spaceship_white');
+		super(game, x, y, 'atlas', 'spaceship_white.png');
 
 		this.pad = this.game.plugins.add(Phaser.VirtualJoystick);
 		this.game = game;

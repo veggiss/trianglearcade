@@ -1,6 +1,6 @@
 class Bullet extends Phaser.Sprite {
 	constructor(game, x, y) {
-		super(game, x, y, 'bullet');
+		super(game, x, y, 'atlas', 'bullet.png');
 
 		this.id;
 		this.game = game;

@@ -4,7 +4,7 @@ import Powers from './Powers';
 
 class Client extends Phaser.Sprite {
 	constructor(game, level, health, maxHealth) {
-		super(game, 0, 0, 'spaceship_white');
+		super(game, 0, 0, 'atlas', 'spaceship_white.png');
 
 		this.game = game;
 		this.health = 0;

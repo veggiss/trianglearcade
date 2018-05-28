@@ -60,7 +60,7 @@ class UI {
 		});
 		this.expBar.setPercent(0);
 
-		this.expBar_bar = this.game.add.sprite(this.expBar.x, this.expBar.y, 'actionbar_bar');
+		this.expBar_bar = this.game.add.sprite(this.expBar.x, this.expBar.y, 'atlas', 'actionbar_bar.png');
 		this.expBar_bar.anchor.setTo(0.5);
 		this.expBar_text = this.game.add.bitmapText(0, 0, 'font', 'XP', 16);
 		this.expBar_text.anchor.setTo(0.5);
@@ -86,7 +86,7 @@ class UI {
 			}
 		});
 
-		this.healthbar_bar = this.game.add.sprite(this.healthbar.x, this.healthbar.y, 'actionbar_bar');
+		this.healthbar_bar = this.game.add.sprite(this.healthbar.x, this.healthbar.y, 'atlas', 'actionbar_bar.png');
 		this.healthbar_bar.anchor.setTo(0.5);
 		this.healthbar_text = this.game.add.bitmapText(0, 0, 'font', 'HP', 16);
 		this.healthbar_text.anchor.setTo(0.5);
@@ -144,9 +144,9 @@ class UI {
 		//Power actionbar UI
 		let spaceX = this.game.canvas.width/2 - 134;
 		for (let i = 0; i < 4; i++) {
-			let actionbar = this.game.add.sprite(spaceX, this.game.canvas.height - 110, 'actionbar');
+			let actionbar = this.game.add.sprite(spaceX, this.game.canvas.height - 110, 'atlas', 'actionbar.png');
 			let chosenPower = this.game.add.sprite(0, 0, null);
-			let newPowerIcon = this.game.add.sprite(0, 0, 'icon_generic');
+			let newPowerIcon = this.game.add.sprite(0, 0, 'atlas', 'icon_generic.png');
 			let cooldownText = this.game.add.bitmapText(0, 0, 'font', '', 40);
 			let hotkeyIcon;
 
@@ -197,10 +197,10 @@ class UI {
 		//Stat actionbar UI
 		let spaceY = 50;
 		for (let i = 0; i < 4; i++) {
-			let actionbar = this.game.add.sprite(15, spaceY, 'actionbar_stat');
+			let actionbar = this.game.add.sprite(15, spaceY, 'atlas', 'actionbar_stat.png');
 			let label = this.game.add.bitmapText(20, 0, 'font', `${stat_label[i]}`, 20);
 			let stat = this.game.add.bitmapText(118, 0, 'font', '0', 20);
-			let add = this.game.add.sprite(155, 0, 'actionbar_add');
+			let add = this.game.add.sprite(155, 0, 'atlas', 'actionbar_add.png');
 
 			if (!this.game.onMobile) {
 				let hotkeyIcon = this.game.add.bitmapText(2, 16, 'font', `[${hotkeys_stat[i]}]`, 13);
@@ -243,9 +243,9 @@ class UI {
 		this.choosetext = this.game.add.bitmapText(this.game.canvas.width/2, this.game.canvas.height - 320, 'font', 'Choose hero power:', 26);
 		this.choosetext.anchor.setTo(0.5);
 
-		this.opt1Button = this.game.add.sprite(-50, 50, 'icon_generic');
+		this.opt1Button = this.game.add.sprite(-50, 50, 'atlas', 'icon_generic.png');
 		this.opt1Text = this.game.add.bitmapText(0, 20, 'font', '', 20);
-		this.opt2Button = this.game.add.sprite(50, 50, 'icon_generic');
+		this.opt2Button = this.game.add.sprite(50, 50, 'atlas', 'icon_generic.png');
 		this.opt2Text = this.game.add.bitmapText(0, 20, 'font', '', 20);
 
 		this.opt1Button.opt = 0;

@@ -44,7 +44,7 @@ class Main extends Phaser.State {
 
 		//Death particles
 		this.deathEmitter = this.game.add.emitter(0, 0, 20);
-		this.deathEmitter.makeParticles('deathParticle');
+		this.deathEmitter.makeParticles('atlas', 'particle.png');
 		this.deathEmitter.setAlpha(1, 0, 2000);
 		this.deathEmitter.setScale(3, 0, 3, 0, 2000);
 		this.deathEmitter.lifespan = 2000;
@@ -273,7 +273,7 @@ class Main extends Phaser.State {
 					bit.reset(change.value.x, change.value.y);
 					bit.scaleTween.start();
 					if (change.value.trap) {
-						let fakeBit = this.game.add.sprite(bit.x, bit.y, 'bit');
+						let fakeBit = this.game.add.sprite(bit.x, bit.y, 'atlas', 'bit.png');
 						fakeBit.scale.setTo(0);
 						fakeBit.anchor.setTo(0.5);
 						this.game.add.tween(fakeBit.scale).to({x: 4, y: 4}, 500, Phaser.Easing.Linear.none, true);

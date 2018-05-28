@@ -5214,7 +5214,7 @@ var Bit = function (_Phaser$Sprite) {
 	function Bit(game, x, y) {
 		_classCallCheck(this, Bit);
 
-		var _this = _possibleConstructorReturn(this, (Bit.__proto__ || Object.getPrototypeOf(Bit)).call(this, game, x, y, 'bit'));
+		var _this = _possibleConstructorReturn(this, (Bit.__proto__ || Object.getPrototypeOf(Bit)).call(this, game, x, y, 'atlas', 'bit.png'));
 
 		_this.id;
 		_this.target;
@@ -5307,7 +5307,7 @@ var Bullet = function (_Phaser$Sprite) {
 	function Bullet(game, x, y) {
 		_classCallCheck(this, Bullet);
 
-		var _this = _possibleConstructorReturn(this, (Bullet.__proto__ || Object.getPrototypeOf(Bullet)).call(this, game, x, y, 'bullet'));
+		var _this = _possibleConstructorReturn(this, (Bullet.__proto__ || Object.getPrototypeOf(Bullet)).call(this, game, x, y, 'atlas', 'bullet.png'));
 
 		_this.id;
 		_this.game = game;
@@ -5424,7 +5424,7 @@ var Client = function (_Phaser$Sprite) {
 	function Client(game, level, health, maxHealth) {
 		_classCallCheck(this, Client);
 
-		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, 0, 0, 'spaceship_white'));
+		var _this = _possibleConstructorReturn(this, (Client.__proto__ || Object.getPrototypeOf(Client)).call(this, game, 0, 0, 'atlas', 'spaceship_white.png'));
 
 		_this.game = game;
 		_this.health = 0;
@@ -5553,7 +5553,7 @@ var Comet = function (_Phaser$Sprite) {
 	function Comet(game, x, y) {
 		_classCallCheck(this, Comet);
 
-		var _this = _possibleConstructorReturn(this, (Comet.__proto__ || Object.getPrototypeOf(Comet)).call(this, game, x, y, 'comet'));
+		var _this = _possibleConstructorReturn(this, (Comet.__proto__ || Object.getPrototypeOf(Comet)).call(this, game, x, y, 'atlas', 'comet.png'));
 
 		_this.id;
 		_this.game = game;
@@ -5802,7 +5802,7 @@ var Particles = function () {
 		// Moving player particles
 
 		var _loop = function _loop(i) {
-			var particle = _this.game.add.sprite(0, 0, 'deathParticle');
+			var particle = _this.game.add.sprite(0, 0, 'atlas', 'particle.png');
 			particle.tween = _this.game.add.tween(particle.scale).to({ x: 0, y: 0 }, 1000, Phaser.Easing.Linear.None, false);
 			particle.tween.onComplete.add(function () {
 				particle.kill();
@@ -5817,10 +5817,10 @@ var Particles = function () {
 			_loop(i);
 		}
 
-		// Bulle trail particles
+		// Bullet trail particles
 
 		var _loop2 = function _loop2(i) {
-			var particle = _this.game.add.sprite(0, 0, 'bullet');
+			var particle = _this.game.add.sprite(0, 0, 'atlas', 'bullet.png');
 			particle.tween = _this.game.add.tween(particle.scale).to({ x: 0, y: 0 }, 400, Phaser.Easing.Linear.None, false);
 			particle.tween.onComplete.add(function () {
 				particle.kill();
@@ -5837,7 +5837,7 @@ var Particles = function () {
 
 		//Bullet hit emitter
 		this.bulletHit = this.game.add.emitter(0, 0, 12);
-		this.bulletHit.makeParticles('deathParticle');
+		this.bulletHit.makeParticles('atlas', 'particle.png');
 		this.bulletHit.setAlpha(1, 0, 500);
 		this.bulletHit.setScale(1, 0, 1, 0, 500);
 		this.bulletHit.lifespan = 500;
@@ -5945,7 +5945,7 @@ var Player = function (_Phaser$Sprite) {
 	function Player(game, x, y, health, angle, color) {
 		_classCallCheck(this, Player);
 
-		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'spaceship_white'));
+		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'atlas', 'spaceship_white.png'));
 
 		_this.pad = _this.game.plugins.add(Phaser.VirtualJoystick);
 		_this.game = game;
@@ -6178,7 +6178,7 @@ var PowerUp = function (_Phaser$Sprite) {
 	function PowerUp(game, x, y) {
 		_classCallCheck(this, PowerUp);
 
-		var _this = _possibleConstructorReturn(this, (PowerUp.__proto__ || Object.getPrototypeOf(PowerUp)).call(this, game, x, y, 'powerup'));
+		var _this = _possibleConstructorReturn(this, (PowerUp.__proto__ || Object.getPrototypeOf(PowerUp)).call(this, game, x, y, 'atlas', 'powerup.png'));
 
 		_this.id;
 		_this.target;
@@ -6267,7 +6267,7 @@ var Powers = function () {
 		this.active = [];
 
 		//Power assets
-		this.powerShield = this.game.add.sprite(0, 0, 'power_shield');
+		this.powerShield = this.game.add.sprite(0, 0, 'atlas', 'power_shield.png');
 		this.powerShield.tweenIn = this.game.add.tween(this.powerShield.scale).to({ x: 1, y: 1 }, 500, Phaser.Easing.Elastic.Out);
 		this.powerShield.tweenOut = this.game.add.tween(this.powerShield).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none);
 		this.powerShield.tweenIn.onStart.add(function () {
@@ -6277,7 +6277,7 @@ var Powers = function () {
 			_this.powerShield.kill();_this.powerShield.scale.setTo(0);
 		});
 
-		this.powerMagnet = this.game.add.sprite(0, 0, 'power_magnet');
+		this.powerMagnet = this.game.add.sprite(0, 0, 'atlas', 'power_magnet.png');
 		this.powerMagnet.tweenIn = this.game.add.tween(this.powerMagnet.scale).to({ x: 1, y: 1 }, 500, Phaser.Easing.Elastic.Out);
 		this.powerMagnet.tweenOut = this.game.add.tween(this.powerMagnet).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none);
 		this.powerMagnet.tweenIn.onStart.add(function () {
@@ -6383,7 +6383,7 @@ var Seeker = function (_Phaser$Sprite) {
 	function Seeker(game, x, y) {
 		_classCallCheck(this, Seeker);
 
-		var _this = _possibleConstructorReturn(this, (Seeker.__proto__ || Object.getPrototypeOf(Seeker)).call(this, game, x, y, 'bullet'));
+		var _this = _possibleConstructorReturn(this, (Seeker.__proto__ || Object.getPrototypeOf(Seeker)).call(this, game, x, y, 'atlas', 'bullet.png'));
 
 		_this.id;
 		_this.target;
@@ -6483,7 +6483,7 @@ var Shockwave = function (_Phaser$Sprite) {
 	function Shockwave(game, x, y) {
 		_classCallCheck(this, Shockwave);
 
-		var _this = _possibleConstructorReturn(this, (Shockwave.__proto__ || Object.getPrototypeOf(Shockwave)).call(this, game, x, y, 'shockwave'));
+		var _this = _possibleConstructorReturn(this, (Shockwave.__proto__ || Object.getPrototypeOf(Shockwave)).call(this, game, x, y, 'atlas', 'shockwave.png'));
 
 		_this.game = game;
 		_this.alpha = 1;
@@ -6610,7 +6610,7 @@ var UI = function () {
 		});
 		this.expBar.setPercent(0);
 
-		this.expBar_bar = this.game.add.sprite(this.expBar.x, this.expBar.y, 'actionbar_bar');
+		this.expBar_bar = this.game.add.sprite(this.expBar.x, this.expBar.y, 'atlas', 'actionbar_bar.png');
 		this.expBar_bar.anchor.setTo(0.5);
 		this.expBar_text = this.game.add.bitmapText(0, 0, 'font', 'XP', 16);
 		this.expBar_text.anchor.setTo(0.5);
@@ -6636,7 +6636,7 @@ var UI = function () {
 			}
 		});
 
-		this.healthbar_bar = this.game.add.sprite(this.healthbar.x, this.healthbar.y, 'actionbar_bar');
+		this.healthbar_bar = this.game.add.sprite(this.healthbar.x, this.healthbar.y, 'atlas', 'actionbar_bar.png');
 		this.healthbar_bar.anchor.setTo(0.5);
 		this.healthbar_text = this.game.add.bitmapText(0, 0, 'font', 'HP', 16);
 		this.healthbar_text.anchor.setTo(0.5);
@@ -6695,9 +6695,9 @@ var UI = function () {
 		var spaceX = this.game.canvas.width / 2 - 134;
 
 		var _loop = function _loop(_i) {
-			var actionbar = _this2.game.add.sprite(spaceX, _this2.game.canvas.height - 110, 'actionbar');
+			var actionbar = _this2.game.add.sprite(spaceX, _this2.game.canvas.height - 110, 'atlas', 'actionbar.png');
 			var chosenPower = _this2.game.add.sprite(0, 0, null);
-			var newPowerIcon = _this2.game.add.sprite(0, 0, 'icon_generic');
+			var newPowerIcon = _this2.game.add.sprite(0, 0, 'atlas', 'icon_generic.png');
 			var cooldownText = _this2.game.add.bitmapText(0, 0, 'font', '', 40);
 			var hotkeyIcon = void 0;
 
@@ -6757,10 +6757,10 @@ var UI = function () {
 		var spaceY = 50;
 
 		var _loop2 = function _loop2(_i2) {
-			var actionbar = _this2.game.add.sprite(15, spaceY, 'actionbar_stat');
+			var actionbar = _this2.game.add.sprite(15, spaceY, 'atlas', 'actionbar_stat.png');
 			var label = _this2.game.add.bitmapText(20, 0, 'font', '' + stat_label[_i2], 20);
 			var stat = _this2.game.add.bitmapText(118, 0, 'font', '0', 20);
-			var add = _this2.game.add.sprite(155, 0, 'actionbar_add');
+			var add = _this2.game.add.sprite(155, 0, 'atlas', 'actionbar_add.png');
 
 			if (!_this2.game.onMobile) {
 				var _hotkeyIcon = _this2.game.add.bitmapText(2, 16, 'font', '[' + hotkeys_stat[_i2] + ']', 13);
@@ -6811,9 +6811,9 @@ var UI = function () {
 		this.choosetext = this.game.add.bitmapText(this.game.canvas.width / 2, this.game.canvas.height - 320, 'font', 'Choose hero power:', 26);
 		this.choosetext.anchor.setTo(0.5);
 
-		this.opt1Button = this.game.add.sprite(-50, 50, 'icon_generic');
+		this.opt1Button = this.game.add.sprite(-50, 50, 'atlas', 'icon_generic.png');
 		this.opt1Text = this.game.add.bitmapText(0, 20, 'font', '', 20);
-		this.opt2Button = this.game.add.sprite(50, 50, 'icon_generic');
+		this.opt2Button = this.game.add.sprite(50, 50, 'atlas', 'icon_generic.png');
 		this.opt2Text = this.game.add.bitmapText(0, 20, 'font', '', 20);
 
 		this.opt1Button.opt = 0;
@@ -7288,7 +7288,7 @@ var Main = function (_Phaser$State) {
 
 			//Death particles
 			this.deathEmitter = this.game.add.emitter(0, 0, 20);
-			this.deathEmitter.makeParticles('deathParticle');
+			this.deathEmitter.makeParticles('atlas', 'particle.png');
 			this.deathEmitter.setAlpha(1, 0, 2000);
 			this.deathEmitter.setScale(3, 0, 3, 0, 2000);
 			this.deathEmitter.lifespan = 2000;
@@ -7527,7 +7527,7 @@ var Main = function (_Phaser$State) {
 						bit.reset(change.value.x, change.value.y);
 						bit.scaleTween.start();
 						if (change.value.trap) {
-							var fakeBit = _this2.game.add.sprite(bit.x, bit.y, 'bit');
+							var fakeBit = _this2.game.add.sprite(bit.x, bit.y, 'atlas', 'bit.png');
 							fakeBit.scale.setTo(0);
 							fakeBit.anchor.setTo(0.5);
 							_this2.game.add.tween(fakeBit.scale).to({ x: 4, y: 4 }, 500, Phaser.Easing.Linear.none, true);
@@ -7903,36 +7903,15 @@ var Preload = function (_Phaser$State) {
 	_createClass(Preload, [{
 		key: 'preload',
 		value: function preload() {
-			this.game.load.image('spaceship_white', 'assets/spaceship_white.png');
-			this.game.load.image('bit', 'assets/bit.png');
-			this.game.load.image('powerup', 'assets/powerup.png');
-			this.game.load.image('bullet', 'assets/bullet.png');
-			this.game.load.image('seeker', 'assets/seeker.png');
-			this.game.load.image('shockwave', 'assets/shockwave.png');
-			this.game.load.image('comet', 'assets/comet.png');
-			this.game.load.image('deathParticle', 'assets/particle.png');
-			this.game.load.image('starfield', 'assets/starfield.png');
-			this.game.load.image('actionbar', 'assets/actionbar.png');
-			this.game.load.image('actionbar_stat', 'assets/actionbar_stat.png');
-			this.game.load.image('actionbar_add', 'assets/actionbar_add.png');
-			this.game.load.image('actionbar_bar', 'assets/actionbar_bar.png');
-			this.game.load.image('power_shield', 'assets/power_shield.png');
-			this.game.load.image('power_magnet', 'assets/power_magnet.png');
-			this.game.load.image('icon_generic', 'assets/icon_generic.png');
-			this.game.load.image('icon_shield', 'assets/icon_shield.png');
-			this.game.load.image('icon_heal', 'assets/icon_heal.png');
-			this.game.load.image('icon_multishot', 'assets/icon_multishot.png');
-			this.game.load.image('icon_seeker', 'assets/icon_seeker.png');
-			this.game.load.image('icon_magnet', 'assets/icon_magnet.png');
-			this.game.load.image('icon_warpspeed', 'assets/icon_warpspeed.png');
-			this.game.load.image('icon_trap', 'assets/icon_trap.png');
-			this.game.load.image('icon_shockwave', 'assets/icon_shockwave.png');
+			this.load.image('starfield', 'assets/starfield.png');
+
+			this.load.atlas('atlas', 'assets/images.png', 'assets/images.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
 
 			this.load.atlas('generic', 'assets/joystick/generic-joystick.png', 'assets/joystick/generic-joystick.json');
 
-			this.game.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
+			this.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
 
-			this.game.load.script('joystick', 'scripts/joystick.js');
+			this.load.script('joystick', 'scripts/joystick.js');
 		}
 	}, {
 		key: 'create',
