@@ -13,7 +13,6 @@ class Client extends Phaser.Sprite {
 		this.angle = 0;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.originalTint = this.tint;
-		this.autoCull = true;
 		this.alpha = 0;
 		this.dead = false;
 		this.dest = {x: 0, y: 0, angle: this.angle};

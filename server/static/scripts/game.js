@@ -5223,7 +5223,6 @@ var Bit = function (_Phaser$Sprite) {
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.scale.setTo(0);
 		_this.angle = Math.floor(Math.random() * 360);
-		_this.autoCull = true;
 		var rs = Math.random() * 0.3 + 0.5;
 		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 1000, Phaser.Easing.Elastic.Out);
 		_this.kill();
@@ -5433,7 +5432,6 @@ var Client = function (_Phaser$Sprite) {
 		_this.angle = 0;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.originalTint = _this.tint;
-		_this.autoCull = true;
 		_this.alpha = 0;
 		_this.dead = false;
 		_this.dest = { x: 0, y: 0, angle: _this.angle };
@@ -5560,7 +5558,6 @@ var Comet = function (_Phaser$Sprite) {
 		_this.anchor.setTo(0.5, 0.5);
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.originalTint = _this.tint;
-		_this.autoCull = true;
 		_this.angle = Math.random() * 180;
 		_this.scale.setTo(0);
 		_this.z = 2;
@@ -7266,6 +7263,7 @@ var Main = function (_Phaser$State) {
 
 			//Pools and network
 			this.game.room = this.game.colyseus.join('game', { name: this.game.myName.toString() });
+			this.planetGroup = this.game.add.group();
 			this.bulletPool = this.game.add.group();
 			this.bitsPool = this.game.add.group();
 			this.powerUpPool = this.game.add.group();

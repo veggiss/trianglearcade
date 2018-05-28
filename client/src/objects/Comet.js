@@ -6,7 +6,6 @@ class Comet extends Phaser.Sprite {
 		this.anchor.setTo(0.5, 0.5);
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.originalTint = this.tint;
-		this.autoCull = true;
 		this.angle = Math.random() * 180;
 		this.scale.setTo(0);
 		this.z = 2;

@@ -2,7 +2,7 @@
 
 "actionbar.png":
 {
-	"frame": {"x":64,"y":166,"w":76,"h":76},
+	"frame": {"x":84,"y":200,"w":76,"h":76},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":76,"h":76},
@@ -10,7 +10,7 @@
 },
 "actionbar_add.png":
 {
-	"frame": {"x":393,"y":0,"w":33,"h":38},
+	"frame": {"x":10,"y":52,"w":33,"h":38},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":33,"h":38},
@@ -18,7 +18,7 @@
 },
 "actionbar_bar.png":
 {
-	"frame": {"x":31,"y":0,"w":330,"h":31},
+	"frame": {"x":71,"y":10,"w":330,"h":31},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":330,"h":31},
@@ -26,7 +26,7 @@
 },
 "actionbar_stat.png":
 {
-	"frame": {"x":0,"y":38,"w":136,"h":38},
+	"frame": {"x":53,"y":52,"w":136,"h":38},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":136,"h":38},
@@ -34,7 +34,7 @@
 },
 "bit.png":
 {
-	"frame": {"x":128,"y":102,"w":64,"h":64},
+	"frame": {"x":158,"y":126,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -42,7 +42,7 @@
 },
 "bullet.png":
 {
-	"frame": {"x":0,"y":0,"w":8,"h":8},
+	"frame": {"x":10,"y":10,"w":8,"h":8},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":8,"h":8},
@@ -50,7 +50,7 @@
 },
 "comet.png":
 {
-	"frame": {"x":140,"y":166,"w":81,"h":82},
+	"frame": {"x":170,"y":200,"w":81,"h":82},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":81,"h":82},
@@ -58,7 +58,7 @@
 },
 "deathParticle.png":
 {
-	"frame": {"x":8,"y":0,"w":8,"h":8},
+	"frame": {"x":28,"y":10,"w":8,"h":8},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":8,"h":8},
@@ -66,7 +66,7 @@
 },
 "icon_generic.png":
 {
-	"frame": {"x":256,"y":102,"w":64,"h":64},
+	"frame": {"x":306,"y":126,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -74,7 +74,7 @@
 },
 "icon_heal.png":
 {
-	"frame": {"x":64,"y":102,"w":64,"h":64},
+	"frame": {"x":84,"y":126,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -82,7 +82,7 @@
 },
 "icon_magnet.png":
 {
-	"frame": {"x":320,"y":102,"w":64,"h":64},
+	"frame": {"x":380,"y":126,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -90,7 +90,7 @@
 },
 "icon_multishot.png":
 {
-	"frame": {"x":192,"y":102,"w":64,"h":64},
+	"frame": {"x":232,"y":126,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -98,7 +98,7 @@
 },
 "icon_seeker.png":
 {
-	"frame": {"x":0,"y":166,"w":64,"h":64},
+	"frame": {"x":10,"y":200,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -106,7 +106,7 @@
 },
 "icon_shield.png":
 {
-	"frame": {"x":136,"y":38,"w":63,"h":63},
+	"frame": {"x":199,"y":52,"w":63,"h":63},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":63,"h":63},
@@ -114,7 +114,7 @@
 },
 "icon_shockwave.png":
 {
-	"frame": {"x":199,"y":38,"w":64,"h":64},
+	"frame": {"x":272,"y":52,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -122,7 +122,7 @@
 },
 "icon_trap.png":
 {
-	"frame": {"x":263,"y":38,"w":64,"h":64},
+	"frame": {"x":346,"y":52,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -130,7 +130,7 @@
 },
 "icon_warpspeed.png":
 {
-	"frame": {"x":0,"y":102,"w":64,"h":64},
+	"frame": {"x":10,"y":126,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -138,7 +138,7 @@
 },
 "particle.png":
 {
-	"frame": {"x":361,"y":0,"w":32,"h":32},
+	"frame": {"x":411,"y":10,"w":32,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
@@ -146,7 +146,7 @@
 },
 "power_magnet.png":
 {
-	"frame": {"x":0,"y":266,"w":180,"h":180},
+	"frame": {"x":10,"y":310,"w":180,"h":180},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":180,"h":180},
@@ -154,7 +154,7 @@
 },
 "power_shield.png":
 {
-	"frame": {"x":317,"y":166,"w":114,"h":100},
+	"frame": {"x":367,"y":200,"w":114,"h":100},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":114,"h":100},
@@ -162,7 +162,7 @@
 },
 "powerup.png":
 {
-	"frame": {"x":327,"y":38,"w":64,"h":64},
+	"frame": {"x":420,"y":52,"w":64,"h":64},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
@@ -170,7 +170,7 @@
 },
 "seeker.png":
 {
-	"frame": {"x":16,"y":0,"w":15,"h":14},
+	"frame": {"x":46,"y":10,"w":15,"h":14},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":15,"h":14},
@@ -178,7 +178,7 @@
 },
 "shockwave.png":
 {
-	"frame": {"x":180,"y":266,"w":240,"h":240},
+	"frame": {"x":200,"y":310,"w":240,"h":240},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":240,"h":240},
@@ -186,7 +186,7 @@
 },
 "spaceship_white.png":
 {
-	"frame": {"x":221,"y":166,"w":96,"h":96},
+	"frame": {"x":261,"y":200,"w":96,"h":96},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":96,"h":96},
@@ -197,8 +197,8 @@
 	"version": "1.0",
 	"image": "images.png",
 	"format": "RGBA8888",
-	"size": {"w":431,"h":506},
+	"size": {"w":494,"h":560},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:b5cc708afd200035c8579fedcd0f9e1b:13fc8a55d93077fc7bbb0c1e5e827b5e:9be8c185d95a5be4a06ec0067a3d8380$"
+	"smartupdate": "$TexturePacker:SmartUpdate:2dfcfae120ac90d8391eda257231eee0:13fc8a55d93077fc7bbb0c1e5e827b5e:9be8c185d95a5be4a06ec0067a3d8380$"
 }
 }

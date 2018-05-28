@@ -22,6 +22,7 @@ class Main extends Phaser.State {
 
 		//Pools and network
 		this.game.room = this.game.colyseus.join('game', {name: this.game.myName.toString()});
+		this.planetGroup = this.game.add.group();
 		this.bulletPool = this.game.add.group();
 		this.bitsPool = this.game.add.group();
 		this.powerUpPool = this.game.add.group();
