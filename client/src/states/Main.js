@@ -12,11 +12,11 @@ class Main extends Phaser.State {
 	create() {
 		this.game.stage.backgroundColor = '#021421';
 		this.game.stage.disableVisibilityChange = true;
-		this.game.world.setBounds(0, 0, 2880, 2880);
+		this.game.world.setBounds(0, 0, 2400, 2000);
 		this.game.onMobile = !this.game.device.desktop;
 		
 		//Background
-		this.starfield = this.add.tileSprite(0, 0, 2880, 2880, 'starfield');
+		this.starfield = this.add.tileSprite(0, 0, 2400, 2000, 'starfield');
 		this.starfield.fixedToCamera = true;
 		this.starfield.alpha = 0.5;
 
@@ -46,6 +46,7 @@ class Main extends Phaser.State {
 			let sound = this.game.add.audio('bit_' + i);
 			this.bitSounds.push(sound);
 		}
+		this.sound_hit.volume = 0.5;
 
 		this.bulletPool.z = 1;
 		this.bitsPool.z = 1;

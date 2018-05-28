@@ -1,7 +1,7 @@
-const world = {width: 2880, height: 2880};
+const world = {width: 2400, height: 2000};
 
 function ranWorldPos() {
-    return {x: Math.floor(Math.random() * (world.width - 400)) + 400, y: Math.floor(Math.random() * (world.height - 400)) + 400};
+    return {x: ranNumBetween(100, world.width - 100), y: ranNumBetween(100, world.width - 100)};
 }
 
 function ranPlayerAngle() {
@@ -52,7 +52,7 @@ function setEnumerable(object) {
 }
 
 function ranNumBetween(min, max) {
-    return Math.floor(Math.random() * max) + min;
+    return Math.floor(Math.random()*(max - min + 1) + min);
 }
 
 function wrapAngle(angle, radians) {

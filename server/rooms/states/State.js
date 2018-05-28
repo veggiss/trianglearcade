@@ -21,7 +21,7 @@ module.exports = class State {
             leaderBoardTimer: Date.now(),
             bitsTimer: Date.now(),
             powerUpTimer: Date.now(),
-            bitExpAmount: 200,
+            bitExpAmount: 300,
             maxBits: 70,
             maxComets: 6,
             powerUpTypes: ['healthBoost', 'xpBoost'],
