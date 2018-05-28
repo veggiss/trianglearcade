@@ -201,12 +201,16 @@ class UI {
 			let label = this.game.add.bitmapText(20, 0, 'font', `${stat_label[i]}`, 20);
 			let stat = this.game.add.bitmapText(118, 0, 'font', '0', 20);
 			let add = this.game.add.sprite(155, 0, 'actionbar_add');
-			
+
 			if (!this.game.onMobile) {
 				let hotkeyIcon = this.game.add.bitmapText(2, 16, 'font', `[${hotkeys_stat[i]}]`, 13);
 				hotkeyIcon.anchor.setTo(0, 1);
 				this.lbTextGroup.add(hotkeyIcon);
 				actionbar.addChild(hotkeyIcon);
+			} else {
+				actionbar.scale.setTo(1.3);
+				stat.scale.setTo(1.3);
+				add.scale.setTo(1.3);
 			}
 
 			actionbar.anchor.setTo(0, 0.5);

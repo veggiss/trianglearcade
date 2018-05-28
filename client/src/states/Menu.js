@@ -5,11 +5,11 @@ class Menu extends Phaser.State {
 		this.game.world.setBounds(0, 0, this.game.width, this.game.heigth);
 		
 		//Background
-		this.starfield = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'starfield');
+		this.starfield = this.add.tileSprite(0, 0, this.game.canvas.width, this.game.canvas.height, 'starfield');
 		this.starfield.fixedToCamera = true;
 		this.starfield.alpha = 0.5;
 
-		this.text = this.game.add.bitmapText(window.innerWidth/2, window.innerHeight/4, 'font', 'Who are you?', 22);
+		this.text = this.game.add.bitmapText(0, 0, 'font', 'Who are you?', 22);
 		this.text.anchor.setTo(0.5, 0.5);
 		this.uiDiv = document.createElement("DIV");
 		this.input = document.createElement("INPUT");
@@ -34,8 +34,8 @@ class Menu extends Phaser.State {
 	}
 
 	setUiPos() {
-		this.text.x = window.innerWidth/2;
-		this.text.y = window.innerHeight/4;
+		this.text.x = this.game.canvas.width/2;
+		this.text.y = 100;
 		this.input.setAttribute("style", "position:absolute;width:"+ 128 +"px;left:"+(this.text.x - (this.text.width/2) - 5)+"px;top:"+(this.text.y + 25)+"px;");
 		this.button.setAttribute("style", "position:absolute;width:"+ 132 +"px;left:"+(this.text.x - (this.text.width/2) - 5)+"px;top:"+(this.text.y + 55)+"px;");
 	}

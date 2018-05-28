@@ -5144,7 +5144,7 @@ function _inherits(subClass, superClass) {
 }
 
 var config = {
-	renderer: Phaser.AUTO,
+	renderer: Phaser.WEBGL,
 	parent: 'trianglearcade'
 };
 
@@ -5979,16 +5979,15 @@ var Player = function (_Phaser$Sprite) {
 
 		//Inputs
 		if (_this.game.onMobile) {
-			_this.stick = _this.pad.addStick(0, 0, 200, 'arcade');
-			_this.stick.scale = 0.5;
-			_this.stick.alignBottomLeft();
+			_this.stick = _this.pad.addStick(0, 0, 200, 'generic');
+			_this.stick.scale = 0.75;
+			_this.stick.alignBottomLeft(50, 20);
 
 			_this.stick.onDown.add(_this.playerControls, _this, 1, true);
 			_this.stick.onUp.add(_this.playerControls, _this, 1, false);
 
-			_this.buttonA = _this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
-			_this.buttonA.scale = 0.5;
-			_this.buttonA.alignBottomRight();
+			_this.buttonA = _this.pad.addButton(0, 0, 'generic', 'button1-up', 'button1-down');
+			_this.buttonA.alignBottomRight(50, 20);
 			_this.buttonA.onDown.add(_this.playerShoot, _this, 1, true);
 			_this.buttonA.onUp.add(_this.playerShoot, _this, 1, false);
 		} else {
@@ -6768,6 +6767,10 @@ var UI = function () {
 				_hotkeyIcon.anchor.setTo(0, 1);
 				_this2.lbTextGroup.add(_hotkeyIcon);
 				actionbar.addChild(_hotkeyIcon);
+			} else {
+				actionbar.scale.setTo(1.3);
+				stat.scale.setTo(1.3);
+				add.scale.setTo(1.3);
 			}
 
 			actionbar.anchor.setTo(0, 0.5);
@@ -7150,8 +7153,8 @@ var Boot = function (_Phaser$State) {
 			var height = window.innerHeight;
 
 			if (!this.game.device.desktop) {
-				width = window.innerWidth * 2;
-				height = window.innerHeight * 2;
+				width = width * 2;
+				height = height * 2;
 			}
 
 			this.game.scale.setGameSize(width, height);
@@ -7321,7 +7324,7 @@ var Main = function (_Phaser$State) {
 					_this2.id = me.id;
 					_this2.clients[_this2.id] = new _Player2.default(_this2.game, -500, -500, 0, 100, 0);
 					_this2.playerGroup.add(_this2.clients[_this2.id]);
-					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.05, 0.05);
+					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 					_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 				}
 
@@ -7811,11 +7814,11 @@ var Menu = function (_Phaser$State) {
 			this.game.world.setBounds(0, 0, this.game.width, this.game.heigth);
 
 			//Background
-			this.starfield = this.add.tileSprite(0, 0, window.innerWidth, window.innerHeight, 'starfield');
+			this.starfield = this.add.tileSprite(0, 0, this.game.canvas.width, this.game.canvas.height, 'starfield');
 			this.starfield.fixedToCamera = true;
 			this.starfield.alpha = 0.5;
 
-			this.text = this.game.add.bitmapText(window.innerWidth / 2, window.innerHeight / 4, 'font', 'Who are you?', 22);
+			this.text = this.game.add.bitmapText(0, 0, 'font', 'Who are you?', 22);
 			this.text.anchor.setTo(0.5, 0.5);
 			this.uiDiv = document.createElement("DIV");
 			this.input = document.createElement("INPUT");
@@ -7841,8 +7844,8 @@ var Menu = function (_Phaser$State) {
 	}, {
 		key: 'setUiPos',
 		value: function setUiPos() {
-			this.text.x = window.innerWidth / 2;
-			this.text.y = window.innerHeight / 4;
+			this.text.x = this.game.canvas.width / 2;
+			this.text.y = 100;
 			this.input.setAttribute("style", "position:absolute;width:" + 128 + "px;left:" + (this.text.x - this.text.width / 2 - 5) + "px;top:" + (this.text.y + 25) + "px;");
 			this.button.setAttribute("style", "position:absolute;width:" + 132 + "px;left:" + (this.text.x - this.text.width / 2 - 5) + "px;top:" + (this.text.y + 55) + "px;");
 		}
@@ -7925,7 +7928,7 @@ var Preload = function (_Phaser$State) {
 			this.game.load.image('icon_trap', 'assets/icon_trap.png');
 			this.game.load.image('icon_shockwave', 'assets/icon_shockwave.png');
 
-			this.load.atlas('arcade', 'assets/joystick/arcade-joystick.png', 'assets/joystick/arcade-joystick.json');
+			this.load.atlas('generic', 'assets/joystick/generic-joystick.png', 'assets/joystick/generic-joystick.json');
 
 			this.game.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
 

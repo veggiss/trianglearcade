@@ -76,7 +76,7 @@ class Main extends Phaser.State {
 				this.id = me.id;
 				this.clients[this.id] = new Player(this.game, -500, -500, 0, 100, 0);
 				this.playerGroup.add(this.clients[this.id]);
-				this.game.camera.follow(this.clients[this.id], Phaser.Camera.FOLLOW_LOCKON, 0.05, 0.05);
+				this.game.camera.follow(this.clients[this.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 				this.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 			}
 

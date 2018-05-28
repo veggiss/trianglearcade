@@ -5,7 +5,7 @@ import Menu from 'states/Menu';
 import Main from 'states/Main';
 
 const config = {
-	renderer: Phaser.AUTO,
+	renderer: Phaser.WEBGL,
 	parent: 'trianglearcade'
 }
 

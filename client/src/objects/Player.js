@@ -40,16 +40,15 @@ class Player extends Phaser.Sprite {
 
 		//Inputs
 		if (this.game.onMobile) {
-	        this.stick = this.pad.addStick(0, 0, 200, 'arcade');
-	        this.stick.scale = 0.5;
-	        this.stick.alignBottomLeft();
+	        this.stick = this.pad.addStick(0, 0, 200, 'generic');
+	        this.stick.scale = 0.75;
+	        this.stick.alignBottomLeft(50, 20);
 
 			this.stick.onDown.add(this.playerControls, this, 1, true);
 			this.stick.onUp.add(this.playerControls, this, 1, false);
 
-	        this.buttonA = this.pad.addButton(0, 0, 'arcade', 'button1-up', 'button1-down');
-	        this.buttonA.scale = 0.5;
-	        this.buttonA.alignBottomRight();
+	        this.buttonA = this.pad.addButton(0, 0, 'generic', 'button1-up', 'button1-down');
+	        this.buttonA.alignBottomRight(50, 20);
 	        this.buttonA.onDown.add(this.playerShoot, this, 1, true);
 	        this.buttonA.onUp.add(this.playerShoot, this, 1, false);
         } else {

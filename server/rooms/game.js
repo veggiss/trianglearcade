@@ -84,7 +84,9 @@ module.exports = class StateHandlerRoom extends Room {
 
         this.clients.forEach(client => {
             if (!excludeList.includes(client.sessionId)) {
-                this.send(client, message);
+                if (client.readyState === 1) {
+                    this.send(client, message);
+                }
             }
         });
     }
@@ -96,13 +98,16 @@ module.exports = class StateHandlerRoom extends Room {
 
     sendToClient(id, message) {
         this.clients.forEach(client => {
-            if (client.sessionId === id) this.send(client, message);
+            if (client.sessionId === id) {
+                if (client.readyState === 1) {
+                    this.send(client, message);
+                }
+            }
         });
     }
 
     update() {
         this.state.globalUpdate();
-        //this.saveSnapshot();
     }
 
     saveSnapshot() {

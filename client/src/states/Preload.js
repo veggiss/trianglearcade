@@ -26,7 +26,7 @@ class Preload extends Phaser.State {
 		this.game.load.image('icon_trap', 'assets/icon_trap.png');
 		this.game.load.image('icon_shockwave', 'assets/icon_shockwave.png');
 
-		this.load.atlas('arcade', 'assets/joystick/arcade-joystick.png', 'assets/joystick/arcade-joystick.json');
+		this.load.atlas('generic', 'assets/joystick/generic-joystick.png', 'assets/joystick/generic-joystick.json');
 
 		this.game.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
 	
