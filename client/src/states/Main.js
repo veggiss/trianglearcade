@@ -32,8 +32,20 @@ class Main extends Phaser.State {
 		this.clientGroupIdle = this.game.add.group();
 		this.clientGroupActive = this.game.add.group();
 		this.playerGroup = this.game.add.group();
+		this.bitSounds = [];
+		this.nextSound = 0;
 		this.clients = {};
 		this.id;
+
+		//Sound
+		this.sound_hit = this.game.add.audio('hit');
+		this.sound_kill = this.game.add.audio('kill');
+		this.sound_shoot = this.game.add.audio('shoot');
+		this.sound_levelup = this.game.add.audio('levelup');
+		for (let i = 1; i < 4; i++) {
+			let sound = this.game.add.audio('bit_' + i);
+			this.bitSounds.push(sound);
+		}
 
 		this.bulletPool.z = 1;
 		this.bitsPool.z = 1;
@@ -70,12 +82,23 @@ class Main extends Phaser.State {
 		}
 	}
 
+	nextBitSound() {
+		this.nextSound++;
+		if (this.nextSound == 3) {
+			this.nextSound = 0;
+		}
+
+		console.log(this.nextSound);
+
+		return this.nextSound;
+	}
+
 	netListener() {
 		this.game.room.onMessage.add(message => {
 			if (message.me) {
 				let me = message.me;
 				this.id = me.id;
-				this.clients[this.id] = new Player(this.game, -500, -500, 0, 100, 0);
+				this.clients[this.id] = new Player(this.game, -5000, -5000, 0, 100, 0);
 				this.playerGroup.add(this.clients[this.id]);
 				this.game.camera.follow(this.clients[this.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 				this.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
@@ -85,7 +108,11 @@ class Main extends Phaser.State {
 				let bit = this.findInGroup(message.bitHit.id, this.bitsPool);
 				if (bit) {
 					let player = this.clients[message.bitHit.player];
+					let sound = this.bitSounds[this.nextBitSound()];
 					bit.target = player;
+					if (sound) {
+						bit.sound = sound;
+					}
 					bit.activated = true;
 
 					if (message.bitHit.trap && message.bitHit.player === this.id) this.game.camera.shake(0.01, 50);
@@ -113,6 +140,20 @@ class Main extends Phaser.State {
 						bullet.setTrail(player.particles);
 						bullet.setDest(message.bullet.x, message.bullet.y);
 						bullet.reset(message.bullet.x, message.bullet.y);
+						if (bullet.id === this.id) {
+							this.sound_shoot.volume = 0.6;
+							this.sound_shoot.play();
+						} else {
+							let dist = this.distanceBetween(bullet, player);
+							if (dist < 500) {
+								if (!this.sound_shoot.isPlaying) {
+									let volume = 100 / dist;
+									this.sound_shoot.volume = 100 / (dist+500);
+									this.sound_shoot.play();
+								}
+								
+							}
+						}
 					}
 				}
 			}
@@ -150,6 +191,7 @@ class Main extends Phaser.State {
 
 			if (message.levelUp) {
 				this.clients[this.id].ui.addPoints();
+				this.sound_levelup.play();
 			}
 
 			if (message.statUpgrade) {
@@ -200,6 +242,7 @@ class Main extends Phaser.State {
 				if (player) {
 					this.emitDeath(player);
 					player.die();
+					this.sound_kill.play();
 				}
 			}
 
@@ -346,7 +389,7 @@ class Main extends Phaser.State {
 	}
 
 	createBitsPool() {
-		for (let i = 0; i < 50; i++) {
+		for (let i = 0; i < 100; i++) {
 			this.bitsPool.add(new Bit(this.game));
 		}
 	}
@@ -439,6 +482,7 @@ class Main extends Phaser.State {
 							let shooter = this.clients[bullet.id];
 							if (shooter) {
 								shooter.particles.emitHit(bullet.x, bullet.y);
+								if (!this.sound_hit.isPlaying) this.sound_hit.play();
 							}
 							bullet.kill();
 						}
@@ -448,6 +492,7 @@ class Main extends Phaser.State {
 							if (shooter) {
 								shooter.particles.emitHit(bullet.x, bullet.y);
 								this.tweenTint(player, player.originalTint, 0xffffff, 50);
+								if (!this.sound_hit.isPlaying) this.sound_hit.play();
 							}
 
 							bullet.kill();
@@ -463,6 +508,7 @@ class Main extends Phaser.State {
 				if (player) {
 					player.particles.emitHit(bullet.x, bullet.y);
 					this.tweenTint(comet, comet.originalTint, 0xffffff, 50);
+					if (!this.sound_hit.isPlaying) this.sound_hit.play();
 				}
 				bullet.kill();
 			}

@@ -10,6 +10,15 @@ class Preload extends Phaser.State {
 		this.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
 	
 		this.load.script('joystick', 'scripts/joystick.js');
+
+		//Sound
+		this.game.load.audio('bit_1', 'assets/sound/bit_1.ogg');
+		this.game.load.audio('bit_2', 'assets/sound/bit_2.ogg');
+		this.game.load.audio('bit_3', 'assets/sound/bit_3.ogg');
+		this.game.load.audio('shoot', 'assets/sound/shoot.ogg');
+		this.game.load.audio('hit', 'assets/sound/hit.ogg');
+		this.game.load.audio('kill', 'assets/sound/kill.ogg');
+		this.game.load.audio('levelup', 'assets/sound/levelup.ogg');
 	}
 
 	create() {

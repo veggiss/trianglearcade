@@ -5227,6 +5227,7 @@ var Bit = function (_Phaser$Sprite) {
 		_this.angle = Math.floor(Math.random() * 360);
 		var rs = Math.random() * 0.3 + 0.5;
 		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 1000, Phaser.Easing.Elastic.Out);
+		_this.sound;
 		_this.kill();
 		return _this;
 	}
@@ -5252,6 +5253,10 @@ var Bit = function (_Phaser$Sprite) {
 				if (dist < 25) {
 					this.activated = false;
 					this.kill();
+					if (this.sound) {
+						this.sound.play();
+						this.sound = undefined;
+					}
 				}
 			}
 		}
@@ -7148,29 +7153,27 @@ var Boot = function (_Phaser$State) {
 	}, {
 		key: "create",
 		value: function create() {
-			var width = window.innerWidth * 2;
-			var height = window.innerHeight * 2;
+			var width = window.innerWidth;
+			var height = window.innerHeight;
 
-			/*if (!this.game.device.desktop) {
-   	width = width * 2;
-   	height = height * 2;
-   }*/
+			this.game.scale.scaleMode = this.game.device.desktop ? Phaser.ScaleManager.RESIZE : Phaser.ScaleManager.SHOW_ALL;
 
-			this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-			this.game.width = width;
-			this.game.height = height;
-			this.game.renderer.resize(width, height);
-			//this.game.renderer.projection.x = width/4;
-			//this.game.renderer.projection.y = height/4;
-			this.game.camera.setSize(width, height);
-			//this.game.scale.setShowAll();
-			//this.game.input.scale.setTo(2);
-			console.log(this.game.renderer);
+			if (this.game.device.desktop) {
+				console.log(width);
+				if (width < 1000) {
+					width = width * 2;
+					height = height * 2;
+					this.game.width = width;
+					this.game.height = height;
+					this.game.renderer.resize(width, height);
+					this.game.camera.setSize(width, height);
+					this.game.scale.refresh();
+					this.game.changedScale = true;
+				}
+			}
 
-			//this.game.scale.setGameSize(width, height);
-			/*this.game.scale.scaleMode = this.game.device.desktop ? Phaser.ScaleManager.RESIZE : Phaser.ScaleManager.SHOW_ALL;
-   this.game.scale.width = 12000;*/
-			this.game.scale.refresh();
+			console.log(this.game.canvas);
+
 			this.game.canvas.oncontextmenu = function (e) {
 				e.preventDefault();
 			};
@@ -7288,8 +7291,20 @@ var Main = function (_Phaser$State) {
 			this.clientGroupIdle = this.game.add.group();
 			this.clientGroupActive = this.game.add.group();
 			this.playerGroup = this.game.add.group();
+			this.bitSounds = [];
+			this.nextSound = 0;
 			this.clients = {};
 			this.id;
+
+			//Sound
+			this.sound_hit = this.game.add.audio('hit');
+			this.sound_kill = this.game.add.audio('kill');
+			this.sound_shoot = this.game.add.audio('shoot');
+			this.sound_levelup = this.game.add.audio('levelup');
+			for (var i = 1; i < 4; i++) {
+				var sound = this.game.add.audio('bit_' + i);
+				this.bitSounds.push(sound);
+			}
 
 			this.bulletPool.z = 1;
 			this.bitsPool.z = 1;
@@ -7327,6 +7342,18 @@ var Main = function (_Phaser$State) {
 			}
 		}
 	}, {
+		key: 'nextBitSound',
+		value: function nextBitSound() {
+			this.nextSound++;
+			if (this.nextSound == 3) {
+				this.nextSound = 0;
+			}
+
+			console.log(this.nextSound);
+
+			return this.nextSound;
+		}
+	}, {
 		key: 'netListener',
 		value: function netListener() {
 			var _this2 = this;
@@ -7335,7 +7362,7 @@ var Main = function (_Phaser$State) {
 				if (message.me) {
 					var me = message.me;
 					_this2.id = me.id;
-					_this2.clients[_this2.id] = new _Player2.default(_this2.game, -500, -500, 0, 100, 0);
+					_this2.clients[_this2.id] = new _Player2.default(_this2.game, -5000, -5000, 0, 100, 0);
 					_this2.playerGroup.add(_this2.clients[_this2.id]);
 					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 					_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
@@ -7345,7 +7372,11 @@ var Main = function (_Phaser$State) {
 					var bit = _this2.findInGroup(message.bitHit.id, _this2.bitsPool);
 					if (bit) {
 						var player = _this2.clients[message.bitHit.player];
+						var sound = _this2.bitSounds[_this2.nextBitSound()];
 						bit.target = player;
+						if (sound) {
+							bit.sound = sound;
+						}
 						bit.activated = true;
 
 						if (message.bitHit.trap && message.bitHit.player === _this2.id) _this2.game.camera.shake(0.01, 50);
@@ -7373,6 +7404,19 @@ var Main = function (_Phaser$State) {
 							bullet.setTrail(_player2.particles);
 							bullet.setDest(message.bullet.x, message.bullet.y);
 							bullet.reset(message.bullet.x, message.bullet.y);
+							if (bullet.id === _this2.id) {
+								_this2.sound_shoot.volume = 0.6;
+								_this2.sound_shoot.play();
+							} else {
+								var dist = _this2.distanceBetween(bullet, _player2);
+								if (dist < 500) {
+									if (!_this2.sound_shoot.isPlaying) {
+										var volume = 100 / dist;
+										_this2.sound_shoot.volume = 100 / (dist + 500);
+										_this2.sound_shoot.play();
+									}
+								}
+							}
 						}
 					}
 				}
@@ -7409,6 +7453,7 @@ var Main = function (_Phaser$State) {
 
 				if (message.levelUp) {
 					_this2.clients[_this2.id].ui.addPoints();
+					_this2.sound_levelup.play();
 				}
 
 				if (message.statUpgrade) {
@@ -7459,6 +7504,7 @@ var Main = function (_Phaser$State) {
 					if (_player7) {
 						_this2.emitDeath(_player7);
 						_player7.die();
+						_this2.sound_kill.play();
 					}
 				}
 
@@ -7615,7 +7661,7 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'createBitsPool',
 		value: function createBitsPool() {
-			for (var i = 0; i < 50; i++) {
+			for (var i = 0; i < 100; i++) {
 				this.bitsPool.add(new _Bit2.default(this.game));
 			}
 		}
@@ -7674,9 +7720,9 @@ var Main = function (_Phaser$State) {
 			for (var id in this.clients) {
 				if (id !== this.id) {
 					var target = this.clients[id];
-					var _dist = this.distanceBetween(this.clients[this.id], target);
+					var dist = this.distanceBetween(this.clients[this.id], target);
 
-					if (_dist < 950) {
+					if (dist < 950) {
 						if (target.alive && target.alpha === 0) {
 							target.x = target.dest.x;
 							target.y = target.dest.y;
@@ -7721,6 +7767,7 @@ var Main = function (_Phaser$State) {
 								var shooter = this.clients[bullet.id];
 								if (shooter) {
 									shooter.particles.emitHit(bullet.x, bullet.y);
+									if (!this.sound_hit.isPlaying) this.sound_hit.play();
 								}
 								bullet.kill();
 							}
@@ -7730,6 +7777,7 @@ var Main = function (_Phaser$State) {
 								if (_shooter) {
 									_shooter.particles.emitHit(bullet.x, bullet.y);
 									this.tweenTint(player, player.originalTint, 0xffffff, 50);
+									if (!this.sound_hit.isPlaying) this.sound_hit.play();
 								}
 
 								bullet.kill();
@@ -7745,6 +7793,7 @@ var Main = function (_Phaser$State) {
 					if (_player8) {
 						_player8.particles.emitHit(bullet.x, bullet.y);
 						_this4.tweenTint(comet, comet.originalTint, 0xffffff, 50);
+						if (!_this4.sound_hit.isPlaying) _this4.sound_hit.play();
 					}
 					bullet.kill();
 				}
@@ -7933,6 +7982,15 @@ var Preload = function (_Phaser$State) {
 			this.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
 
 			this.load.script('joystick', 'scripts/joystick.js');
+
+			//Sound
+			this.game.load.audio('bit_1', 'assets/sound/bit_1.ogg');
+			this.game.load.audio('bit_2', 'assets/sound/bit_2.ogg');
+			this.game.load.audio('bit_3', 'assets/sound/bit_3.ogg');
+			this.game.load.audio('shoot', 'assets/sound/shoot.ogg');
+			this.game.load.audio('hit', 'assets/sound/hit.ogg');
+			this.game.load.audio('kill', 'assets/sound/kill.ogg');
+			this.game.load.audio('levelup', 'assets/sound/levelup.ogg');
 		}
 	}, {
 		key: 'create',
