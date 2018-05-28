@@ -382,8 +382,8 @@ class UI {
 
 		_this.opt1Text.text = text.opt1Text;
 		_this.opt2Text.text = text.opt2Text;
-		_this.opt1Button.loadTexture(text.btn1Texture);
-		_this.opt2Button.loadTexture(text.btn2Texture);
+		_this.opt1Button.loadTexture('atlas', text.btn1Texture);
+		_this.opt2Button.loadTexture('atlas', text.btn2Texture);
 		_this.opt1Button.actionbarIndex = text.index;
 		_this.opt2Button.actionbarIndex = text.index;
 
@@ -396,26 +396,26 @@ class UI {
 			case 0:
 				texts.opt1Text = 'Shield';
 				texts.opt2Text = 'Heal';
-				texts.btn1Texture = 'icon_shield';
-				texts.btn2Texture = 'icon_heal';
+				texts.btn1Texture = 'icon_shield.png';
+				texts.btn2Texture = 'icon_heal.png';
 			break;
 			case 1:
 				texts.opt1Text = 'Seeker';
 				texts.opt2Text = 'Multishot';
-				texts.btn1Texture = 'icon_seeker';
-				texts.btn2Texture = 'icon_multishot';
+				texts.btn1Texture = 'icon_seeker.png';
+				texts.btn2Texture = 'icon_multishot.png';
 			break;
 			case 2:
 				texts.opt1Text = 'Magnet';
 				texts.opt2Text = 'Warpspeed';
-				texts.btn1Texture = 'icon_magnet';
-				texts.btn2Texture = 'icon_warpspeed';
+				texts.btn1Texture = 'icon_magnet.png';
+				texts.btn2Texture = 'icon_warpspeed.png';
 			break;
 			case 3:
 				texts.opt1Text = 'Trap';
 				texts.opt2Text = 'Shockwave';
-				texts.btn1Texture = 'icon_trap';
-				texts.btn2Texture = 'icon_shockwave';
+				texts.btn1Texture = 'icon_trap.png';
+				texts.btn2Texture = 'icon_shockwave.png';
 			break;
 		}
 
@@ -428,7 +428,7 @@ class UI {
 		let actionbar = this.actionbarGroup.getAt(button.actionbarIndex);
 
 		if (actionbar) {
-			actionbar.chosenPower.loadTexture(button.key);
+			actionbar.chosenPower.loadTexture('atlas', button._frame.name);
 			actionbar.newPowerIcon.kill();
 			actionbar.events.onInputDown.removeAll();
 			actionbar.events.onInputDown.add(this.activateHeroPower, {actionbar: actionbar, game: this.game});

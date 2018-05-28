@@ -6964,8 +6964,8 @@ var UI = function () {
 
 			_this.opt1Text.text = text.opt1Text;
 			_this.opt2Text.text = text.opt2Text;
-			_this.opt1Button.loadTexture(text.btn1Texture);
-			_this.opt2Button.loadTexture(text.btn2Texture);
+			_this.opt1Button.loadTexture('atlas', text.btn1Texture);
+			_this.opt2Button.loadTexture('atlas', text.btn2Texture);
 			_this.opt1Button.actionbarIndex = text.index;
 			_this.opt2Button.actionbarIndex = text.index;
 
@@ -6979,26 +6979,26 @@ var UI = function () {
 				case 0:
 					texts.opt1Text = 'Shield';
 					texts.opt2Text = 'Heal';
-					texts.btn1Texture = 'icon_shield';
-					texts.btn2Texture = 'icon_heal';
+					texts.btn1Texture = 'icon_shield.png';
+					texts.btn2Texture = 'icon_heal.png';
 					break;
 				case 1:
 					texts.opt1Text = 'Seeker';
 					texts.opt2Text = 'Multishot';
-					texts.btn1Texture = 'icon_seeker';
-					texts.btn2Texture = 'icon_multishot';
+					texts.btn1Texture = 'icon_seeker.png';
+					texts.btn2Texture = 'icon_multishot.png';
 					break;
 				case 2:
 					texts.opt1Text = 'Magnet';
 					texts.opt2Text = 'Warpspeed';
-					texts.btn1Texture = 'icon_magnet';
-					texts.btn2Texture = 'icon_warpspeed';
+					texts.btn1Texture = 'icon_magnet.png';
+					texts.btn2Texture = 'icon_warpspeed.png';
 					break;
 				case 3:
 					texts.opt1Text = 'Trap';
 					texts.opt2Text = 'Shockwave';
-					texts.btn1Texture = 'icon_trap';
-					texts.btn2Texture = 'icon_shockwave';
+					texts.btn1Texture = 'icon_trap.png';
+					texts.btn2Texture = 'icon_shockwave.png';
 					break;
 			}
 
@@ -7012,7 +7012,7 @@ var UI = function () {
 			var actionbar = this.actionbarGroup.getAt(button.actionbarIndex);
 
 			if (actionbar) {
-				actionbar.chosenPower.loadTexture(button.key);
+				actionbar.chosenPower.loadTexture('atlas', button._frame.name);
 				actionbar.newPowerIcon.kill();
 				actionbar.events.onInputDown.removeAll();
 				actionbar.events.onInputDown.add(this.activateHeroPower, { actionbar: actionbar, game: this.game });
@@ -7352,13 +7352,15 @@ var Main = function (_Phaser$State) {
 					var _player2 = _this2.clients[message.bullet.id];
 					if (_player2) {
 						var bullet = _this2.bulletPool.getFirstDead();
-						bullet.id = message.bullet.id;
-						bullet.angle = message.bullet.angle;
-						bullet.timer = Date.now() + 1000;
-						bullet.setTint(_player2.tint);
-						bullet.setTrail(_player2.particles);
-						bullet.setDest(message.bullet.x, message.bullet.y);
-						bullet.reset(message.bullet.x, message.bullet.y);
+						if (bullet) {
+							bullet.id = message.bullet.id;
+							bullet.angle = message.bullet.angle;
+							bullet.timer = Date.now() + 1000;
+							bullet.setTint(_player2.tint);
+							bullet.setTrail(_player2.particles);
+							bullet.setDest(message.bullet.x, message.bullet.y);
+							bullet.reset(message.bullet.x, message.bullet.y);
+						}
 					}
 				}
 
@@ -7368,18 +7370,20 @@ var Main = function (_Phaser$State) {
 					if (_player3) {
 						var m = message.seeker;
 						var seeker = _this2.seekerPool.getFirstDead();
-						seeker.id = m.owner;
-						seeker.timer = Date.now() + 2000;
-						seeker.setTint(_player3.tint);
-						seeker.setTrail(_player3.particles);
+						if (seeker) {
+							seeker.id = m.owner;
+							seeker.timer = Date.now() + 2000;
+							seeker.setTint(_player3.tint);
+							seeker.setTrail(_player3.particles);
 
-						if (target) {
-							seeker.target = target;
-						} else {
-							seeker.rotation = _player3.rotation;
-							seeker.target = { alive: false };
+							if (target) {
+								seeker.target = target;
+							} else {
+								seeker.rotation = _player3.rotation;
+								seeker.target = { alive: false };
+							}
+							seeker.reset(_player3.x, _player3.y);
 						}
-						seeker.reset(_player3.x, _player3.y);
 					}
 				}
 
@@ -7449,27 +7453,29 @@ var Main = function (_Phaser$State) {
 					(function () {
 						var m = message.shockwave;
 						var shockwave = _this2.shockwavePool.getFirstDead();
-						shockwave.start(m.x, m.y, _this2.clients[_this2.id].tint);
+						if (shockwave) {
+							shockwave.start(m.x, m.y, _this2.clients[_this2.id].tint);
 
-						var _loop = function _loop(id) {
-							var player = _this2.clients[id];
-							var dist = _this2.distanceBetween({ x: m.x, y: m.y }, player);
-							if (dist < 300) {
-								setTimeout(function () {
-									if (player.alive) {
-										if (!player.powers.active.includes('shield')) {
-											_this2.tweenTint(player, player.originalTint, 0xffffff, 50);
-											if (id == _this2.id && m.id !== _this2.id) {
-												_this2.game.camera.shake(0.01, 50);
+							var _loop = function _loop(id) {
+								var player = _this2.clients[id];
+								var dist = _this2.distanceBetween({ x: m.x, y: m.y }, player);
+								if (dist < 300) {
+									setTimeout(function () {
+										if (player.alive) {
+											if (!player.powers.active.includes('shield')) {
+												_this2.tweenTint(player, player.originalTint, 0xffffff, 50);
+												if (id == _this2.id && m.id !== _this2.id) {
+													_this2.game.camera.shake(0.01, 50);
+												}
 											}
 										}
-									}
-								}, dist * 1.5);
-							}
-						};
+									}, dist * 1.5);
+								}
+							};
 
-						for (var id in _this2.clients) {
-							_loop(id);
+							for (var id in _this2.clients) {
+								_loop(id);
+							}
 						}
 					})();
 				}
@@ -7500,20 +7506,22 @@ var Main = function (_Phaser$State) {
 				if (change.path.id && change.path.id !== _this2.id) {
 					if (change.operation === "add") {
 						var client = _this2.clientGroupIdle.getFirstDead();
-						_this2.clientGroupActive.add(client);
+						if (client) {
+							_this2.clientGroupActive.add(client);
 
-						client.revive(-500, -500);
-						client.level = change.value.level;
-						client.health = change.value.health;
-						client.maxHealth = change.value.maxHealth;
-						_this2.clients[change.path.id] = client;
-						_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
-					} else if (change.operation === "remove") {
-						var _client = _this2.clients[change.path.id];
-						_this2.clientGroupIdle.add(_client);
-						_client.die();
+							client.revive(-500, -500);
+							client.level = change.value.level;
+							client.health = change.value.health;
+							client.maxHealth = change.value.maxHealth;
+							_this2.clients[change.path.id] = client;
+							_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
+						} else if (change.operation === "remove") {
+							var _client = _this2.clients[change.path.id];
+							_this2.clientGroupIdle.add(_client);
+							_client.die();
 
-						delete _this2.clients[change.path.id];
+							delete _this2.clients[change.path.id];
+						}
 					}
 				}
 			});
@@ -7594,7 +7602,7 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'createBitsPool',
 		value: function createBitsPool() {
-			for (var i = 0; i < 100; i++) {
+			for (var i = 0; i < 50; i++) {
 				this.bitsPool.add(new _Bit2.default(this.game));
 			}
 		}

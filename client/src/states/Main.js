@@ -104,13 +104,15 @@ class Main extends Phaser.State {
 				let player = this.clients[message.bullet.id];
 				if (player) {
 					let bullet = this.bulletPool.getFirstDead();
-					bullet.id = message.bullet.id;
-					bullet.angle = message.bullet.angle;
-					bullet.timer = Date.now() + 1000;
-					bullet.setTint(player.tint);
-					bullet.setTrail(player.particles);
-					bullet.setDest(message.bullet.x, message.bullet.y);
-					bullet.reset(message.bullet.x, message.bullet.y);
+					if (bullet) {
+						bullet.id = message.bullet.id;
+						bullet.angle = message.bullet.angle;
+						bullet.timer = Date.now() + 1000;
+						bullet.setTint(player.tint);
+						bullet.setTrail(player.particles);
+						bullet.setDest(message.bullet.x, message.bullet.y);
+						bullet.reset(message.bullet.x, message.bullet.y);
+					}
 				}
 			}
 
@@ -120,18 +122,21 @@ class Main extends Phaser.State {
 				if (player) {
 					let m = message.seeker;
 					let seeker = this.seekerPool.getFirstDead();
-					seeker.id = m.owner;
-					seeker.timer = Date.now() + 2000;
-					seeker.setTint(player.tint);
-					seeker.setTrail(player.particles);
+					if (seeker) {
+						seeker.id = m.owner;
+						seeker.timer = Date.now() + 2000;
+						seeker.setTint(player.tint);
+						seeker.setTrail(player.particles);
 
-					if (target) {
-						seeker.target = target;
-					} else {
-						seeker.rotation = player.rotation;
-						seeker.target = {alive: false}
+
+						if (target) {
+							seeker.target = target;
+						} else {
+							seeker.rotation = player.rotation;
+							seeker.target = {alive: false}
+						}
+						seeker.reset(player.x, player.y);
 					}
-					seeker.reset(player.x, player.y);
 				}
 			}
 
@@ -200,22 +205,24 @@ class Main extends Phaser.State {
 			if (message.shockwave) {
 				let m = message.shockwave;
 				let shockwave = this.shockwavePool.getFirstDead();
-				shockwave.start(m.x, m.y, this.clients[this.id].tint);
+				if (shockwave) {
+					shockwave.start(m.x, m.y, this.clients[this.id].tint);
 
-				for (let id in this.clients) {
-					let player = this.clients[id]
-					let dist = this.distanceBetween({x: m.x, y: m.y}, player);
-					if (dist < 300) {
-						setTimeout(() => {
-							if (player.alive) {
-								if (!player.powers.active.includes('shield')) {
-									this.tweenTint(player, player.originalTint, 0xffffff, 50);
-									if (id == this.id && m.id !== this.id) {
-										this.game.camera.shake(0.01, 50);
+					for (let id in this.clients) {
+						let player = this.clients[id]
+						let dist = this.distanceBetween({x: m.x, y: m.y}, player);
+						if (dist < 300) {
+							setTimeout(() => {
+								if (player.alive) {
+									if (!player.powers.active.includes('shield')) {
+										this.tweenTint(player, player.originalTint, 0xffffff, 50);
+										if (id == this.id && m.id !== this.id) {
+											this.game.camera.shake(0.01, 50);
+										}
 									}
 								}
-							}
-						}, dist * 1.5);
+							}, dist * 1.5);
+						}
 					}
 				}
 			}
@@ -246,20 +253,22 @@ class Main extends Phaser.State {
 			if (change.path.id && change.path.id !== this.id) {
 				if (change.operation === "add") {
 					let client = this.clientGroupIdle.getFirstDead();
-					this.clientGroupActive.add(client);
+					if (client) {
+						this.clientGroupActive.add(client);
 
-					client.revive(-500, -500);
-					client.level = change.value.level;
-					client.health = change.value.health;
-					client.maxHealth = change.value.maxHealth;
-					this.clients[change.path.id] = client;
-					this.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
-				} else if (change.operation === "remove") {
-					let client = this.clients[change.path.id];
-					this.clientGroupIdle.add(client);
-					client.die();
+						client.revive(-500, -500);
+						client.level = change.value.level;
+						client.health = change.value.health;
+						client.maxHealth = change.value.maxHealth;
+						this.clients[change.path.id] = client;
+						this.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
+					} else if (change.operation === "remove") {
+						let client = this.clients[change.path.id];
+						this.clientGroupIdle.add(client);
+						client.die();
 
-					delete this.clients[change.path.id];
+						delete this.clients[change.path.id];
+					}
 				}
 			}
 		});
@@ -336,7 +345,7 @@ class Main extends Phaser.State {
 	}
 
 	createBitsPool() {
-		for (let i = 0; i < 100; i++) {
+		for (let i = 0; i < 50; i++) {
 			this.bitsPool.add(new Bit(this.game));
 		}
 	}
