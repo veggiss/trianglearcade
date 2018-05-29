@@ -298,7 +298,7 @@ module.exports = class State {
         this.deathWall.x = pos.x;
         this.deathWall.y = pos.y;
         this.deathWall.active = true;
-        this.deathWall.timer = Date.now() + 60000;
+        this.deathWall.timer = (Date.now() + 60000) * 0.001;
         this.private.network.sendToAll({message: 'Get inside the forcefield!'});
 
         setTimeout(() => {

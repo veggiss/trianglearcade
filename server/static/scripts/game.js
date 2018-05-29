@@ -7459,7 +7459,7 @@ var Main = function (_Phaser$State) {
 				this.forceFieldText.tweenIn.start();
 				this.forceFieldText.text = '';
 
-				var delay = Math.floor((message - Date.now()) * 0.001);
+				var delay = Math.floor(message - Date.now() * 0.001);
 				var loop = this.game.time.events.loop(Phaser.Timer.SECOND, function () {
 					delay--;
 					_this3.forceFieldText.text = 'Seconds before wipe: ' + delay;
