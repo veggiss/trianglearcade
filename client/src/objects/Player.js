@@ -19,6 +19,8 @@ class Player extends Phaser.Sprite {
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
 		this.originalTint = this.tint;
 		this.dest = {x: x, y: y, angle: this.angle};
+		this.healthBarGroup = this.game.add.group();
+		this.healthBarGroup.z = 2;
 
 		this.stats = {
 			level: 0,
@@ -32,6 +34,23 @@ class Player extends Phaser.Sprite {
 		//Sprite
 		this.scale.setTo(0.75);
 		this.anchor.setTo(0.5);
+
+		//Healthbar
+		this.playerHealthBar = new HealthBar(this.game, {
+			x: this.x, 
+			y: this.y + 64,
+			width: 64,
+			height: 8,
+			animationDuration: 10,
+			bg: {
+				color: '#002611'
+			},
+			bar: {
+				color: '#00A549'
+			}
+		});
+		this.healthBarGroup.add(this.playerHealthBar.bgSprite);
+		this.healthBarGroup.add(this.playerHealthBar.barSprite);
 		
 		//Emitters and particles
 		this.particles = new Particles(this.game, this.tint);
@@ -60,7 +79,6 @@ class Player extends Phaser.Sprite {
 
 		//UI
 		this.ui = new UI(this.game, this.stats);
-		this.playerHealthBar = this.ui.healthbar;
 
         //Add player to stage
         this.kill();

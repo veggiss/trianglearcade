@@ -5235,6 +5235,7 @@ var Bit = function (_Phaser$Sprite) {
 	_createClass(Bit, [{
 		key: 'update',
 		value: function update() {
+			this.angle += 10;
 			if (this.activated) {
 				this.moveToTarget();
 			}
@@ -5442,6 +5443,7 @@ var Client = function (_Phaser$Sprite) {
 		_this.alpha = 0;
 		_this.dead = false;
 		_this.dest = { x: 0, y: 0, angle: _this.angle };
+		_this.lastUpdate = 0;
 		_this.healthBarGroup = _this.game.add.group();
 		_this.healthBarGroup.z = 2;
 
@@ -5458,7 +5460,13 @@ var Client = function (_Phaser$Sprite) {
 			y: _this.y + 64,
 			width: 64,
 			height: 8,
-			animationDuration: 10
+			animationDuration: 10,
+			bg: {
+				color: '#002611'
+			},
+			bar: {
+				color: '#00A549'
+			}
 		});
 		_this.playerHealthBar.barSprite.alpha = 0;
 		_this.playerHealthBar.bgSprite.alpha = 0;
@@ -5478,8 +5486,9 @@ var Client = function (_Phaser$Sprite) {
 				var shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 				this.angle = this.lerp(this.angle, this.angle + shortestAngle, 0.075);
 				this.playerHealthBar.setPosition(this.x, this.y + 55);
-				if (this.alive && this.alpha === 1) {
+				if (this.alpha === 1) {
 					this.particles.playerMove(this.x, this.y);
+					this.checkLastUpdate();
 				}
 			}
 		}
@@ -5499,6 +5508,15 @@ var Client = function (_Phaser$Sprite) {
 			this.alpha = 0;
 			this.playerHealthBar.barSprite.alpha = 0;
 			this.playerHealthBar.bgSprite.alpha = 0;
+		}
+	}, {
+		key: 'checkLastUpdate',
+		value: function checkLastUpdate() {
+			if (this.lastUpdate < Date.now()) {
+				this.alpha = 0;
+				this.playerHealthBar.barSprite.alpha = 0;
+				this.playerHealthBar.bgSprite.alpha = 0;
+			}
 		}
 	}, {
 		key: 'setHealth',
@@ -5963,6 +5981,8 @@ var Player = function (_Phaser$Sprite) {
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
 		_this.originalTint = _this.tint;
 		_this.dest = { x: x, y: y, angle: _this.angle };
+		_this.healthBarGroup = _this.game.add.group();
+		_this.healthBarGroup.z = 2;
 
 		_this.stats = {
 			level: 0,
@@ -5975,6 +5995,23 @@ var Player = function (_Phaser$Sprite) {
 			//Sprite
 		};_this.scale.setTo(0.75);
 		_this.anchor.setTo(0.5);
+
+		//Healthbar
+		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
+			x: _this.x,
+			y: _this.y + 64,
+			width: 64,
+			height: 8,
+			animationDuration: 10,
+			bg: {
+				color: '#002611'
+			},
+			bar: {
+				color: '#00A549'
+			}
+		});
+		_this.healthBarGroup.add(_this.playerHealthBar.bgSprite);
+		_this.healthBarGroup.add(_this.playerHealthBar.barSprite);
 
 		//Emitters and particles
 		_this.particles = new _Particles2.default(_this.game, _this.tint);
@@ -6003,7 +6040,6 @@ var Player = function (_Phaser$Sprite) {
 
 		//UI
 		_this.ui = new _UI2.default(_this.game, _this.stats);
-		_this.playerHealthBar = _this.ui.healthbar;
 
 		//Add player to stage
 		_this.kill();
@@ -6314,13 +6350,16 @@ var Powers = function () {
 				if (!_this2.active.includes(power)) {
 					switch (power) {
 						case 'shield':
+							console.log('shield power used' + _this2.active);
 							_this2.powerShield.tweenIn.start();
 							setTimeout(function () {
 								_this2.powerShield.tweenOut.start();
 								var index = _this2.active.findIndex(function (item) {
 									return item === 'shield';
 								});
-								if (index) _this2.active.splice(index, 1);
+								console.log('before', _this2.active);
+								if (index > -1) _this2.active.splice(index, 1);
+								console.log('after', _this2.active);
 							}, 6000);
 							break;
 						case 'magnet':
@@ -6330,7 +6369,7 @@ var Powers = function () {
 								var index = _this2.active.findIndex(function (item) {
 									return item === 'magnet';
 								});
-								if (index) _this2.active.splice(index, 1);
+								if (index > -1) _this2.active.splice(index, 1);
 							}, 10000);
 							break;
 					}
@@ -6562,7 +6601,6 @@ var UI = function () {
 		this.stats = stats;
 		this.maxStats = 10;
 
-		this.healthBarGroup = this.game.add.group();
 		this.expBarGroup = this.game.add.group();
 		this.statTextGroup = this.game.add.group();
 		this.lbTextGroup = this.game.add.group();
@@ -6625,40 +6663,13 @@ var UI = function () {
 		this.expBarGroup.add(this.expBar.barSprite);
 		this.expBarGroup.add(this.expBar_bar);
 
-		//Health bar
-		this.healthbar = new _HealthBar2.default(this.game, {
-			x: this.expBar.x,
-			y: this.expBar.y - 32,
-			width: 324,
-			height: 24,
-			animationDuration: 100,
-			bg: {
-				color: '#002611'
-			},
-			bar: {
-				color: '#00A549'
-			}
-		});
-
-		this.healthbar_bar = this.game.add.sprite(this.healthbar.x, this.healthbar.y, 'atlas', 'actionbar_bar.png');
-		this.healthbar_bar.anchor.setTo(0.5);
-		this.healthbar_text = this.game.add.bitmapText(0, 0, 'font', 'HP', 16);
-		this.healthbar_text.anchor.setTo(0.5);
-		this.healthbar_text.alpha = 0.5;
-		this.healthbar_bar.addChild(this.healthbar_text);
-		this.healthBarGroup.alpha = 0.75;
-		this.healthBarGroup.add(this.healthbar.bgSprite);
-		this.healthBarGroup.add(this.healthbar.barSprite);
-		this.healthBarGroup.add(this.healthbar_bar);
-
 		// Stat UI
-		this.scoreText = this.game.add.bitmapText(this.game.canvas.width / 2 - 100, this.game.canvas.height - 185, 'font', 'Score:', 20);
-		this.posText = this.game.add.bitmapText(this.game.canvas.width / 2 - 100, this.game.canvas.height - 165, 'font', 'Position:', 25);
-
-		this.nameText = this.game.add.bitmapText(this.game.canvas.width / 2 + 100, this.game.canvas.height - 185, 'font', this.game.myName, 20);
-		this.levelText = this.game.add.bitmapText(this.game.canvas.width / 2 + 100, this.game.canvas.height - 165, 'font', 'Level: 0', 25);
-
-		this.pointsText = this.game.add.bitmapText(83, 20, 'font', 'Points available: 0', 16);
+		var padding = 190;
+		this.nameText = this.game.add.bitmapText(20, padding += 22, 'font', this.game.myName, 25);
+		this.posText = this.game.add.bitmapText(20, padding += 22, 'font', 'Position:', 25);
+		this.scoreText = this.game.add.bitmapText(20, padding += 22, 'font', 'Score:', 25);
+		this.levelText = this.game.add.bitmapText(20, padding += 22, 'font', 'Level: 0', 25);
+		this.pointsText = this.game.add.bitmapText(20, 20, 'font', 'Points available: 0', 17);
 
 		this.statTextGroup.add(this.nameText);
 		this.statTextGroup.add(this.scoreText);
@@ -6667,7 +6678,7 @@ var UI = function () {
 		this.statTextGroup.add(this.pointsText);
 
 		this.statTextGroup.forEach(function (item) {
-			item.anchor.setTo(0.5);
+			item.anchor.setTo(0, 0.5);
 			item.alpha = 0.75;
 		});
 
@@ -6699,7 +6710,7 @@ var UI = function () {
 		var spaceX = this.game.canvas.width / 2 - 134;
 
 		var _loop = function _loop(_i) {
-			var actionbar = _this2.game.add.sprite(spaceX, _this2.game.canvas.height - 110, 'atlas', 'actionbar.png');
+			var actionbar = _this2.game.add.sprite(spaceX, _this2.game.canvas.height - 75, 'atlas', 'actionbar.png');
 			var chosenPower = _this2.game.add.sprite(0, 0, null);
 			var newPowerIcon = _this2.game.add.sprite(0, 0, 'atlas', 'icon_generic.png');
 			var cooldownText = _this2.game.add.bitmapText(0, 0, 'font', '', 40);
@@ -6777,12 +6788,16 @@ var UI = function () {
 				add.scale.setTo(1.3);
 			}
 
+			actionbar.alpha = 0.75;
 			actionbar.anchor.setTo(0, 0.5);
 			label.anchor.setTo(0, 0.5);
 			stat.anchor.setTo(0.5);
+			add.alpha = 0.75;
 			add.anchor.setTo(0.5);
 			add.scale.setTo(0);
 			add.inputEnabled = true;
+			add.events.onInputOver.add(_this2.buttonOver, _this2);
+			add.events.onInputOut.add(_this2.buttonOut, _this2);
 			add.name = stat_label[_i2].toLowerCase();
 			add.tweenIn = _this2.game.add.tween(add.scale).to({ x: 1, y: 1 }, 1000, Phaser.Easing.Elastic.Out);
 			add.tweenOut = _this2.game.add.tween(add.scale).to({ x: 0, y: 0 }, 500, Phaser.Easing.Elastic.Out);
@@ -6812,7 +6827,7 @@ var UI = function () {
 		}
 
 		//Choose heropower UI
-		this.choosetext = this.game.add.bitmapText(this.game.canvas.width / 2, this.game.canvas.height - 320, 'font', 'Choose hero power:', 26);
+		this.choosetext = this.game.add.bitmapText(this.game.canvas.width / 2, this.game.canvas.height - 250, 'font', 'Choose hero power:', 26);
 		this.choosetext.anchor.setTo(0.5);
 
 		this.opt1Button = this.game.add.sprite(-50, 50, 'atlas', 'icon_generic.png');
@@ -6855,18 +6870,12 @@ var UI = function () {
   }, this);*/
 
 		this.expBar.setFixedToCamera(true);
-		this.healthbar.setFixedToCamera(true);
 		this.expBar_bar.fixedToCamera = true;
-		this.healthbar_bar.fixedToCamera = true;
 		this.statTextGroup.fixedToCamera = true;
 		this.lbTextGroup.fixedToCamera = true;
 		this.actionbarGroup.fixedToCamera = true;
 		this.actionbarGroup_stat.fixedToCamera = true;
 		this.choosetext.fixedToCamera = true;
-
-		for (var _i3 = 0; _i3 < 4; _i3++) {
-			this.newPowerAvailable(_i3);
-		}
 
 		return this;
 	}
@@ -6951,13 +6960,16 @@ var UI = function () {
 	}, {
 		key: 'newPowerAvailable',
 		value: function newPowerAvailable(index) {
-			var actionbar = this.actionbarGroup.getAt(index);
-			actionbar.show.start();
-			actionbar.events.onInputDown.add(this.showPowerOption, { text: this.getPowerTexts(index), _this: this });
+			console.log(index);
+			if (index >= 0 && index <= 3) {
+				var _actionbar = this.actionbarGroup.getAt(index);
+				_actionbar.show.start();
+				_actionbar.events.onInputDown.add(this.showPowerOption, { text: this.getPowerTexts(index), _this: this });
 
-			if (!this.game.onMobile) {
-				var key = this.hotkeyList[index];
-				key.onDown.add(this.showPowerOption, { text: this.getPowerTexts(index), _this: this });
+				if (!this.game.onMobile) {
+					var key = this.hotkeyList[index];
+					key.onDown.add(this.showPowerOption, { text: this.getPowerTexts(index), _this: this });
+				}
 			}
 		}
 	}, {
@@ -7156,11 +7168,11 @@ var Boot = function (_Phaser$State) {
 			var width = window.innerWidth;
 			var height = window.innerHeight;
 
-			this.game.scale.scaleMode = this.game.device.desktop ? Phaser.ScaleManager.RESIZE : Phaser.ScaleManager.SHOW_ALL;
+			this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
 
 			if (this.game.device.desktop) {
-				console.log(width);
 				if (width < 1000) {
+					this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 					width = width * 2;
 					height = height * 2;
 					this.game.width = width;
@@ -7171,8 +7183,6 @@ var Boot = function (_Phaser$State) {
 					this.game.changedScale = true;
 				}
 			}
-
-			console.log(this.game.canvas);
 
 			this.game.canvas.oncontextmenu = function (e) {
 				e.preventDefault();
@@ -7275,9 +7285,17 @@ var Main = function (_Phaser$State) {
 			this.game.onMobile = !this.game.device.desktop;
 
 			//Background
-			this.starfield = this.add.tileSprite(0, 0, 2400, 2000, 'starfield');
+			this.starfield = this.add.tileSprite(0, 0, 2400, 2000, 'atlas', 'starfield.png');
 			this.starfield.fixedToCamera = true;
 			this.starfield.alpha = 0.5;
+			this.forceField = this.game.add.sprite(0, 0, 'atlas', 'shockwave.png');
+			this.forceField.anchor.setTo(0.5);
+			this.forceField.width = 400;
+			this.forceField.height = 400;
+			this.forceField.alpha = 0;
+			this.arrow = this.game.add.sprite(0, 0, 'arrow');
+			this.arrow.anchor.setTo(0, 0.5);
+			this.arrow.alpha = 0;
 
 			//Pools and network
 			this.game.room = this.game.colyseus.join('game', { name: this.game.myName.toString() });
@@ -7339,6 +7357,7 @@ var Main = function (_Phaser$State) {
 			if (this.id) {
 				this.updateBullets();
 				this.updateVisiblePlayers();
+				this.updateArrow();
 				this.starfield.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
 			}
 		}
@@ -7349,8 +7368,6 @@ var Main = function (_Phaser$State) {
 			if (this.nextSound == 3) {
 				this.nextSound = 0;
 			}
-
-			console.log(this.nextSound);
 
 			return this.nextSound;
 		}
@@ -7455,6 +7472,10 @@ var Main = function (_Phaser$State) {
 				if (message.levelUp) {
 					_this2.clients[_this2.id].ui.addPoints();
 					_this2.sound_levelup.play();
+
+					if (typeof message.newPower === 'number') {
+						_this2.clients[_this2.id].ui.newPowerAvailable(message.newPower);
+					}
 				}
 
 				if (message.statUpgrade) {
@@ -7466,6 +7487,8 @@ var Main = function (_Phaser$State) {
 					var client = _this2.clients[_m.id];
 
 					if (client) {
+						if (_m.id !== _this2.id) client.lastUpdate = Date.now() + 1000;
+
 						if (!client.alive) {
 							client.reset(_m.x, _m.y);
 							client.alpha = 0;
@@ -7651,6 +7674,42 @@ var Main = function (_Phaser$State) {
 					}
 				}
 			});
+
+			this.game.room.listen("deathWall/:variable", function (change) {
+				if (change.operation === 'add') {
+					switch (change.path.variable) {
+						case 'x':
+							_this2.forceField.x = change.value;
+							break;
+						case 'y':
+							_this2.forceField.y = change.value;
+							break;
+						case 'active':
+							if (change.value === true) {
+								_this2.forceField.alpha = 1;
+							} else if (change.value === false) {
+								_this2.forceField.alpha = 0;
+							}
+							break;
+					}
+				} else if (change.operation === 'replace') {
+					switch (change.path.variable) {
+						case 'x':
+							_this2.forceField.x = change.value;
+							break;
+						case 'y':
+							_this2.forceField.y = change.value;
+							break;
+						case 'active':
+							if (change.value === true) {
+								_this2.forceField.alpha = 1;
+							} else if (change.value === false) {
+								_this2.forceField.alpha = 0;
+							}
+							break;
+					}
+				}
+			});
 		}
 	}, {
 		key: 'createBulletPool',
@@ -7724,7 +7783,7 @@ var Main = function (_Phaser$State) {
 					var dist = this.distanceBetween(this.clients[this.id], target);
 
 					if (dist < 950) {
-						if (target.alive && target.alpha === 0) {
+						if (target.alive && target.alpha === 0 && target.lastUpdate > Date.now()) {
 							target.x = target.dest.x;
 							target.y = target.dest.y;
 							this.game.add.tween(target).to({ alpha: 1 }, 500, Phaser.Easing.Linear.None, true);
@@ -7752,6 +7811,22 @@ var Main = function (_Phaser$State) {
 			this.seekerPool.forEachAlive(function (seeker) {
 				_this3.checkCollision(seeker);
 			}, this);
+		}
+	}, {
+		key: 'updateArrow',
+		value: function updateArrow() {
+			if (this.forceField.alpha == 1) {
+				if (this.distanceBetween(this.arrow, this.forceField) < 400) {
+					this.arrow.alpha = 0;
+				} else {
+					this.arrow.x = this.clients[this.id].x;
+					this.arrow.y = this.clients[this.id].y;
+					this.arrow.alpha = 1;
+					this.arrow.rotation = Phaser.Math.angleBetween(this.arrow.x, this.arrow.y, this.forceField.x, this.forceField.y);
+				}
+			} else {
+				this.arrow.alpha = 0;
+			}
 		}
 	}, {
 		key: 'checkCollision',
@@ -7885,7 +7960,7 @@ var Menu = function (_Phaser$State) {
 			this.game.world.setBounds(0, 0, this.game.width, this.game.heigth);
 
 			//Background
-			this.starfield = this.add.tileSprite(0, 0, this.game.canvas.width, this.game.canvas.height, 'starfield');
+			this.starfield = this.add.tileSprite(0, 0, this.game.canvas.width, this.game.canvas.height, 'atlas', 'starfield.png');
 			this.starfield.fixedToCamera = true;
 			this.starfield.alpha = 0.5;
 
@@ -7897,11 +7972,7 @@ var Menu = function (_Phaser$State) {
 			this.input.setAttribute("type", "text");
 			this.button.innerHTML = 'Enter';
 			this.gameDiv = document.getElementById("content");
-			this.setUiPos();
-			/*this.game.scale.setResizeCallback(() => {
-       this.scale.refresh();
-       console.log("lol");
-   }, this);*/
+
 			this.uiDiv.appendChild(this.input);
 			this.uiDiv.appendChild(this.button);
 			this.gameDiv.appendChild(this.uiDiv);
@@ -7911,14 +7982,24 @@ var Menu = function (_Phaser$State) {
 				_this2.uiDiv.remove();
 				_this2.game.state.start("Main");
 			}, false);
+
+			this.resize();
 		}
 	}, {
-		key: 'setUiPos',
-		value: function setUiPos() {
-			this.text.x = this.game.canvas.width / 2;
+		key: 'resize',
+		value: function resize() {
+			this.starfield.width = this.game.canvas.width;
+			this.starfield.height = this.game.canvas.height;
+			this.text.x = this.game.camera.width / 2;
 			this.text.y = 100;
-			this.input.setAttribute("style", "position:absolute;width:" + 128 + "px;left:" + (this.text.x - this.text.width / 2 - 5) + "px;top:" + (this.text.y + 25) + "px;");
-			this.button.setAttribute("style", "position:absolute;width:" + 132 + "px;left:" + (this.text.x - this.text.width / 2 - 5) + "px;top:" + (this.text.y + 55) + "px;");
+
+			if (this.game.changedScale) {
+				this.input.setAttribute("style", "position:absolute;width:" + 128 + "px;left:" + (this.game.canvas.width / 4 - this.text.width / 2 - 5) + "px;top:" + (this.text.y + 25) + "px;");
+				this.button.setAttribute("style", "position:absolute;width:" + 132 + "px;left:" + (this.game.canvas.width / 4 - this.text.width / 2 - 5) + "px;top:" + (this.text.y + 55) + "px;");
+			} else {
+				this.input.setAttribute("style", "position:absolute;width:" + 128 + "px;left:" + (this.game.canvas.width / 2 - this.text.width / 2 - 5) + "px;top:" + (this.text.y + 25) + "px;");
+				this.button.setAttribute("style", "position:absolute;width:" + 132 + "px;left:" + (this.game.canvas.width / 2 - this.text.width / 2 - 5) + "px;top:" + (this.text.y + 55) + "px;");
+			}
 		}
 	}]);
 
@@ -7974,14 +8055,10 @@ var Preload = function (_Phaser$State) {
 	_createClass(Preload, [{
 		key: 'preload',
 		value: function preload() {
-			this.load.image('starfield', 'assets/starfield.png');
-
 			this.load.atlas('atlas', 'assets/images.png', 'assets/images.json', Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-
 			this.load.atlas('generic', 'assets/joystick/generic-joystick.png', 'assets/joystick/generic-joystick.json');
-
+			this.load.image('arrow', 'assets/arrow.png');
 			this.load.bitmapFont('font', 'assets/font/font.png', 'assets/font/font.xml');
-
 			this.load.script('joystick', 'scripts/joystick.js');
 
 			//Sound

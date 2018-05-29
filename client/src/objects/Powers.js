@@ -37,13 +37,16 @@ class Powers {
 			if (!this.active.includes(power)) {
 				switch(power) {
 					case 'shield':
+						console.log('shield power used' + this.active);
 						this.powerShield.tweenIn.start();
 						setTimeout(() => {
 							this.powerShield.tweenOut.start();
 							let index = this.active.findIndex(item => {
 								return item === 'shield';
 							});
-							if (index) this.active.splice(index, 1);
+							console.log('before', this.active);
+							if (index > -1) this.active.splice(index, 1);
+							console.log('after', this.active);
 						}, 6000);
 					break;
 					case 'magnet':
@@ -53,7 +56,7 @@ class Powers {
 							let index = this.active.findIndex(item => {
 								return item === 'magnet';
 							});
-							if (index) this.active.splice(index, 1);
+							if (index > -1) this.active.splice(index, 1);
 						}, 10000);
 					break;
 				}

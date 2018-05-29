@@ -14,6 +14,12 @@ module.exports = class State {
         this.bits = {};
         this.powerUps = {};
         this.comets = {};
+        this.deathWall = {
+            x: 0,
+            y: 0,
+            radius: 500,
+            active: false
+        };
 
         this.private = util.setEnumerable({
             network: network,
@@ -279,6 +285,29 @@ module.exports = class State {
         }
     }
 
+    newDeathWall() {
+        let pos = util.ranWorldPos();
+        this.deathWall.x = pos.x;
+        this.deathWall.y = pos.y;
+        this.deathWall.active = true;
+        setTimeout(() => {
+            this.deathWall.active = false;
+
+            let list = util.getProximityList({
+                id: -1,
+                x: pos.x,
+                y: pos.y
+            }, this.players, false, this.deathWall.radius);
+
+            list.forEach(player => {
+                let target = this.players[player];
+                if (target) {
+                    target.die();
+                }
+            });
+        }, 20000);
+    }
+
     //Updaters
     globalUpdate() {
         this.updatePlayers();
@@ -353,8 +382,8 @@ module.exports = class State {
     }
 
     playerWorldCollision(player) {
-        if (player.pos.x < 0 || player.pos.x > util.world.width) this.killPlayer(player);
-        else if (player.pos.y < 0 || player.pos.y > util.world.height) this.killPlayer(player);
+        if (player.private.bodyPos.x < 0 || player.private.bodyPos.x > util.world.width) this.killPlayer(player);
+        else if (player.private.bodyPos.y < 0 || player.private.bodyPos.y > util.world.height) this.killPlayer(player);
     }
 
     playerBulletCollision(player) {

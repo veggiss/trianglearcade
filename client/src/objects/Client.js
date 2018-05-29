@@ -16,6 +16,7 @@ class Client extends Phaser.Sprite {
 		this.alpha = 0;
 		this.dead = false;
 		this.dest = {x: 0, y: 0, angle: this.angle};
+		this.lastUpdate = 0;
 		this.healthBarGroup = this.game.add.group();
 		this.healthBarGroup.z = 2;
 
@@ -32,7 +33,13 @@ class Client extends Phaser.Sprite {
 			y: this.y + 64,
 			width: 64,
 			height: 8,
-			animationDuration: 10
+			animationDuration: 10,
+			bg: {
+				color: '#002611'
+			},
+			bar: {
+				color: '#00A549'
+			}
 		});
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
@@ -49,8 +56,9 @@ class Client extends Phaser.Sprite {
 			let shortestAngle = Phaser.Math.getShortestAngle(this.angle, Phaser.Math.wrapAngle(this.dest.angle));
 			this.angle = this.lerp(this.angle, (this.angle + shortestAngle), 0.075);
 			this.playerHealthBar.setPosition(this.x, this.y + 55);
-			if (this.alive && this.alpha === 1) {
+			if (this.alpha === 1) {
 				this.particles.playerMove(this.x, this.y);
+				this.checkLastUpdate();
 			}
 		}
 	}
@@ -68,6 +76,14 @@ class Client extends Phaser.Sprite {
 		this.alpha = 0;
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
+	}
+
+	checkLastUpdate() {
+		if (this.lastUpdate < Date.now()) {
+			this.alpha = 0;
+			this.playerHealthBar.barSprite.alpha = 0;
+			this.playerHealthBar.bgSprite.alpha = 0;
+		}
 	}
 
 	setHealth(value) {

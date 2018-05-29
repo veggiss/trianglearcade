@@ -7,7 +7,6 @@ class UI {
 		this.stats = stats;
 		this.maxStats = 10;
 
-		this.healthBarGroup = this.game.add.group();
 		this.expBarGroup = this.game.add.group();
 		this.statTextGroup = this.game.add.group();
 		this.lbTextGroup = this.game.add.group();
@@ -71,40 +70,13 @@ class UI {
 		this.expBarGroup.add(this.expBar.barSprite);
 		this.expBarGroup.add(this.expBar_bar);
 
-		//Health bar
-		this.healthbar = new HealthBar(this.game, {
-			x: this.expBar.x, 
-			y: this.expBar.y - 32,
-			width: 324,
-			height: 24,
-			animationDuration: 100,
-			bg: {
-				color: '#002611'
-			},
-			bar: {
-				color: '#00A549'
-			}
-		});
-
-		this.healthbar_bar = this.game.add.sprite(this.healthbar.x, this.healthbar.y, 'atlas', 'actionbar_bar.png');
-		this.healthbar_bar.anchor.setTo(0.5);
-		this.healthbar_text = this.game.add.bitmapText(0, 0, 'font', 'HP', 16);
-		this.healthbar_text.anchor.setTo(0.5);
-		this.healthbar_text.alpha = 0.5;
-		this.healthbar_bar.addChild(this.healthbar_text);
-		this.healthBarGroup.alpha = 0.75;
-		this.healthBarGroup.add(this.healthbar.bgSprite);
-		this.healthBarGroup.add(this.healthbar.barSprite);
-		this.healthBarGroup.add(this.healthbar_bar);
-
 		// Stat UI
-		this.scoreText = this.game.add.bitmapText(this.game.canvas.width/2 - 100, this.game.canvas.height - 185, 'font', 'Score:', 20);
-		this.posText = this.game.add.bitmapText(this.game.canvas.width/2 - 100, this.game.canvas.height - 165, 'font', 'Position:', 25);
-
-		this.nameText = this.game.add.bitmapText(this.game.canvas.width/2 + 100, this.game.canvas.height - 185, 'font', this.game.myName, 20);
-		this.levelText = this.game.add.bitmapText(this.game.canvas.width/2 + 100, this.game.canvas.height - 165, 'font', 'Level: 0', 25);
-
-		this.pointsText = this.game.add.bitmapText(83, 20, 'font', 'Points available: 0', 16);
+		let padding = 190;
+		this.nameText = this.game.add.bitmapText(20, padding += 22, 'font', this.game.myName, 25);
+		this.posText = this.game.add.bitmapText(20, padding += 22, 'font', 'Position:', 25);
+		this.scoreText = this.game.add.bitmapText(20, padding += 22, 'font', 'Score:', 25);
+		this.levelText = this.game.add.bitmapText(20, padding += 22, 'font', 'Level: 0', 25);
+		this.pointsText = this.game.add.bitmapText(20, 20, 'font', 'Points available: 0', 17);
 
 		this.statTextGroup.add(this.nameText);
 		this.statTextGroup.add(this.scoreText);
@@ -113,7 +85,7 @@ class UI {
 		this.statTextGroup.add(this.pointsText);
 
 		this.statTextGroup.forEach(item => {
-			item.anchor.setTo(0.5);
+			item.anchor.setTo(0, 0.5);
 			item.alpha = 0.75;
 		});
 
@@ -144,7 +116,7 @@ class UI {
 		//Power actionbar UI
 		let spaceX = this.game.canvas.width/2 - 134;
 		for (let i = 0; i < 4; i++) {
-			let actionbar = this.game.add.sprite(spaceX, this.game.canvas.height - 110, 'atlas', 'actionbar.png');
+			let actionbar = this.game.add.sprite(spaceX, this.game.canvas.height - 75, 'atlas', 'actionbar.png');
 			let chosenPower = this.game.add.sprite(0, 0, null);
 			let newPowerIcon = this.game.add.sprite(0, 0, 'atlas', 'icon_generic.png');
 			let cooldownText = this.game.add.bitmapText(0, 0, 'font', '', 40);
@@ -213,12 +185,16 @@ class UI {
 				add.scale.setTo(1.3);
 			}
 
+			actionbar.alpha = 0.75;
 			actionbar.anchor.setTo(0, 0.5);
 			label.anchor.setTo(0, 0.5);
 			stat.anchor.setTo(0.5);
+			add.alpha = 0.75;
 			add.anchor.setTo(0.5);
 			add.scale.setTo(0);
 			add.inputEnabled = true;
+			add.events.onInputOver.add(this.buttonOver, this);
+			add.events.onInputOut.add(this.buttonOut, this);
 			add.name = stat_label[i].toLowerCase();
 			add.tweenIn = this.game.add.tween(add.scale).to({x: 1, y: 1}, 1000, Phaser.Easing.Elastic.Out);
 			add.tweenOut = this.game.add.tween(add.scale).to({x: 0, y: 0}, 500, Phaser.Easing.Elastic.Out);
@@ -240,7 +216,7 @@ class UI {
 		}
 
 		//Choose heropower UI
-		this.choosetext = this.game.add.bitmapText(this.game.canvas.width/2, this.game.canvas.height - 320, 'font', 'Choose hero power:', 26);
+		this.choosetext = this.game.add.bitmapText(this.game.canvas.width/2, this.game.canvas.height - 250, 'font', 'Choose hero power:', 26);
 		this.choosetext.anchor.setTo(0.5);
 
 		this.opt1Button = this.game.add.sprite(-50, 50, 'atlas', 'icon_generic.png');
@@ -279,18 +255,12 @@ class UI {
 		}, this);*/
 
 		this.expBar.setFixedToCamera(true);
-		this.healthbar.setFixedToCamera(true);
 		this.expBar_bar.fixedToCamera = true;
-		this.healthbar_bar.fixedToCamera = true;
 		this.statTextGroup.fixedToCamera = true;
 		this.lbTextGroup.fixedToCamera = true;
 		this.actionbarGroup.fixedToCamera = true;
 		this.actionbarGroup_stat.fixedToCamera = true;
 		this.choosetext.fixedToCamera = true;
-
-		for(let i = 0; i < 4; i++) {
-			this.newPowerAvailable(i);
-		}
 
 		return this;
 	}
@@ -366,13 +336,16 @@ class UI {
 	}
 
 	newPowerAvailable(index) {
-		let actionbar = this.actionbarGroup.getAt(index);
-		actionbar.show.start();
-		actionbar.events.onInputDown.add(this.showPowerOption, {text: this.getPowerTexts(index), _this: this});
+		console.log(index);
+		if (index >= 0 && index <= 3) { 
+			let actionbar = this.actionbarGroup.getAt(index);
+			actionbar.show.start();
+			actionbar.events.onInputDown.add(this.showPowerOption, {text: this.getPowerTexts(index), _this: this});
 
-		if (!this.game.onMobile) {
-			let key = this.hotkeyList[index];
-			key.onDown.add(this.showPowerOption, {text: this.getPowerTexts(index), _this: this});
+			if (!this.game.onMobile) {
+				let key = this.hotkeyList[index];
+				key.onDown.add(this.showPowerOption, {text: this.getPowerTexts(index), _this: this});
+			}
 		}
 	}
 

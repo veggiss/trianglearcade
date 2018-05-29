@@ -1,7 +1,7 @@
 const world = {width: 2400, height: 2000};
 
 function ranWorldPos() {
-    return {x: ranNumBetween(100, world.width - 100), y: ranNumBetween(100, world.width - 100)};
+    return {x: ranNumBetween(100, world.width - 100), y: ranNumBetween(100, world.height - 100)};
 }
 
 function ranPlayerAngle() {
@@ -52,7 +52,7 @@ function setEnumerable(object) {
 }
 
 function ranNumBetween(min, max) {
-    return Math.floor(Math.random()*(max - min + 1) + min);
+    return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
 function wrapAngle(angle, radians) {
@@ -113,7 +113,6 @@ function getNearestTarget(player, list) {
 
 function getProximityList(player, list, within, range) {
     let exclutionList = [];
-    let proxyRange = range ? 1280 : range;
 
     for (let id in list) {
         if (id !== player.id) {

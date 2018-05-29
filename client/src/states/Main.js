@@ -16,9 +16,17 @@ class Main extends Phaser.State {
 		this.game.onMobile = !this.game.device.desktop;
 		
 		//Background
-		this.starfield = this.add.tileSprite(0, 0, 2400, 2000, 'starfield');
+		this.starfield = this.add.tileSprite(0, 0, 2400, 2000, 'atlas', 'starfield.png');
 		this.starfield.fixedToCamera = true;
 		this.starfield.alpha = 0.5;
+		this.forceField = this.game.add.sprite(0, 0, 'atlas', 'shockwave.png');
+		this.forceField.anchor.setTo(0.5);
+		this.forceField.width = 400;
+		this.forceField.height = 400;
+		this.forceField.alpha = 0;
+		this.arrow = this.game.add.sprite(0, 0, 'arrow');
+		this.arrow.anchor.setTo(0, 0.5);
+		this.arrow.alpha = 0;
 
 		//Pools and network
 		this.game.room = this.game.colyseus.join('game', {name: this.game.myName.toString()});
@@ -79,6 +87,7 @@ class Main extends Phaser.State {
 		if (this.id) {
 			this.updateBullets();
 			this.updateVisiblePlayers();
+			this.updateArrow();
 			this.starfield.tilePosition.set(-(this.game.camera.x * 0.05), -(this.game.camera.y * 0.05));
 		}
 	}
@@ -88,8 +97,6 @@ class Main extends Phaser.State {
 		if (this.nextSound == 3) {
 			this.nextSound = 0;
 		}
-
-		console.log(this.nextSound);
 
 		return this.nextSound;
 	}
@@ -193,6 +200,10 @@ class Main extends Phaser.State {
 			if (message.levelUp) {
 				this.clients[this.id].ui.addPoints();
 				this.sound_levelup.play();
+
+				if (typeof(message.newPower) === 'number') {
+					this.clients[this.id].ui.newPowerAvailable(message.newPower);
+				}
 			}
 
 			if (message.statUpgrade) {
@@ -204,6 +215,8 @@ class Main extends Phaser.State {
 				let client = this.clients[m.id];
 
 				if (client) {
+					if (m.id !== this.id) client.lastUpdate = Date.now() + 1000;
+
 					if (!client.alive) {
 						client.reset(m.x, m.y);
 						client.alpha = 0;
@@ -381,6 +394,42 @@ class Main extends Phaser.State {
 				}
 			}
 		});
+
+		this.game.room.listen("deathWall/:variable", change => {
+			if (change.operation === 'add') {
+				switch (change.path.variable) {
+					case 'x':
+						this.forceField.x = change.value;
+					break;
+					case 'y':
+						this.forceField.y = change.value;
+					break;
+					case 'active':
+						if (change.value === true) {
+							this.forceField.alpha = 1;
+						} else if (change.value === false) {
+							this.forceField.alpha = 0;
+						}
+					break;
+				}
+			} else if (change.operation === 'replace') {
+				switch (change.path.variable) {
+					case 'x':
+						this.forceField.x = change.value;
+					break;
+					case 'y':
+						this.forceField.y = change.value;
+					break;
+					case 'active':
+						if (change.value === true) {
+							this.forceField.alpha = 1;
+						} else if (change.value === false) {
+							this.forceField.alpha = 0;
+						}
+					break;
+				}
+			}
+		});
 	}
 
 	createBulletPool() {
@@ -445,7 +494,7 @@ class Main extends Phaser.State {
 				let dist = this.distanceBetween(this.clients[this.id], target);
 
 				if (dist < 950) {
-					if (target.alive && target.alpha === 0) {
+					if (target.alive && target.alpha === 0 && target.lastUpdate > Date.now()) {
 						target.x = target.dest.x;
 						target.y = target.dest.y;
 						this.game.add.tween(target).to({alpha: 1}, 500, Phaser.Easing.Linear.None, true);
@@ -470,6 +519,21 @@ class Main extends Phaser.State {
 		this.seekerPool.forEachAlive(seeker => {
 			this.checkCollision(seeker);
 		}, this);
+	}
+
+	updateArrow() {
+		if (this.forceField.alpha == 1) {
+			if (this.distanceBetween(this.arrow, this.forceField) < 400) {
+				this.arrow.alpha = 0;
+			} else {
+				this.arrow.x = this.clients[this.id].x;
+				this.arrow.y = this.clients[this.id].y;
+				this.arrow.alpha = 1;
+				this.arrow.rotation = Phaser.Math.angleBetween(this.arrow.x, this.arrow.y, this.forceField.x, this.forceField.y);
+			}
+		} else {
+			this.arrow.alpha = 0;
+		}
 	}
 
 	checkCollision(bullet) {

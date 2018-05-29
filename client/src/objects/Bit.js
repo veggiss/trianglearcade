@@ -16,6 +16,7 @@ class Bit extends Phaser.Sprite {
 	}
 
 	update() {
+		this.angle += 10;
 		if (this.activated) {
 			this.moveToTarget();
 		}
