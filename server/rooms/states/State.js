@@ -19,7 +19,7 @@ module.exports = class State {
             y: 0,
             radius: 300,
             active: false,
-            timer: 0
+            timer: -1
         };
 
         this.private = util.setEnumerable({
@@ -355,11 +355,10 @@ module.exports = class State {
     }
 
     updateDeathWall() {
-        if (this.deathWall.active) {
-            setTimeout(() => {
+        if (this.deathWall.active === true) {
+            if (this.deathWall.timer > 0) {
                 this.deathWall.timer--;
-                this.updateDeathWall();
-            }, 1000);
+            }
         }
     }
 

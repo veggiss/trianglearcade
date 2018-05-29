@@ -11,9 +11,9 @@ module.exports = class StateHandlerRoom extends Room {
         this.state.populateBits();
         this.state.populateComets();
         this.state.startDeathWall();
-        this.state.updateDeathWall();
         this.setSimulationInterval(() => this.update(), 1000 / 20);
         setInterval(() => this.updateProximity(), 100);
+        setInterval(() => this.state.updateDeathWall(), 1000);
     }
 
     requestJoin(options) {

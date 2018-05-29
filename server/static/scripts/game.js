@@ -7091,7 +7091,6 @@ var UI = function () {
 		key: 'activateHeroPower',
 		value: function activateHeroPower() {
 			var _this = this._this;
-			console.log(this.type);
 
 			if (this.actionbar) {
 				if (this.actionbar.cooldown < Date.now()) {
@@ -7453,23 +7452,11 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'setText',
 		value: function setText(type, message) {
-			var _this3 = this;
-
 			if (type === 'forcefield') {
-				this.forceFieldText.tweenIn.start();
-				this.forceFieldText.text = '';
-
-				var delay = message;
-				var loop = this.game.time.events.loop(Phaser.Timer.SECOND, function () {
-					delay--;
-					_this3.forceFieldText.text = 'Seconds before wipe: ' + delay;
-					if (delay <= 0) {
-						_this3.game.time.events.remove(loop);
-						_this3.forceFieldText.tweenOut.start();
-					} else if (delay < 10) {
-						_this3.sound_forcefield.play();
-					}
-				}, this);
+				this.forceFieldText.text = 'Seconds before wipe: ' + message;
+				if (message < 10 && message > 0) {
+					this.sound_forcefield.play();
+				}
 			} else if (type === 'message') {
 				this.messageText.text = message;
 				this.messageText.tweenIn.start();
@@ -7479,44 +7466,44 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'netListener',
 		value: function netListener() {
-			var _this4 = this;
+			var _this3 = this;
 
 			this.game.room.onMessage.add(function (message) {
 				if (message.me) {
 					var me = message.me;
-					_this4.id = me.id;
-					_this4.clients[_this4.id] = new _Player2.default(_this4.game, -5000, -5000, 0, 100, 0);
-					_this4.playerGroup.add(_this4.clients[_this4.id]);
-					_this4.game.camera.follow(_this4.clients[_this4.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
-					_this4.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
+					_this3.id = me.id;
+					_this3.clients[_this3.id] = new _Player2.default(_this3.game, -5000, -5000, 0, 100, 0);
+					_this3.playerGroup.add(_this3.clients[_this3.id]);
+					_this3.game.camera.follow(_this3.clients[_this3.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+					_this3.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 				}
 
 				if (message.bitHit) {
-					var bit = _this4.findInGroup(message.bitHit.id, _this4.bitsPool);
+					var bit = _this3.findInGroup(message.bitHit.id, _this3.bitsPool);
 					if (bit) {
-						var player = _this4.clients[message.bitHit.player];
+						var player = _this3.clients[message.bitHit.player];
 						if (player) {
-							var sound = _this4.bitSounds[_this4.nextBitSound()];
+							var sound = _this3.bitSounds[_this3.nextBitSound()];
 							bit.target = player;
-							if (sound && message.bitHit.player === _this4.id) {
+							if (sound && message.bitHit.player === _this3.id) {
 								bit.playSound = true;
 								bit.sound = sound;
 							}
 							bit.activated = true;
 
-							if (message.bitHit.trap && message.bitHit.player === _this4.id) _this4.game.camera.shake(0.01, 50);
+							if (message.bitHit.trap && message.bitHit.player === _this3.id) _this3.game.camera.shake(0.01, 50);
 						}
 					}
 				}
 
 				if (message.powerUpHit) {
-					var powerup = _this4.findInGroup(message.powerUpHit.id, _this4.powerUpPool);
+					var powerup = _this3.findInGroup(message.powerUpHit.id, _this3.powerUpPool);
 					if (powerup) {
-						var _player = _this4.clients[message.powerUpHit.id];
+						var _player = _this3.clients[message.powerUpHit.id];
 						if (_player) {
-							var _sound = _this4.bitSounds[_this4.nextBitSound()];
+							var _sound = _this3.bitSounds[_this3.nextBitSound()];
 							powerup.target = _player;
-							if (_sound && message.powerUpHit.id === _this4.id) {
+							if (_sound && message.powerUpHit.id === _this3.id) {
 								powerup.playSound = true;
 								powerup.sound = _sound;
 							}
@@ -7526,9 +7513,9 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.bullet) {
-					var _player2 = _this4.clients[message.bullet.id];
+					var _player2 = _this3.clients[message.bullet.id];
 					if (_player2) {
-						var bullet = _this4.bulletPool.getFirstDead();
+						var bullet = _this3.bulletPool.getFirstDead();
 						if (bullet) {
 							bullet.id = message.bullet.id;
 							bullet.angle = message.bullet.angle;
@@ -7537,34 +7524,34 @@ var Main = function (_Phaser$State) {
 							bullet.setTrail(_player2.particles);
 							bullet.setDest(message.bullet.x, message.bullet.y);
 							bullet.reset(message.bullet.x, message.bullet.y);
-							if (bullet.id === _this4.id) {
-								_this4.sound_shoot.volume = 0.6;
-								_this4.sound_shoot.play();
+							if (bullet.id === _this3.id) {
+								_this3.sound_shoot.volume = 0.6;
+								_this3.sound_shoot.play();
 							} else {
-								_this4.sound_shoot.volume = 0.1;
-								if (!_this4.sound_shoot.isPlaying) _this4.sound_shoot.play();
+								_this3.sound_shoot.volume = 0.1;
+								if (!_this3.sound_shoot.isPlaying) _this3.sound_shoot.play();
 							}
 						}
 					}
 				}
 
 				if (message.seeker) {
-					var _player3 = _this4.clients[message.seeker.owner];
-					var target = _this4.clients[message.seeker.target];
+					var _player3 = _this3.clients[message.seeker.owner];
+					var target = _this3.clients[message.seeker.target];
 					if (_player3) {
 						var m = message.seeker;
-						var seeker = _this4.seekerPool.getFirstDead();
+						var seeker = _this3.seekerPool.getFirstDead();
 						if (seeker) {
 							seeker.id = m.owner;
 							seeker.timer = Date.now() + 2000;
 							seeker.setTint(_player3.tint);
 							seeker.setTrail(_player3.particles);
-							if (m.owner === _this4.id) {
-								_this4.sound_shoot.volume = 0.6;
-								_this4.sound_shoot.play();
+							if (m.owner === _this3.id) {
+								_this3.sound_shoot.volume = 0.6;
+								_this3.sound_shoot.play();
 							} else {
-								_this4.sound_shoot.volume = 0.1;
-								if (!_this4.sound_shoot.isPlaying) _this4.sound_shoot.play();
+								_this3.sound_shoot.volume = 0.1;
+								if (!_this3.sound_shoot.isPlaying) _this3.sound_shoot.play();
 							}
 
 							if (target) {
@@ -7579,31 +7566,31 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.expGain) {
-					var _player4 = _this4.clients[_this4.id];
+					var _player4 = _this3.clients[_this3.id];
 					_player4.exp = message.expGain.exp;
 					_player4.expAmount = message.expGain.expAmount;
 					_player4.ui.expBar.setPercent(_player4.exp / _player4.expAmount * 100);
 				}
 
 				if (message.levelUp) {
-					_this4.clients[_this4.id].ui.addPoints();
-					_this4.sound_levelup.play();
+					_this3.clients[_this3.id].ui.addPoints();
+					_this3.sound_levelup.play();
 
 					if (typeof message.newPower === 'number') {
-						_this4.clients[_this4.id].ui.newPowerAvailable(message.newPower);
+						_this3.clients[_this3.id].ui.newPowerAvailable(message.newPower);
 					}
 				}
 
 				if (message.statUpgrade) {
-					_this4.clients[_this4.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
+					_this3.clients[_this3.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
 				}
 
 				if (message.updateClient) {
 					var _m = message.updateClient;
-					var client = _this4.clients[_m.id];
+					var client = _this3.clients[_m.id];
 
 					if (client) {
-						if (_m.id !== _this4.id) client.lastUpdate = Date.now() + 1000;
+						if (_m.id !== _this3.id) client.lastUpdate = Date.now() + 1000;
 
 						if (!client.alive) {
 							client.reset(_m.x, _m.y);
@@ -7623,7 +7610,7 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.leaderboard) {
-					var _player5 = _this4.clients[_this4.id];
+					var _player5 = _this3.clients[_this3.id];
 					var _m2 = message.leaderboard;
 					if (_player5 && _player5.ui) {
 						_player5.ui.updateLeaderboard(_m2.lb);
@@ -7634,37 +7621,37 @@ var Main = function (_Phaser$State) {
 
 				if (message.respawn) {
 					var _m3 = message.respawn;
-					var _player6 = _this4.clients[_m3.id];
+					var _player6 = _this3.clients[_m3.id];
 					if (_player6) _player6.respawn(_m3.x, _m3.y);
 				}
 
 				if (message.death) {
 					var _m4 = message.death;
-					var _player7 = _this4.clients[_m4.id];
+					var _player7 = _this3.clients[_m4.id];
 					if (_player7) {
-						_this4.emitDeath(_player7);
+						_this3.emitDeath(_player7);
 						_player7.die();
-						_this4.sound_kill.play();
+						_this3.sound_kill.play();
 					}
 				}
 
 				if (message.shockwave) {
 					(function () {
 						var m = message.shockwave;
-						var shockwave = _this4.shockwavePool.getFirstDead();
+						var shockwave = _this3.shockwavePool.getFirstDead();
 						if (shockwave) {
-							shockwave.start(m.x, m.y, _this4.clients[_this4.id].tint);
+							shockwave.start(m.x, m.y, _this3.clients[_this3.id].tint);
 
 							var _loop = function _loop(id) {
-								var player = _this4.clients[id];
-								var dist = _this4.distanceBetween({ x: m.x, y: m.y }, player);
+								var player = _this3.clients[id];
+								var dist = _this3.distanceBetween({ x: m.x, y: m.y }, player);
 								if (dist < 300) {
 									setTimeout(function () {
 										if (player.alive) {
 											if (!player.powers.active.includes('shield')) {
-												_this4.tweenTint(player, player.originalTint, 0xffffff, 50);
-												if (id == _this4.id && m.id !== _this4.id) {
-													_this4.game.camera.shake(0.01, 50);
+												_this3.tweenTint(player, player.originalTint, 0xffffff, 50);
+												if (id == _this3.id && m.id !== _this3.id) {
+													_this3.game.camera.shake(0.01, 50);
 												}
 											}
 										}
@@ -7672,7 +7659,7 @@ var Main = function (_Phaser$State) {
 								}
 							};
 
-							for (var id in _this4.clients) {
+							for (var id in _this3.clients) {
 								_loop(id);
 							}
 						}
@@ -7680,13 +7667,13 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.message) {
-					_this4.setText('message', message.message);
+					_this3.setText('message', message.message);
 				}
 			});
 
 			this.game.room.listen("players/:id/:variable", function (change) {
 				if (change.operation === 'replace') {
-					var player = _this4.clients[change.path.id];
+					var player = _this3.clients[change.path.id];
 					if (player) {
 						switch (change.path.variable) {
 							case 'maxHealth':
@@ -7694,11 +7681,11 @@ var Main = function (_Phaser$State) {
 								player.setHealth(player.health);
 								break;
 							case 'level':
-								if (change.path.id !== _this4.id) {
+								if (change.path.id !== _this3.id) {
 									player.nameLabel.text = player.name + ' (' + change.value + ')';
 								} else {
 									player.levelUp(change.value);
-									player.nameLabel.text = _this4.game.myName + ' (' + change.value + ')';
+									player.nameLabel.text = _this3.game.myName + ' (' + change.value + ')';
 								}
 								break;
 						}
@@ -7707,11 +7694,11 @@ var Main = function (_Phaser$State) {
 			});
 
 			this.game.room.listen("players/:id", function (change) {
-				if (change.path.id && change.path.id !== _this4.id) {
+				if (change.path.id && change.path.id !== _this3.id) {
 					if (change.operation === "add") {
-						var client = _this4.clientGroupIdle.getFirstDead();
+						var client = _this3.clientGroupIdle.getFirstDead();
 						if (client) {
-							_this4.clientGroupActive.add(client);
+							_this3.clientGroupActive.add(client);
 
 							client.revive(-500, -500);
 							client.level = change.value.level;
@@ -7719,14 +7706,14 @@ var Main = function (_Phaser$State) {
 							client.maxHealth = change.value.maxHealth;
 							client.name = change.value.name;
 							client.nameLabel.text = client.name + ' (' + client.level + ')';
-							_this4.clients[change.path.id] = client;
-							_this4.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
+							_this3.clients[change.path.id] = client;
+							_this3.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 						} else if (change.operation === "remove") {
-							var _client = _this4.clients[change.path.id];
-							_this4.clientGroupIdle.add(_client);
+							var _client = _this3.clients[change.path.id];
+							_this3.clientGroupIdle.add(_client);
 							_client.die();
 
-							delete _this4.clients[change.path.id];
+							delete _this3.clients[change.path.id];
 						}
 					}
 				}
@@ -7734,18 +7721,18 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.listen("bits/:id", function (change) {
 				if (change.operation === 'add') {
-					var bit = _this4.bitsPool.getFirstDead();
+					var bit = _this3.bitsPool.getFirstDead();
 					if (bit) {
 						bit.id = change.path.id;
 						bit.scale.setTo(0);
 						bit.reset(change.value.x, change.value.y);
 						bit.scaleTween.start();
 						if (change.value.trap) {
-							var fakeBit = _this4.game.add.sprite(bit.x, bit.y, 'atlas', 'bit.png');
+							var fakeBit = _this3.game.add.sprite(bit.x, bit.y, 'atlas', 'bit.png');
 							fakeBit.scale.setTo(0);
 							fakeBit.anchor.setTo(0.5);
-							_this4.game.add.tween(fakeBit.scale).to({ x: 4, y: 4 }, 500, Phaser.Easing.Linear.none, true);
-							var tween = _this4.game.add.tween(fakeBit).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none, true);
+							_this3.game.add.tween(fakeBit.scale).to({ x: 4, y: 4 }, 500, Phaser.Easing.Linear.none, true);
+							var tween = _this3.game.add.tween(fakeBit).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none, true);
 							tween.onComplete.add(function () {
 								return fakeBit.destroy();
 							});
@@ -7753,7 +7740,7 @@ var Main = function (_Phaser$State) {
 					}
 				} else if (change.operation === 'remove') {
 					setTimeout(function () {
-						var bit = _this4.findInGroup(change.path.id, _this4.bitsPool);
+						var bit = _this3.findInGroup(change.path.id, _this3.bitsPool);
 						if (bit && bit.alive) bit.kill();
 					}, 1000);
 				}
@@ -7761,7 +7748,7 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.listen("powerUps/:id", function (change) {
 				if (change.operation === 'add') {
-					var powerUp = _this4.powerUpPool.getFirstDead();
+					var powerUp = _this3.powerUpPool.getFirstDead();
 					if (powerUp) {
 						powerUp.id = change.path.id;
 						if (change.value.type === 'healthBoost') {
@@ -7774,7 +7761,7 @@ var Main = function (_Phaser$State) {
 					}
 				} else if (change.operation === 'remove') {
 					setTimeout(function () {
-						var powerUp = _this4.findInGroup(change.path.id, _this4.powerUpPool);
+						var powerUp = _this3.findInGroup(change.path.id, _this3.powerUpPool);
 						if (powerUp && powerUp.alive) powerUp.kill();
 					}, 1000);
 				}
@@ -7782,7 +7769,7 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.listen("comets/:id", function (change) {
 				if (change.operation === 'add') {
-					var comet = _this4.cometPool.getFirstDead();
+					var comet = _this3.cometPool.getFirstDead();
 					if (comet) {
 						comet.id = change.path.id;
 						comet.scale.setTo(0);
@@ -7790,9 +7777,9 @@ var Main = function (_Phaser$State) {
 						comet.scaleTween.start();
 					}
 				} else if (change.operation === 'remove') {
-					var _comet = _this4.findInGroup(change.path.id, _this4.cometPool);
+					var _comet = _this3.findInGroup(change.path.id, _this3.cometPool);
 					if (_comet) {
-						_this4.emitDeath(_comet);
+						_this3.emitDeath(_comet);
 						_comet.kill();
 					}
 				}
@@ -7802,42 +7789,46 @@ var Main = function (_Phaser$State) {
 				if (change.operation === 'add') {
 					switch (change.path.variable) {
 						case 'x':
-							_this4.forceField.x = change.value;
+							_this3.forceField.x = change.value;
 							break;
 						case 'y':
-							_this4.forceField.y = change.value;
+							_this3.forceField.y = change.value;
 							break;
 						case 'active':
 							if (change.value === true) {
-								_this4.forceField.alpha = 1;
+								_this3.forceField.alpha = 1;
 							} else if (change.value === false) {
-								_this4.forceField.alpha = 0;
+								_this3.forceField.alpha = 0;
 							}
 							break;
 						case 'timer':
 							if (change.value > 0) {
-								console.log(change.value);
-								_this4.setText('forcefield', change.value);
+								_this3.forceFieldText.tweenIn.start();
+								_this3.setText('forcefield', change.value);
 							}
 							break;
 					}
 				} else if (change.operation === 'replace') {
 					switch (change.path.variable) {
 						case 'x':
-							_this4.forceField.x = change.value;
+							_this3.forceField.x = change.value;
 							break;
 						case 'y':
-							_this4.forceField.y = change.value;
+							_this3.forceField.y = change.value;
 							break;
 						case 'active':
 							if (change.value === true) {
-								_this4.forceField.alpha = 1;
+								_this3.forceField.alpha = 1;
+								_this3.forceFieldText.tweenIn.start();
 							} else if (change.value === false) {
-								_this4.forceField.alpha = 0;
+								_this3.forceField.alpha = 0;
+								_this3.forceFieldText.tweenOut.start();
 							}
 							break;
 						case 'timer':
-							_this4.setText('forcefield', change.value);
+							if (change.value > 0) {
+								_this3.setText('forcefield', change.value);
+							}
 							break;
 					}
 				}
@@ -7935,13 +7926,13 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'updateBullets',
 		value: function updateBullets() {
-			var _this5 = this;
+			var _this4 = this;
 
 			this.bulletPool.forEachAlive(function (bullet) {
-				_this5.checkCollision(bullet);
+				_this4.checkCollision(bullet);
 			}, this);
 			this.seekerPool.forEachAlive(function (seeker) {
-				_this5.checkCollision(seeker);
+				_this4.checkCollision(seeker);
 			}, this);
 		}
 	}, {
@@ -7963,7 +7954,7 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'checkCollision',
 		value: function checkCollision(bullet) {
-			var _this6 = this;
+			var _this5 = this;
 
 			for (var id in this.clients) {
 				if (bullet.id !== id) {
@@ -7996,12 +7987,12 @@ var Main = function (_Phaser$State) {
 			}
 
 			this.cometPool.forEachAlive(function (comet) {
-				if (_this6.distanceBetween(comet, bullet) < 25) {
-					var _player8 = _this6.clients[bullet.id];
+				if (_this5.distanceBetween(comet, bullet) < 25) {
+					var _player8 = _this5.clients[bullet.id];
 					if (_player8) {
 						_player8.particles.emitHit(bullet.x, bullet.y);
-						_this6.tweenTint(comet, comet.originalTint, 0xffffff, 50);
-						if (!_this6.sound_hit.isPlaying) _this6.sound_hit.play();
+						_this5.tweenTint(comet, comet.originalTint, 0xffffff, 50);
+						if (!_this5.sound_hit.isPlaying) _this5.sound_hit.play();
 					}
 					bullet.kill();
 				}

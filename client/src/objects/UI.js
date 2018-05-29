@@ -443,7 +443,6 @@ class UI {
 
 	activateHeroPower() {
 		let _this = this._this;
-		console.log(this.type);
 
 		if (this.actionbar) {
 			if (this.actionbar.cooldown < Date.now()) {

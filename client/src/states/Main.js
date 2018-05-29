@@ -128,20 +128,10 @@ class Main extends Phaser.State {
 
 	setText(type, message) {
 		if (type === 'forcefield') {
-			this.forceFieldText.tweenIn.start();
-			this.forceFieldText.text = '';
-
-			let delay = message;
-			let loop = this.game.time.events.loop(Phaser.Timer.SECOND, () => {
-				delay--;
-				this.forceFieldText.text = 'Seconds before wipe: ' + delay;
-				if (delay <= 0) {
-					this.game.time.events.remove(loop);
-					this.forceFieldText.tweenOut.start();
-				} else if (delay < 10) {
-					this.sound_forcefield.play();
-				}
-			}, this);
+			this.forceFieldText.text = 'Seconds before wipe: ' + message;
+			if (message < 10 && message > 0) {
+				this.sound_forcefield.play();
+			}
 		} else if (type === 'message') {
 			this.messageText.text = message;
 			this.messageText.tweenIn.start();
@@ -477,7 +467,7 @@ class Main extends Phaser.State {
 					break;
 					case 'timer':
 						if (change.value > 0) {
-							console.log(change.value);
+							this.forceFieldText.tweenIn.start();
 							this.setText('forcefield', change.value);
 						}
 					break;
@@ -493,12 +483,16 @@ class Main extends Phaser.State {
 					case 'active':
 						if (change.value === true) {
 							this.forceField.alpha = 1;
+							this.forceFieldText.tweenIn.start();
 						} else if (change.value === false) {
 							this.forceField.alpha = 0;
+							this.forceFieldText.tweenOut.start();
 						}
 					break;
 					case 'timer':
-						this.setText('forcefield', change.value);
+						if (change.value > 0) {
+							this.setText('forcefield', change.value);
+						}
 					break;
 				}
 			}
