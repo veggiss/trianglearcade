@@ -131,7 +131,7 @@ class Main extends Phaser.State {
 			this.forceFieldText.tweenIn.start();
 			this.forceFieldText.text = '';
 
-			let delay = Math.floor(message - (Date.now() * 0.001));
+			let delay = message;
 			let loop = this.game.time.events.loop(Phaser.Timer.SECOND, () => {
 				delay--;
 				this.forceFieldText.text = 'Seconds before wipe: ' + delay;
@@ -476,7 +476,8 @@ class Main extends Phaser.State {
 						}
 					break;
 					case 'timer':
-						if (change.value > Date.now()) {
+						if (change.value > 0) {
+							console.log(change.value);
 							this.setText('forcefield', change.value);
 						}
 					break;

@@ -19,7 +19,7 @@ module.exports = class State {
             y: 0,
             radius: 300,
             active: false,
-            timer: Date.now()
+            timer: 0
         };
 
         this.private = util.setEnumerable({
@@ -298,7 +298,7 @@ module.exports = class State {
         this.deathWall.x = pos.x;
         this.deathWall.y = pos.y;
         this.deathWall.active = true;
-        this.deathWall.timer = (Date.now() + 60000) * 0.001;
+        this.deathWall.timer = 60;
         this.private.network.sendToAll({message: 'Get inside the forcefield!'});
 
         setTimeout(() => {
@@ -352,6 +352,15 @@ module.exports = class State {
         }
 
         this.updateLeaderBoard();
+    }
+
+    updateDeathWall() {
+        if (this.deathWall.active) {
+            setTimeout(() => {
+                this.deathWall.timer--;
+                this.updateDeathWall();
+            }, 1000);
+        }
     }
 
     sendProximity() {
