@@ -42,6 +42,17 @@ class UI {
 		    this.hotkey_statList.push(key_4);
 		}
 
+		//Power sounds
+		this.sound_heal = this.game.add.audio('heal');
+		this.sound_magnet = this.game.add.audio('magnet');
+		this.sound_shield = this.game.add.audio('shield');
+		this.sound_shockwave = this.game.add.audio('shockwave');
+		this.sound_trap = this.game.add.audio('trap');
+		this.sound_heal.volume = 0.7;
+		this.sound_magnet.volume = 0.7;
+		this.sound_shield.volume = 0.7;
+		this.sound_shockwave.volume = 0.7;
+		this.sound_trap.volume = 0.7;
 
 		//Experience bar
 		this.expBar = new HealthBar(this.game, {
@@ -248,11 +259,7 @@ class UI {
 		this.showHeroBtns = this.game.add.tween(this.choosetext).to({alpha: 1}, 250, Phaser.Easing.Linear.None);
 		this.hideHeroBtns = this.game.add.tween(this.choosetext).to({alpha: 0}, 250, Phaser.Easing.Linear.None);
 		this.showHeroBtns.onStart.add((btn) => btn.revive(), this);
-		this.hideHeroBtns.onComplete.add((btn) => btn.kill(), this);
-
-		/*this.game.scale.setResizeCallback(() => { //--- This event has to be removed before changing state
-		    this.lbHeader.x = this.game.canvas.width - 100;
-		}, this);*/
+		this.hideHeroBtns.onComplete.add((btn) => btn.kill(), this);	
 
 		this.expBar.setFixedToCamera(true);
 		this.expBar_bar.fixedToCamera = true;
@@ -336,7 +343,6 @@ class UI {
 	}
 
 	newPowerAvailable(index) {
-		console.log(index);
 		if (index >= 0 && index <= 3) { 
 			let actionbar = this.actionbarGroup.getAt(index);
 			actionbar.show.start();
@@ -395,6 +401,26 @@ class UI {
 		return texts;
 	}
 
+	playerPowerSound(type) {
+		switch (type) {
+			case 'icon_shield.png':
+				this.sound_shield.play();
+			break;
+			case 'icon_heal.png':
+				this.sound_heal.play();
+			break;
+			case 'icon_magnet.png':
+				this.sound_magnet.play();
+			break;
+			case 'icon_trap.png':
+				this.sound_trap.play();
+			break;
+			case 'icon_shockwave.png':
+				this.sound_shockwave.play();
+			break;
+		}
+	}
+
 	sendPowerUpgrade(button) {
 		this.hideHeroBtns.start();
 
@@ -404,11 +430,11 @@ class UI {
 			actionbar.chosenPower.loadTexture('atlas', button._frame.name);
 			actionbar.newPowerIcon.kill();
 			actionbar.events.onInputDown.removeAll();
-			actionbar.events.onInputDown.add(this.activateHeroPower, {actionbar: actionbar, game: this.game});
+			actionbar.events.onInputDown.add(this.activateHeroPower, {actionbar: actionbar, _this: this, type: button._frame.name, });
 			if (!this.game.onMobile) {
 				let key = this.hotkeyList[button.actionbarIndex];
 				key.onDown.removeAll();
-				key.onDown.add(this.activateHeroPower, {actionbar: actionbar, game: this.game});
+				key.onDown.add(this.activateHeroPower, {actionbar: actionbar, _this: this, type: button._frame.name});
 			}
 
 			this.game.room.send({powerChosen: {option: button.opt, index: actionbar.powerNumber}});
@@ -416,10 +442,14 @@ class UI {
 	}
 
 	activateHeroPower() {
+		let _this = this._this;
+		console.log(this.type);
+
 		if (this.actionbar) {
 			if (this.actionbar.cooldown < Date.now()) {
 				this.actionbar.cooldownTween.start();
-				this.game.room.send({activatePower: this.actionbar.powerNumber});
+				_this.playerPowerSound(this.type);
+				_this.game.room.send({activatePower: this.actionbar.powerNumber});
 				this.actionbar.cooldown = Date.now() + 30000;
 			}
 		}

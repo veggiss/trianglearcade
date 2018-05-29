@@ -15,6 +15,12 @@ class Preload extends Phaser.State {
 		this.game.load.audio('hit', 'assets/sound/hit.ogg');
 		this.game.load.audio('kill', 'assets/sound/kill.ogg');
 		this.game.load.audio('levelup', 'assets/sound/levelup.ogg');
+		this.game.load.audio('forcefield', 'assets/sound/forcefield.ogg');
+		this.game.load.audio('heal', 'assets/sound/heal.ogg');
+		this.game.load.audio('magnet', 'assets/sound/magnet.ogg');
+		this.game.load.audio('shield', 'assets/sound/shield.ogg');
+		this.game.load.audio('shockwave', 'assets/sound/shockwave.ogg');
+		this.game.load.audio('trap', 'assets/sound/trap.ogg');
 	}
 
 	create() {

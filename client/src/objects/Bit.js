@@ -4,6 +4,8 @@ class Bit extends Phaser.Sprite {
 		
 		this.id;
 		this.target;
+		this.sound;
+		this.playSound = false;
 		this.game = game;
 		this.anchor.setTo(0.5, 0.5);
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
@@ -11,7 +13,7 @@ class Bit extends Phaser.Sprite {
 		this.angle = Math.floor(Math.random() * 360);
 		let rs = (Math.random() * 0.3) + 0.5;
 		this.scaleTween = this.game.add.tween(this.scale).to({x: rs, y: rs}, 1000, Phaser.Easing.Elastic.Out);
-		this.sound;
+		
 		this.kill();
 	}
 
@@ -34,9 +36,9 @@ class Bit extends Phaser.Sprite {
 			if (dist < 25) {
 				this.activated = false;
 				this.kill();
-				if (this.sound) {
+				if (this.playSound && this.sound) {
 					this.sound.play();
-					this.sound = undefined;
+					this.playSound = false;
 				}
 			}
 		}

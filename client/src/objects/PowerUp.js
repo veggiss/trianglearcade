@@ -4,6 +4,8 @@ class PowerUp extends Phaser.Sprite {
 		
 		this.id;
 		this.target;
+		this.sound;
+		this.playSound = false;
 		this.type = undefined;
 		this.game = game;
 		this.anchor.setTo(0.5);
@@ -35,6 +37,10 @@ class PowerUp extends Phaser.Sprite {
 				this.activated = false;
 				this.type = undefined;
 				this.kill();
+				if (this.playSound && this.sound) {
+					this.sound.play();
+					this.playSound = false;
+				}
 			}
 		}
 	}

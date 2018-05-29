@@ -17,8 +17,9 @@ module.exports = class State {
         this.deathWall = {
             x: 0,
             y: 0,
-            radius: 500,
-            active: false
+            radius: 300,
+            active: false,
+            timer: Date.now()
         };
 
         this.private = util.setEnumerable({
@@ -132,7 +133,7 @@ module.exports = class State {
                         let target = this.players[this.bits[id].owner];
                         if (target) {
                             target.addXp(((50 * player.level) + 500));
-                            target.private.score += 50;
+                            target.private.score += 25;
                         }
                     }
                 }
@@ -285,27 +286,51 @@ module.exports = class State {
         }
     }
 
+    startDeathWall() {
+        setTimeout(() => {
+            this.newDeathWall();
+            this.startDeathWall();
+        }, 120000);
+    }
+
     newDeathWall() {
         let pos = util.ranWorldPos();
         this.deathWall.x = pos.x;
         this.deathWall.y = pos.y;
         this.deathWall.active = true;
+        this.deathWall.timer = Date.now() + 60000;
+        this.private.network.sendToAll({message: 'Get inside the forcefield!'});
+
         setTimeout(() => {
             this.deathWall.active = false;
 
-            let list = util.getProximityList({
+            let outside = util.getProximityList({
                 id: -1,
                 x: pos.x,
                 y: pos.y
             }, this.players, false, this.deathWall.radius);
 
-            list.forEach(player => {
+            let within = util.getProximityList({
+                id: -1,
+                x: pos.x,
+                y: pos.y
+            }, this.players, true, this.deathWall.radius);
+
+            outside.forEach(player => {
                 let target = this.players[player];
                 if (target) {
                     target.die();
                 }
             });
-        }, 20000);
+
+            within.forEach(player => {
+                let target = this.players[player];
+                if (target) {
+                    target.addXp(2000);
+                    target.private.score += 100;
+                }
+            })
+        }, 60000);
     }
 
     //Updaters
@@ -397,7 +422,7 @@ module.exports = class State {
                                     if (player.bulletHit(this.players[id].private.damage)) {
                                         let target = this.players[id];
                                         target.addXp((50 * player.level) + 500);
-                                        target.private.score++;
+                                        target.private.score += 50;
                                     }
                                 }
                                 

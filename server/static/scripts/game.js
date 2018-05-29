@@ -5220,6 +5220,8 @@ var Bit = function (_Phaser$Sprite) {
 
 		_this.id;
 		_this.target;
+		_this.sound;
+		_this.playSound = false;
 		_this.game = game;
 		_this.anchor.setTo(0.5, 0.5);
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
@@ -5227,7 +5229,7 @@ var Bit = function (_Phaser$Sprite) {
 		_this.angle = Math.floor(Math.random() * 360);
 		var rs = Math.random() * 0.3 + 0.5;
 		_this.scaleTween = _this.game.add.tween(_this.scale).to({ x: rs, y: rs }, 1000, Phaser.Easing.Elastic.Out);
-		_this.sound;
+
 		_this.kill();
 		return _this;
 	}
@@ -5254,9 +5256,9 @@ var Bit = function (_Phaser$Sprite) {
 				if (dist < 25) {
 					this.activated = false;
 					this.kill();
-					if (this.sound) {
+					if (this.playSound && this.sound) {
 						this.sound.play();
-						this.sound = undefined;
+						this.playSound = false;
 					}
 				}
 			}
@@ -5436,6 +5438,7 @@ var Client = function (_Phaser$Sprite) {
 		_this.game = game;
 		_this.health = 0;
 		_this.maxHealth = 0;
+		_this.name = '';
 		_this.level = 0;
 		_this.angle = 0;
 		_this.tint = '0x' + Math.floor(Math.random() * 16777215).toString(16);
@@ -5455,6 +5458,10 @@ var Client = function (_Phaser$Sprite) {
 		//Powers container
 		_this.powers = new _Powers2.default(_this.game, _this);
 
+		//Name label
+		_this.nameLabel = _this.game.add.bitmapText(0, -15, 'font', '', 16);
+		_this.nameLabel.anchor.setTo(0.5);
+
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
 			x: _this.x,
 			y: _this.y + 64,
@@ -5468,6 +5475,7 @@ var Client = function (_Phaser$Sprite) {
 				color: '#00A549'
 			}
 		});
+		_this.playerHealthBar.bgSprite.addChild(_this.nameLabel);
 		_this.playerHealthBar.barSprite.alpha = 0;
 		_this.playerHealthBar.bgSprite.alpha = 0;
 		_this.healthBarGroup.add(_this.playerHealthBar.bgSprite);
@@ -5970,6 +5978,8 @@ var Player = function (_Phaser$Sprite) {
 		var _this = _possibleConstructorReturn(this, (Player.__proto__ || Object.getPrototypeOf(Player)).call(this, game, x, y, 'atlas', 'spaceship_white.png'));
 
 		_this.pad = _this.game.plugins.add(Phaser.VirtualJoystick);
+		_this.name = '';
+		_this.level = 0;
 		_this.game = game;
 		_this.health = health;
 		_this.maxHealth = 100;
@@ -5982,7 +5992,7 @@ var Player = function (_Phaser$Sprite) {
 		_this.originalTint = _this.tint;
 		_this.dest = { x: x, y: y, angle: _this.angle };
 		_this.healthBarGroup = _this.game.add.group();
-		_this.healthBarGroup.z = 2;
+		_this.healthBarGroup.z = 3;
 
 		_this.stats = {
 			level: 0,
@@ -5995,6 +6005,10 @@ var Player = function (_Phaser$Sprite) {
 			//Sprite
 		};_this.scale.setTo(0.75);
 		_this.anchor.setTo(0.5);
+
+		//Name label
+		_this.nameLabel = _this.game.add.bitmapText(0, -15, 'font', _this.game.myName + ' (0)', 16);
+		_this.nameLabel.anchor.setTo(0.5);
 
 		//Healthbar
 		_this.playerHealthBar = new _HealthBar2.default(_this.game, {
@@ -6010,6 +6024,7 @@ var Player = function (_Phaser$Sprite) {
 				color: '#00A549'
 			}
 		});
+		_this.playerHealthBar.bgSprite.addChild(_this.nameLabel);
 		_this.healthBarGroup.add(_this.playerHealthBar.bgSprite);
 		_this.healthBarGroup.add(_this.playerHealthBar.barSprite);
 
@@ -6222,6 +6237,8 @@ var PowerUp = function (_Phaser$Sprite) {
 
 		_this.id;
 		_this.target;
+		_this.sound;
+		_this.playSound = false;
 		_this.type = undefined;
 		_this.game = game;
 		_this.anchor.setTo(0.5);
@@ -6257,6 +6274,10 @@ var PowerUp = function (_Phaser$Sprite) {
 					this.activated = false;
 					this.type = undefined;
 					this.kill();
+					if (this.playSound && this.sound) {
+						this.sound.play();
+						this.playSound = false;
+					}
 				}
 			}
 		}
@@ -6350,16 +6371,13 @@ var Powers = function () {
 				if (!_this2.active.includes(power)) {
 					switch (power) {
 						case 'shield':
-							console.log('shield power used' + _this2.active);
 							_this2.powerShield.tweenIn.start();
 							setTimeout(function () {
 								_this2.powerShield.tweenOut.start();
 								var index = _this2.active.findIndex(function (item) {
 									return item === 'shield';
 								});
-								console.log('before', _this2.active);
 								if (index > -1) _this2.active.splice(index, 1);
-								console.log('after', _this2.active);
 							}, 6000);
 							break;
 						case 'magnet':
@@ -6636,6 +6654,18 @@ var UI = function () {
 			this.hotkey_statList.push(key_4);
 		}
 
+		//Power sounds
+		this.sound_heal = this.game.add.audio('heal');
+		this.sound_magnet = this.game.add.audio('magnet');
+		this.sound_shield = this.game.add.audio('shield');
+		this.sound_shockwave = this.game.add.audio('shockwave');
+		this.sound_trap = this.game.add.audio('trap');
+		this.sound_heal.volume = 0.7;
+		this.sound_magnet.volume = 0.7;
+		this.sound_shield.volume = 0.7;
+		this.sound_shockwave.volume = 0.7;
+		this.sound_trap.volume = 0.7;
+
 		//Experience bar
 		this.expBar = new _HealthBar2.default(this.game, {
 			x: this.game.canvas.width / 2 - 5,
@@ -6865,10 +6895,6 @@ var UI = function () {
 			return btn.kill();
 		}, this);
 
-		/*this.game.scale.setResizeCallback(() => { //--- This event has to be removed before changing state
-      this.lbHeader.x = this.game.canvas.width - 100;
-  }, this);*/
-
 		this.expBar.setFixedToCamera(true);
 		this.expBar_bar.fixedToCamera = true;
 		this.statTextGroup.fixedToCamera = true;
@@ -6960,7 +6986,6 @@ var UI = function () {
 	}, {
 		key: 'newPowerAvailable',
 		value: function newPowerAvailable(index) {
-			console.log(index);
 			if (index >= 0 && index <= 3) {
 				var _actionbar = this.actionbarGroup.getAt(index);
 				_actionbar.show.start();
@@ -7021,6 +7046,27 @@ var UI = function () {
 			return texts;
 		}
 	}, {
+		key: 'playerPowerSound',
+		value: function playerPowerSound(type) {
+			switch (type) {
+				case 'icon_shield.png':
+					this.sound_shield.play();
+					break;
+				case 'icon_heal.png':
+					this.sound_heal.play();
+					break;
+				case 'icon_magnet.png':
+					this.sound_magnet.play();
+					break;
+				case 'icon_trap.png':
+					this.sound_trap.play();
+					break;
+				case 'icon_shockwave.png':
+					this.sound_shockwave.play();
+					break;
+			}
+		}
+	}, {
 		key: 'sendPowerUpgrade',
 		value: function sendPowerUpgrade(button) {
 			this.hideHeroBtns.start();
@@ -7031,11 +7077,11 @@ var UI = function () {
 				actionbar.chosenPower.loadTexture('atlas', button._frame.name);
 				actionbar.newPowerIcon.kill();
 				actionbar.events.onInputDown.removeAll();
-				actionbar.events.onInputDown.add(this.activateHeroPower, { actionbar: actionbar, game: this.game });
+				actionbar.events.onInputDown.add(this.activateHeroPower, { actionbar: actionbar, _this: this, type: button._frame.name });
 				if (!this.game.onMobile) {
 					var key = this.hotkeyList[button.actionbarIndex];
 					key.onDown.removeAll();
-					key.onDown.add(this.activateHeroPower, { actionbar: actionbar, game: this.game });
+					key.onDown.add(this.activateHeroPower, { actionbar: actionbar, _this: this, type: button._frame.name });
 				}
 
 				this.game.room.send({ powerChosen: { option: button.opt, index: actionbar.powerNumber } });
@@ -7044,10 +7090,14 @@ var UI = function () {
 	}, {
 		key: 'activateHeroPower',
 		value: function activateHeroPower() {
+			var _this = this._this;
+			console.log(this.type);
+
 			if (this.actionbar) {
 				if (this.actionbar.cooldown < Date.now()) {
 					this.actionbar.cooldownTween.start();
-					this.game.room.send({ activatePower: this.actionbar.powerNumber });
+					_this.playerPowerSound(this.type);
+					_this.game.room.send({ activatePower: this.actionbar.powerNumber });
 					this.actionbar.cooldown = Date.now() + 30000;
 				}
 			}
@@ -7170,7 +7220,7 @@ var Boot = function (_Phaser$State) {
 
 			this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
 
-			if (this.game.device.desktop) {
+			if (!this.game.device.desktop) {
 				if (width < 1000) {
 					this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 					width = width * 2;
@@ -7279,6 +7329,8 @@ var Main = function (_Phaser$State) {
 	_createClass(Main, [{
 		key: 'create',
 		value: function create() {
+			var _this2 = this;
+
 			this.game.stage.backgroundColor = '#021421';
 			this.game.stage.disableVisibilityChange = true;
 			this.game.world.setBounds(0, 0, 2400, 2000);
@@ -7288,14 +7340,6 @@ var Main = function (_Phaser$State) {
 			this.starfield = this.add.tileSprite(0, 0, 2400, 2000, 'atlas', 'starfield.png');
 			this.starfield.fixedToCamera = true;
 			this.starfield.alpha = 0.5;
-			this.forceField = this.game.add.sprite(0, 0, 'atlas', 'shockwave.png');
-			this.forceField.anchor.setTo(0.5);
-			this.forceField.width = 400;
-			this.forceField.height = 400;
-			this.forceField.alpha = 0;
-			this.arrow = this.game.add.sprite(0, 0, 'arrow');
-			this.arrow.anchor.setTo(0, 0.5);
-			this.arrow.alpha = 0;
 
 			//Pools and network
 			this.game.room = this.game.colyseus.join('game', { name: this.game.myName.toString() });
@@ -7309,21 +7353,54 @@ var Main = function (_Phaser$State) {
 			this.clientGroupIdle = this.game.add.group();
 			this.clientGroupActive = this.game.add.group();
 			this.playerGroup = this.game.add.group();
+			this.messageTextGroup = this.game.add.group();
+			this.forceFieldGroup = this.game.add.group();
 			this.bitSounds = [];
 			this.nextSound = 0;
 			this.clients = {};
 			this.id;
 
+			//Force field and arrow pointing to it
+			this.forceField = this.game.add.sprite(0, 0, 'atlas', 'shockwave.png');
+			this.forceField.anchor.setTo(0.5);
+			this.forceField.width = 800;
+			this.forceField.height = 800;
+			this.forceField.alpha = 0;
+			this.arrow = this.game.add.sprite(0, 0, 'arrow');
+			this.arrow.anchor.setTo(0, 0.5);
+			this.arrow.alpha = 0;
+			this.forceFieldGroup.add(this.forceField);
+
+			//Message texts
+			this.forceFieldText = this.game.add.bitmapText(this.game.canvas.width / 2, 60, 'font', '', 26);
+			this.forceFieldText.alpha = 0;
+			this.forceFieldText.anchor.setTo(0.5);
+			this.forceFieldText.tweenOut = this.game.add.tween(this.forceFieldText).to({ alpha: 0 }, 1000, Phaser.Easing.Linear.None);
+			this.forceFieldText.tweenIn = this.game.add.tween(this.forceFieldText).to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None);
+			this.messageText = this.game.add.bitmapText(this.game.canvas.width / 2, 90, 'font', '', 30);
+			this.messageText.alpha = 0;
+			this.messageText.anchor.setTo(0.5);
+			this.messageText.tweenOut = this.game.add.tween(this.messageText).to({ alpha: 0 }, 1000, Phaser.Easing.Linear.None);
+			this.messageText.tweenIn = this.game.add.tween(this.messageText).to({ alpha: 1 }, 5000, Phaser.Easing.Linear.None);
+			this.messageText.tweenIn.onComplete.add(function () {
+				return _this2.messageText.tweenOut.start();
+			});
+			this.messageTextGroup.add(this.forceFieldText);
+			this.messageTextGroup.add(this.messageText);
+			this.messageTextGroup.fixedToCamera = true;
 			//Sound
 			this.sound_hit = this.game.add.audio('hit');
 			this.sound_kill = this.game.add.audio('kill');
 			this.sound_shoot = this.game.add.audio('shoot');
 			this.sound_levelup = this.game.add.audio('levelup');
+			this.sound_forcefield = this.game.add.audio('forcefield');
 			for (var i = 1; i < 4; i++) {
 				var sound = this.game.add.audio('bit_' + i);
 				this.bitSounds.push(sound);
 			}
-			this.sound_hit.volume = 0.5;
+			this.sound_forcefield.volume = 0.6;
+			this.sound_kill.volume = 0.6;
+			this.sound_hit.volume = 0.3;
 
 			this.bulletPool.z = 1;
 			this.bitsPool.z = 1;
@@ -7332,6 +7409,8 @@ var Main = function (_Phaser$State) {
 			this.seekerPool.z = 1;
 			this.clientGroupActive.z = 2;
 			this.playerGroup.z = 3;
+			this.messageTextGroup.z = 4;
+			this.forceFieldGroup.z = 4;
 
 			//Death particles
 			this.deathEmitter = this.game.add.emitter(0, 0, 20);
@@ -7372,48 +7451,84 @@ var Main = function (_Phaser$State) {
 			return this.nextSound;
 		}
 	}, {
+		key: 'setText',
+		value: function setText(type, message) {
+			var _this3 = this;
+
+			if (type === 'forcefield') {
+				this.forceFieldText.tweenIn.start();
+				this.forceFieldText.text = '';
+
+				var delay = Math.floor((message - Date.now()) * 0.001);
+				var loop = this.game.time.events.loop(Phaser.Timer.SECOND, function () {
+					delay--;
+					_this3.forceFieldText.text = 'Seconds before wipe: ' + delay;
+					if (delay <= 0) {
+						_this3.game.time.events.remove(loop);
+						_this3.forceFieldText.tweenOut.start();
+					} else if (delay < 10) {
+						_this3.sound_forcefield.play();
+					}
+				}, this);
+			} else if (type === 'message') {
+				this.messageText.text = message;
+				this.messageText.tweenIn.start();
+				this.sound_forcefield.play();
+			}
+		}
+	}, {
 		key: 'netListener',
 		value: function netListener() {
-			var _this2 = this;
+			var _this4 = this;
 
 			this.game.room.onMessage.add(function (message) {
 				if (message.me) {
 					var me = message.me;
-					_this2.id = me.id;
-					_this2.clients[_this2.id] = new _Player2.default(_this2.game, -5000, -5000, 0, 100, 0);
-					_this2.playerGroup.add(_this2.clients[_this2.id]);
-					_this2.game.camera.follow(_this2.clients[_this2.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
-					_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
+					_this4.id = me.id;
+					_this4.clients[_this4.id] = new _Player2.default(_this4.game, -5000, -5000, 0, 100, 0);
+					_this4.playerGroup.add(_this4.clients[_this4.id]);
+					_this4.game.camera.follow(_this4.clients[_this4.id], Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
+					_this4.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 				}
 
 				if (message.bitHit) {
-					var bit = _this2.findInGroup(message.bitHit.id, _this2.bitsPool);
+					var bit = _this4.findInGroup(message.bitHit.id, _this4.bitsPool);
 					if (bit) {
-						var player = _this2.clients[message.bitHit.player];
-						var sound = _this2.bitSounds[_this2.nextBitSound()];
-						bit.target = player;
-						if (sound) {
-							bit.sound = sound;
-						}
-						bit.activated = true;
+						var player = _this4.clients[message.bitHit.player];
+						if (player) {
+							var sound = _this4.bitSounds[_this4.nextBitSound()];
+							bit.target = player;
+							if (sound && message.bitHit.player === _this4.id) {
+								bit.playSound = true;
+								bit.sound = sound;
+							}
+							bit.activated = true;
 
-						if (message.bitHit.trap && message.bitHit.player === _this2.id) _this2.game.camera.shake(0.01, 50);
+							if (message.bitHit.trap && message.bitHit.player === _this4.id) _this4.game.camera.shake(0.01, 50);
+						}
 					}
 				}
 
 				if (message.powerUpHit) {
-					var powerup = _this2.findInGroup(message.powerUpHit.id, _this2.powerUpPool);
+					var powerup = _this4.findInGroup(message.powerUpHit.id, _this4.powerUpPool);
 					if (powerup) {
-						var _player = _this2.clients[message.powerUpHit.player];
-						powerup.target = _player;
-						powerup.activated = true;
+						var _player = _this4.clients[message.powerUpHit.id];
+						if (_player) {
+							var _sound = _this4.bitSounds[_this4.nextBitSound()];
+							powerup.target = _player;
+							if (_sound && message.powerUpHit.id === _this4.id) {
+								powerup.playSound = true;
+								powerup.sound = _sound;
+							}
+							powerup.activated = true;
+						}
 					}
 				}
 
 				if (message.bullet) {
-					var _player2 = _this2.clients[message.bullet.id];
+					var _player2 = _this4.clients[message.bullet.id];
 					if (_player2) {
-						var bullet = _this2.bulletPool.getFirstDead();
+						var bullet = _this4.bulletPool.getFirstDead();
 						if (bullet) {
 							bullet.id = message.bullet.id;
 							bullet.angle = message.bullet.angle;
@@ -7422,34 +7537,35 @@ var Main = function (_Phaser$State) {
 							bullet.setTrail(_player2.particles);
 							bullet.setDest(message.bullet.x, message.bullet.y);
 							bullet.reset(message.bullet.x, message.bullet.y);
-							if (bullet.id === _this2.id) {
-								_this2.sound_shoot.volume = 0.6;
-								_this2.sound_shoot.play();
+							if (bullet.id === _this4.id) {
+								_this4.sound_shoot.volume = 0.6;
+								_this4.sound_shoot.play();
 							} else {
-								var dist = _this2.distanceBetween(bullet, _player2);
-								if (dist < 500) {
-									if (!_this2.sound_shoot.isPlaying) {
-										var volume = 100 / dist;
-										_this2.sound_shoot.volume = 100 / (dist + 500);
-										_this2.sound_shoot.play();
-									}
-								}
+								_this4.sound_shoot.volume = 0.1;
+								if (!_this4.sound_shoot.isPlaying) _this4.sound_shoot.play();
 							}
 						}
 					}
 				}
 
 				if (message.seeker) {
-					var _player3 = _this2.clients[message.seeker.owner];
-					var target = _this2.clients[message.seeker.target];
+					var _player3 = _this4.clients[message.seeker.owner];
+					var target = _this4.clients[message.seeker.target];
 					if (_player3) {
 						var m = message.seeker;
-						var seeker = _this2.seekerPool.getFirstDead();
+						var seeker = _this4.seekerPool.getFirstDead();
 						if (seeker) {
 							seeker.id = m.owner;
 							seeker.timer = Date.now() + 2000;
 							seeker.setTint(_player3.tint);
 							seeker.setTrail(_player3.particles);
+							if (m.owner === _this4.id) {
+								_this4.sound_shoot.volume = 0.6;
+								_this4.sound_shoot.play();
+							} else {
+								_this4.sound_shoot.volume = 0.1;
+								if (!_this4.sound_shoot.isPlaying) _this4.sound_shoot.play();
+							}
 
 							if (target) {
 								seeker.target = target;
@@ -7463,31 +7579,31 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.expGain) {
-					var _player4 = _this2.clients[_this2.id];
+					var _player4 = _this4.clients[_this4.id];
 					_player4.exp = message.expGain.exp;
 					_player4.expAmount = message.expGain.expAmount;
 					_player4.ui.expBar.setPercent(_player4.exp / _player4.expAmount * 100);
 				}
 
 				if (message.levelUp) {
-					_this2.clients[_this2.id].ui.addPoints();
-					_this2.sound_levelup.play();
+					_this4.clients[_this4.id].ui.addPoints();
+					_this4.sound_levelup.play();
 
 					if (typeof message.newPower === 'number') {
-						_this2.clients[_this2.id].ui.newPowerAvailable(message.newPower);
+						_this4.clients[_this4.id].ui.newPowerAvailable(message.newPower);
 					}
 				}
 
 				if (message.statUpgrade) {
-					_this2.clients[_this2.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
+					_this4.clients[_this4.id].upgradeStat(message.statUpgrade.type, message.statUpgrade.value);
 				}
 
 				if (message.updateClient) {
 					var _m = message.updateClient;
-					var client = _this2.clients[_m.id];
+					var client = _this4.clients[_m.id];
 
 					if (client) {
-						if (_m.id !== _this2.id) client.lastUpdate = Date.now() + 1000;
+						if (_m.id !== _this4.id) client.lastUpdate = Date.now() + 1000;
 
 						if (!client.alive) {
 							client.reset(_m.x, _m.y);
@@ -7507,7 +7623,7 @@ var Main = function (_Phaser$State) {
 				}
 
 				if (message.leaderboard) {
-					var _player5 = _this2.clients[_this2.id];
+					var _player5 = _this4.clients[_this4.id];
 					var _m2 = message.leaderboard;
 					if (_player5 && _player5.ui) {
 						_player5.ui.updateLeaderboard(_m2.lb);
@@ -7518,37 +7634,37 @@ var Main = function (_Phaser$State) {
 
 				if (message.respawn) {
 					var _m3 = message.respawn;
-					var _player6 = _this2.clients[_m3.id];
+					var _player6 = _this4.clients[_m3.id];
 					if (_player6) _player6.respawn(_m3.x, _m3.y);
 				}
 
 				if (message.death) {
 					var _m4 = message.death;
-					var _player7 = _this2.clients[_m4.id];
+					var _player7 = _this4.clients[_m4.id];
 					if (_player7) {
-						_this2.emitDeath(_player7);
+						_this4.emitDeath(_player7);
 						_player7.die();
-						_this2.sound_kill.play();
+						_this4.sound_kill.play();
 					}
 				}
 
 				if (message.shockwave) {
 					(function () {
 						var m = message.shockwave;
-						var shockwave = _this2.shockwavePool.getFirstDead();
+						var shockwave = _this4.shockwavePool.getFirstDead();
 						if (shockwave) {
-							shockwave.start(m.x, m.y, _this2.clients[_this2.id].tint);
+							shockwave.start(m.x, m.y, _this4.clients[_this4.id].tint);
 
 							var _loop = function _loop(id) {
-								var player = _this2.clients[id];
-								var dist = _this2.distanceBetween({ x: m.x, y: m.y }, player);
+								var player = _this4.clients[id];
+								var dist = _this4.distanceBetween({ x: m.x, y: m.y }, player);
 								if (dist < 300) {
 									setTimeout(function () {
 										if (player.alive) {
 											if (!player.powers.active.includes('shield')) {
-												_this2.tweenTint(player, player.originalTint, 0xffffff, 50);
-												if (id == _this2.id && m.id !== _this2.id) {
-													_this2.game.camera.shake(0.01, 50);
+												_this4.tweenTint(player, player.originalTint, 0xffffff, 50);
+												if (id == _this4.id && m.id !== _this4.id) {
+													_this4.game.camera.shake(0.01, 50);
 												}
 											}
 										}
@@ -7556,17 +7672,21 @@ var Main = function (_Phaser$State) {
 								}
 							};
 
-							for (var id in _this2.clients) {
+							for (var id in _this4.clients) {
 								_loop(id);
 							}
 						}
 					})();
 				}
+
+				if (message.message) {
+					_this4.setText('message', message.message);
+				}
 			});
 
 			this.game.room.listen("players/:id/:variable", function (change) {
 				if (change.operation === 'replace') {
-					var player = _this2.clients[change.path.id];
+					var player = _this4.clients[change.path.id];
 					if (player) {
 						switch (change.path.variable) {
 							case 'maxHealth':
@@ -7574,10 +7694,11 @@ var Main = function (_Phaser$State) {
 								player.setHealth(player.health);
 								break;
 							case 'level':
-								if (change.path.id !== _this2.id) {
-									// Message on ding?
+								if (change.path.id !== _this4.id) {
+									player.nameLabel.text = player.name + ' (' + change.value + ')';
 								} else {
 									player.levelUp(change.value);
+									player.nameLabel.text = _this4.game.myName + ' (' + change.value + ')';
 								}
 								break;
 						}
@@ -7586,24 +7707,26 @@ var Main = function (_Phaser$State) {
 			});
 
 			this.game.room.listen("players/:id", function (change) {
-				if (change.path.id && change.path.id !== _this2.id) {
+				if (change.path.id && change.path.id !== _this4.id) {
 					if (change.operation === "add") {
-						var client = _this2.clientGroupIdle.getFirstDead();
+						var client = _this4.clientGroupIdle.getFirstDead();
 						if (client) {
-							_this2.clientGroupActive.add(client);
+							_this4.clientGroupActive.add(client);
 
 							client.revive(-500, -500);
 							client.level = change.value.level;
 							client.health = change.value.health;
 							client.maxHealth = change.value.maxHealth;
-							_this2.clients[change.path.id] = client;
-							_this2.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
+							client.name = change.value.name;
+							client.nameLabel.text = client.name + ' (' + client.level + ')';
+							_this4.clients[change.path.id] = client;
+							_this4.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 						} else if (change.operation === "remove") {
-							var _client = _this2.clients[change.path.id];
-							_this2.clientGroupIdle.add(_client);
+							var _client = _this4.clients[change.path.id];
+							_this4.clientGroupIdle.add(_client);
 							_client.die();
 
-							delete _this2.clients[change.path.id];
+							delete _this4.clients[change.path.id];
 						}
 					}
 				}
@@ -7611,18 +7734,18 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.listen("bits/:id", function (change) {
 				if (change.operation === 'add') {
-					var bit = _this2.bitsPool.getFirstDead();
+					var bit = _this4.bitsPool.getFirstDead();
 					if (bit) {
 						bit.id = change.path.id;
 						bit.scale.setTo(0);
 						bit.reset(change.value.x, change.value.y);
 						bit.scaleTween.start();
 						if (change.value.trap) {
-							var fakeBit = _this2.game.add.sprite(bit.x, bit.y, 'atlas', 'bit.png');
+							var fakeBit = _this4.game.add.sprite(bit.x, bit.y, 'atlas', 'bit.png');
 							fakeBit.scale.setTo(0);
 							fakeBit.anchor.setTo(0.5);
-							_this2.game.add.tween(fakeBit.scale).to({ x: 4, y: 4 }, 500, Phaser.Easing.Linear.none, true);
-							var tween = _this2.game.add.tween(fakeBit).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none, true);
+							_this4.game.add.tween(fakeBit.scale).to({ x: 4, y: 4 }, 500, Phaser.Easing.Linear.none, true);
+							var tween = _this4.game.add.tween(fakeBit).to({ alpha: 0 }, 500, Phaser.Easing.Linear.none, true);
 							tween.onComplete.add(function () {
 								return fakeBit.destroy();
 							});
@@ -7630,7 +7753,7 @@ var Main = function (_Phaser$State) {
 					}
 				} else if (change.operation === 'remove') {
 					setTimeout(function () {
-						var bit = _this2.findInGroup(change.path.id, _this2.bitsPool);
+						var bit = _this4.findInGroup(change.path.id, _this4.bitsPool);
 						if (bit && bit.alive) bit.kill();
 					}, 1000);
 				}
@@ -7638,7 +7761,7 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.listen("powerUps/:id", function (change) {
 				if (change.operation === 'add') {
-					var powerUp = _this2.powerUpPool.getFirstDead();
+					var powerUp = _this4.powerUpPool.getFirstDead();
 					if (powerUp) {
 						powerUp.id = change.path.id;
 						if (change.value.type === 'healthBoost') {
@@ -7651,7 +7774,7 @@ var Main = function (_Phaser$State) {
 					}
 				} else if (change.operation === 'remove') {
 					setTimeout(function () {
-						var powerUp = _this2.findInGroup(change.path.id, _this2.powerUpPool);
+						var powerUp = _this4.findInGroup(change.path.id, _this4.powerUpPool);
 						if (powerUp && powerUp.alive) powerUp.kill();
 					}, 1000);
 				}
@@ -7659,7 +7782,7 @@ var Main = function (_Phaser$State) {
 
 			this.game.room.listen("comets/:id", function (change) {
 				if (change.operation === 'add') {
-					var comet = _this2.cometPool.getFirstDead();
+					var comet = _this4.cometPool.getFirstDead();
 					if (comet) {
 						comet.id = change.path.id;
 						comet.scale.setTo(0);
@@ -7667,9 +7790,9 @@ var Main = function (_Phaser$State) {
 						comet.scaleTween.start();
 					}
 				} else if (change.operation === 'remove') {
-					var _comet = _this2.findInGroup(change.path.id, _this2.cometPool);
+					var _comet = _this4.findInGroup(change.path.id, _this4.cometPool);
 					if (_comet) {
-						_this2.emitDeath(_comet);
+						_this4.emitDeath(_comet);
 						_comet.kill();
 					}
 				}
@@ -7679,33 +7802,41 @@ var Main = function (_Phaser$State) {
 				if (change.operation === 'add') {
 					switch (change.path.variable) {
 						case 'x':
-							_this2.forceField.x = change.value;
+							_this4.forceField.x = change.value;
 							break;
 						case 'y':
-							_this2.forceField.y = change.value;
+							_this4.forceField.y = change.value;
 							break;
 						case 'active':
 							if (change.value === true) {
-								_this2.forceField.alpha = 1;
+								_this4.forceField.alpha = 1;
 							} else if (change.value === false) {
-								_this2.forceField.alpha = 0;
+								_this4.forceField.alpha = 0;
+							}
+							break;
+						case 'timer':
+							if (change.value > Date.now()) {
+								_this4.setText('forcefield', change.value);
 							}
 							break;
 					}
 				} else if (change.operation === 'replace') {
 					switch (change.path.variable) {
 						case 'x':
-							_this2.forceField.x = change.value;
+							_this4.forceField.x = change.value;
 							break;
 						case 'y':
-							_this2.forceField.y = change.value;
+							_this4.forceField.y = change.value;
 							break;
 						case 'active':
 							if (change.value === true) {
-								_this2.forceField.alpha = 1;
+								_this4.forceField.alpha = 1;
 							} else if (change.value === false) {
-								_this2.forceField.alpha = 0;
+								_this4.forceField.alpha = 0;
 							}
+							break;
+						case 'timer':
+							_this4.setText('forcefield', change.value);
 							break;
 					}
 				}
@@ -7780,9 +7911,9 @@ var Main = function (_Phaser$State) {
 			for (var id in this.clients) {
 				if (id !== this.id) {
 					var target = this.clients[id];
-					var dist = this.distanceBetween(this.clients[this.id], target);
+					var _dist = this.distanceBetween(this.clients[this.id], target);
 
-					if (dist < 950) {
+					if (_dist < 950) {
 						if (target.alive && target.alpha === 0 && target.lastUpdate > Date.now()) {
 							target.x = target.dest.x;
 							target.y = target.dest.y;
@@ -7803,25 +7934,25 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'updateBullets',
 		value: function updateBullets() {
-			var _this3 = this;
+			var _this5 = this;
 
 			this.bulletPool.forEachAlive(function (bullet) {
-				_this3.checkCollision(bullet);
+				_this5.checkCollision(bullet);
 			}, this);
 			this.seekerPool.forEachAlive(function (seeker) {
-				_this3.checkCollision(seeker);
+				_this5.checkCollision(seeker);
 			}, this);
 		}
 	}, {
 		key: 'updateArrow',
 		value: function updateArrow() {
 			if (this.forceField.alpha == 1) {
-				if (this.distanceBetween(this.arrow, this.forceField) < 400) {
+				if (this.distanceBetween(this.clients[this.id], this.forceField) < 400) {
 					this.arrow.alpha = 0;
 				} else {
+					this.arrow.alpha = 1;
 					this.arrow.x = this.clients[this.id].x;
 					this.arrow.y = this.clients[this.id].y;
-					this.arrow.alpha = 1;
 					this.arrow.rotation = Phaser.Math.angleBetween(this.arrow.x, this.arrow.y, this.forceField.x, this.forceField.y);
 				}
 			} else {
@@ -7831,7 +7962,7 @@ var Main = function (_Phaser$State) {
 	}, {
 		key: 'checkCollision',
 		value: function checkCollision(bullet) {
-			var _this4 = this;
+			var _this6 = this;
 
 			for (var id in this.clients) {
 				if (bullet.id !== id) {
@@ -7843,7 +7974,7 @@ var Main = function (_Phaser$State) {
 								var shooter = this.clients[bullet.id];
 								if (shooter) {
 									shooter.particles.emitHit(bullet.x, bullet.y);
-									if (!this.sound_hit.isPlaying) this.sound_hit.play();
+									this.sound_hit.play();
 								}
 								bullet.kill();
 							}
@@ -7853,7 +7984,7 @@ var Main = function (_Phaser$State) {
 								if (_shooter) {
 									_shooter.particles.emitHit(bullet.x, bullet.y);
 									this.tweenTint(player, player.originalTint, 0xffffff, 50);
-									if (!this.sound_hit.isPlaying) this.sound_hit.play();
+									this.sound_hit.play();
 								}
 
 								bullet.kill();
@@ -7864,12 +7995,12 @@ var Main = function (_Phaser$State) {
 			}
 
 			this.cometPool.forEachAlive(function (comet) {
-				if (_this4.distanceBetween(comet, bullet) < 25) {
-					var _player8 = _this4.clients[bullet.id];
+				if (_this6.distanceBetween(comet, bullet) < 25) {
+					var _player8 = _this6.clients[bullet.id];
 					if (_player8) {
 						_player8.particles.emitHit(bullet.x, bullet.y);
-						_this4.tweenTint(comet, comet.originalTint, 0xffffff, 50);
-						if (!_this4.sound_hit.isPlaying) _this4.sound_hit.play();
+						_this6.tweenTint(comet, comet.originalTint, 0xffffff, 50);
+						if (!_this6.sound_hit.isPlaying) _this6.sound_hit.play();
 					}
 					bullet.kill();
 				}
@@ -8069,6 +8200,12 @@ var Preload = function (_Phaser$State) {
 			this.game.load.audio('hit', 'assets/sound/hit.ogg');
 			this.game.load.audio('kill', 'assets/sound/kill.ogg');
 			this.game.load.audio('levelup', 'assets/sound/levelup.ogg');
+			this.game.load.audio('forcefield', 'assets/sound/forcefield.ogg');
+			this.game.load.audio('heal', 'assets/sound/heal.ogg');
+			this.game.load.audio('magnet', 'assets/sound/magnet.ogg');
+			this.game.load.audio('shield', 'assets/sound/shield.ogg');
+			this.game.load.audio('shockwave', 'assets/sound/shockwave.ogg');
+			this.game.load.audio('trap', 'assets/sound/trap.ogg');
 		}
 	}, {
 		key: 'create',

@@ -19,14 +19,6 @@ class Main extends Phaser.State {
 		this.starfield = this.add.tileSprite(0, 0, 2400, 2000, 'atlas', 'starfield.png');
 		this.starfield.fixedToCamera = true;
 		this.starfield.alpha = 0.5;
-		this.forceField = this.game.add.sprite(0, 0, 'atlas', 'shockwave.png');
-		this.forceField.anchor.setTo(0.5);
-		this.forceField.width = 400;
-		this.forceField.height = 400;
-		this.forceField.alpha = 0;
-		this.arrow = this.game.add.sprite(0, 0, 'arrow');
-		this.arrow.anchor.setTo(0, 0.5);
-		this.arrow.alpha = 0;
 
 		//Pools and network
 		this.game.room = this.game.colyseus.join('game', {name: this.game.myName.toString()});
@@ -40,21 +32,52 @@ class Main extends Phaser.State {
 		this.clientGroupIdle = this.game.add.group();
 		this.clientGroupActive = this.game.add.group();
 		this.playerGroup = this.game.add.group();
+		this.messageTextGroup = this.game.add.group();
+		this.forceFieldGroup = this.game.add.group();
 		this.bitSounds = [];
 		this.nextSound = 0;
 		this.clients = {};
 		this.id;
 
+		//Force field and arrow pointing to it
+		this.forceField = this.game.add.sprite(0, 0, 'atlas', 'shockwave.png');
+		this.forceField.anchor.setTo(0.5);
+		this.forceField.width = 800;
+		this.forceField.height = 800;
+		this.forceField.alpha = 0;
+		this.arrow = this.game.add.sprite(0, 0, 'arrow');
+		this.arrow.anchor.setTo(0, 0.5);
+		this.arrow.alpha = 0;
+		this.forceFieldGroup.add(this.forceField);
+
+		//Message texts
+		this.forceFieldText = this.game.add.bitmapText(this.game.canvas.width/2, 60, 'font', '', 26);
+		this.forceFieldText.alpha = 0;
+		this.forceFieldText.anchor.setTo(0.5);
+		this.forceFieldText.tweenOut = this.game.add.tween(this.forceFieldText).to({alpha: 0}, 1000, Phaser.Easing.Linear.None);
+		this.forceFieldText.tweenIn = this.game.add.tween(this.forceFieldText).to({alpha: 1}, 1000, Phaser.Easing.Linear.None);
+		this.messageText = this.game.add.bitmapText(this.game.canvas.width/2, 90, 'font', '', 30);
+		this.messageText.alpha = 0;
+		this.messageText.anchor.setTo(0.5);
+		this.messageText.tweenOut = this.game.add.tween(this.messageText).to({alpha: 0}, 1000, Phaser.Easing.Linear.None);
+		this.messageText.tweenIn = this.game.add.tween(this.messageText).to({alpha: 1}, 5000, Phaser.Easing.Linear.None);
+		this.messageText.tweenIn.onComplete.add(() => this.messageText.tweenOut.start());
+		this.messageTextGroup.add(this.forceFieldText);
+		this.messageTextGroup.add(this.messageText);
+		this.messageTextGroup.fixedToCamera = true;
 		//Sound
 		this.sound_hit = this.game.add.audio('hit');
 		this.sound_kill = this.game.add.audio('kill');
 		this.sound_shoot = this.game.add.audio('shoot');
 		this.sound_levelup = this.game.add.audio('levelup');
+		this.sound_forcefield = this.game.add.audio('forcefield');
 		for (let i = 1; i < 4; i++) {
 			let sound = this.game.add.audio('bit_' + i);
 			this.bitSounds.push(sound);
 		}
-		this.sound_hit.volume = 0.5;
+		this.sound_forcefield.volume = 0.6;
+		this.sound_kill.volume = 0.6;
+		this.sound_hit.volume = 0.3;
 
 		this.bulletPool.z = 1;
 		this.bitsPool.z = 1;
@@ -63,6 +86,8 @@ class Main extends Phaser.State {
 		this.seekerPool.z = 1;
 		this.clientGroupActive.z = 2;
 		this.playerGroup.z = 3;
+		this.messageTextGroup.z = 4;
+		this.forceFieldGroup.z = 4;
 
 		//Death particles
 		this.deathEmitter = this.game.add.emitter(0, 0, 20);
@@ -101,6 +126,29 @@ class Main extends Phaser.State {
 		return this.nextSound;
 	}
 
+	setText(type, message) {
+		if (type === 'forcefield') {
+			this.forceFieldText.tweenIn.start();
+			this.forceFieldText.text = '';
+
+			let delay = Math.floor((message - Date.now()) * 0.001);
+			let loop = this.game.time.events.loop(Phaser.Timer.SECOND, () => {
+				delay--;
+				this.forceFieldText.text = 'Seconds before wipe: ' + delay;
+				if (delay <= 0) {
+					this.game.time.events.remove(loop);
+					this.forceFieldText.tweenOut.start();
+				} else if (delay < 10) {
+					this.sound_forcefield.play();
+				}
+			}, this);
+		} else if (type === 'message') {
+			this.messageText.text = message;
+			this.messageText.tweenIn.start();
+			this.sound_forcefield.play();
+		}
+	}
+
 	netListener() {
 		this.game.room.onMessage.add(message => {
 			if (message.me) {
@@ -116,23 +164,33 @@ class Main extends Phaser.State {
 				let bit = this.findInGroup(message.bitHit.id, this.bitsPool);
 				if (bit) {
 					let player = this.clients[message.bitHit.player];
-					let sound = this.bitSounds[this.nextBitSound()];
-					bit.target = player;
-					if (sound) {
-						bit.sound = sound;
-					}
-					bit.activated = true;
+					if (player) {
+						let sound = this.bitSounds[this.nextBitSound()];
+						bit.target = player;
+						if (sound && message.bitHit.player === this.id) {
+							bit.playSound = true;
+							bit.sound = sound;
+						}
+						bit.activated = true;
 
-					if (message.bitHit.trap && message.bitHit.player === this.id) this.game.camera.shake(0.01, 50);
+						if (message.bitHit.trap && message.bitHit.player === this.id) this.game.camera.shake(0.01, 50);
+					}
 				}
 			}
 
 			if (message.powerUpHit) {
 				let powerup = this.findInGroup(message.powerUpHit.id, this.powerUpPool);
 				if (powerup) {
-					let player = this.clients[message.powerUpHit.player];
-					powerup.target = player;
-					powerup.activated = true;
+					let player = this.clients[message.powerUpHit.id];
+					if (player) {
+						let sound = this.bitSounds[this.nextBitSound()];
+						powerup.target = player;
+						if (sound && message.powerUpHit.id === this.id) {
+							powerup.playSound = true;
+							powerup.sound = sound;
+						}
+						powerup.activated = true;
+					}
 				}
 			}
 
@@ -152,15 +210,8 @@ class Main extends Phaser.State {
 							this.sound_shoot.volume = 0.6;
 							this.sound_shoot.play();
 						} else {
-							let dist = this.distanceBetween(bullet, player);
-							if (dist < 500) {
-								if (!this.sound_shoot.isPlaying) {
-									let volume = 100 / dist;
-									this.sound_shoot.volume = 100 / (dist+500);
-									this.sound_shoot.play();
-								}
-								
-							}
+							this.sound_shoot.volume = 0.1;
+							if (!this.sound_shoot.isPlaying) this.sound_shoot.play();
 						}
 					}
 				}
@@ -177,7 +228,13 @@ class Main extends Phaser.State {
 						seeker.timer = Date.now() + 2000;
 						seeker.setTint(player.tint);
 						seeker.setTrail(player.particles);
-
+						if (m.owner === this.id) {
+							this.sound_shoot.volume = 0.6;
+							this.sound_shoot.play();
+						} else {
+							this.sound_shoot.volume = 0.1;
+							if (!this.sound_shoot.isPlaying) this.sound_shoot.play();
+						}
 
 						if (target) {
 							seeker.target = target;
@@ -284,6 +341,10 @@ class Main extends Phaser.State {
 					}
 				}
 			}
+
+			if (message.message) {
+				this.setText('message', message.message);
+			}
 		});
 
 		this.game.room.listen("players/:id/:variable", change => {
@@ -297,9 +358,10 @@ class Main extends Phaser.State {
 						break;
 						case 'level':
 							if (change.path.id !== this.id) {
-								// Message on ding?
+								player.nameLabel.text = `${player.name} (${change.value})`;
 							} else {
 								player.levelUp(change.value);
+								player.nameLabel.text = `${this.game.myName} (${change.value})`;
 							}
 						break;
 					}
@@ -318,6 +380,8 @@ class Main extends Phaser.State {
 						client.level = change.value.level;
 						client.health = change.value.health;
 						client.maxHealth = change.value.maxHealth;
+						client.name = change.value.name;
+						client.nameLabel.text = `${client.name} (${client.level})`;
 						this.clients[change.path.id] = client;
 						this.game.world.sort('z', Phaser.Group.SORT_ASCENDING);
 					} else if (change.operation === "remove") {
@@ -411,6 +475,11 @@ class Main extends Phaser.State {
 							this.forceField.alpha = 0;
 						}
 					break;
+					case 'timer':
+						if (change.value > Date.now()) {
+							this.setText('forcefield', change.value);
+						}
+					break;
 				}
 			} else if (change.operation === 'replace') {
 				switch (change.path.variable) {
@@ -426,6 +495,9 @@ class Main extends Phaser.State {
 						} else if (change.value === false) {
 							this.forceField.alpha = 0;
 						}
+					break;
+					case 'timer':
+						this.setText('forcefield', change.value);
 					break;
 				}
 			}
@@ -523,12 +595,12 @@ class Main extends Phaser.State {
 
 	updateArrow() {
 		if (this.forceField.alpha == 1) {
-			if (this.distanceBetween(this.arrow, this.forceField) < 400) {
+			if (this.distanceBetween(this.clients[this.id], this.forceField) < 400) {
 				this.arrow.alpha = 0;
 			} else {
+				this.arrow.alpha = 1;
 				this.arrow.x = this.clients[this.id].x;
 				this.arrow.y = this.clients[this.id].y;
-				this.arrow.alpha = 1;
 				this.arrow.rotation = Phaser.Math.angleBetween(this.arrow.x, this.arrow.y, this.forceField.x, this.forceField.y);
 			}
 		} else {
@@ -547,7 +619,7 @@ class Main extends Phaser.State {
 							let shooter = this.clients[bullet.id];
 							if (shooter) {
 								shooter.particles.emitHit(bullet.x, bullet.y);
-								if (!this.sound_hit.isPlaying) this.sound_hit.play();
+								this.sound_hit.play();
 							}
 							bullet.kill();
 						}
@@ -557,7 +629,7 @@ class Main extends Phaser.State {
 							if (shooter) {
 								shooter.particles.emitHit(bullet.x, bullet.y);
 								this.tweenTint(player, player.originalTint, 0xffffff, 50);
-								if (!this.sound_hit.isPlaying) this.sound_hit.play();
+								this.sound_hit.play();
 							}
 
 							bullet.kill();

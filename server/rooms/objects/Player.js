@@ -45,7 +45,8 @@ module.exports = class Player {
                 damage: 0,
                 health: 0
             },
-            nextPowerAt: 5
+            nextPowerAt: 5,
+            powerIndex: 0
         });
     }
 
@@ -161,9 +162,10 @@ module.exports = class Player {
                 this.private.expNeeded += this.private.expRate;
             }
 
-            if (this.level === this.private.nextPowerAt) {
-                this.private.network.sendToClient(this.id, {levelUp: true, newPower: this.private.nextPowerAt});
+            if (this.private.nextPowerAt <= 20 && this.level === this.private.nextPowerAt) {
+                this.private.network.sendToClient(this.id, {levelUp: true, newPower: this.private.powerIndex});
                 this.private.nextPowerAt += 5;
+                this.private.powerIndex++;
             } else {
                 this.private.network.sendToClient(this.id, {levelUp: true});
             }

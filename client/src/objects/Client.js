@@ -9,6 +9,7 @@ class Client extends Phaser.Sprite {
 		this.game = game;
 		this.health = 0;
 		this.maxHealth = 0;
+		this.name = '';
 		this.level = 0;
 		this.angle = 0;
 		this.tint = '0x' + Math.floor(Math.random()*16777215).toString(16);
@@ -28,6 +29,10 @@ class Client extends Phaser.Sprite {
 		//Powers container
 		this.powers = new Powers(this.game, this);
 
+		//Name label
+		this.nameLabel = this.game.add.bitmapText(0, -15, 'font', '', 16);
+		this.nameLabel.anchor.setTo(0.5);
+
 		this.playerHealthBar = new HealthBar(this.game, {
 			x: this.x, 
 			y: this.y + 64,
@@ -41,6 +46,7 @@ class Client extends Phaser.Sprite {
 				color: '#00A549'
 			}
 		});
+		this.playerHealthBar.bgSprite.addChild(this.nameLabel);
 		this.playerHealthBar.barSprite.alpha = 0;
 		this.playerHealthBar.bgSprite.alpha = 0;
 		this.healthBarGroup.add(this.playerHealthBar.bgSprite);

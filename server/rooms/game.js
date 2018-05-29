@@ -10,7 +10,7 @@ module.exports = class StateHandlerRoom extends Room {
         this.maxClients = 10;
         this.state.populateBits();
         this.state.populateComets();
-        this.state.newDeathWall();
+        this.state.startDeathWall();
         this.setSimulationInterval(() => this.update(), 1000 / 20);
         setInterval(() => this.updateProximity(), 100);
     }

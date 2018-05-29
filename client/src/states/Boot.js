@@ -9,7 +9,7 @@ class Boot extends Phaser.State {
 
 		this.game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
 
-		if (this.game.device.desktop) {
+		if (!this.game.device.desktop) {
 			if (width < 1000) {
 				this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 				width = width * 2;

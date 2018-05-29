@@ -8,6 +8,8 @@ class Player extends Phaser.Sprite {
 		super(game, x, y, 'atlas', 'spaceship_white.png');
 
 		this.pad = this.game.plugins.add(Phaser.VirtualJoystick);
+		this.name = '';
+		this.level = 0;
 		this.game = game;
 		this.health = health;
 		this.maxHealth = 100;
@@ -20,7 +22,7 @@ class Player extends Phaser.Sprite {
 		this.originalTint = this.tint;
 		this.dest = {x: x, y: y, angle: this.angle};
 		this.healthBarGroup = this.game.add.group();
-		this.healthBarGroup.z = 2;
+		this.healthBarGroup.z = 3;
 
 		this.stats = {
 			level: 0,
@@ -34,6 +36,10 @@ class Player extends Phaser.Sprite {
 		//Sprite
 		this.scale.setTo(0.75);
 		this.anchor.setTo(0.5);
+
+		//Name label
+		this.nameLabel = this.game.add.bitmapText(0, -15, 'font', this.game.myName + ' (0)', 16);
+		this.nameLabel.anchor.setTo(0.5);
 
 		//Healthbar
 		this.playerHealthBar = new HealthBar(this.game, {
@@ -49,6 +55,7 @@ class Player extends Phaser.Sprite {
 				color: '#00A549'
 			}
 		});
+		this.playerHealthBar.bgSprite.addChild(this.nameLabel);
 		this.healthBarGroup.add(this.playerHealthBar.bgSprite);
 		this.healthBarGroup.add(this.playerHealthBar.barSprite);
 		
