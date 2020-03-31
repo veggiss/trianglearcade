@@ -1,4 +1,4 @@
-# Triangle &#9651;rcade
+# [Triangle &#9651;rcade](https://trianglearcadetest.herokuapp.com/)
 Bachelor project at UiA, Multimediatechnology and design
 
 #### Controls: 
